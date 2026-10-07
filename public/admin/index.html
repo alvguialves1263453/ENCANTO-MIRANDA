@@ -248,7 +248,10 @@ details.mini-opt summary{cursor:pointer;font-size:13px;font-weight:700;color:#5A
  .desc-size{height:30px!important;min-width:0!important;width:auto!important;padding:0 8px!important;font-size:11px!important;font-weight:700!important;line-height:normal!important;white-space:nowrap}
  .desc-font-number{width:55px!important;height:30px!important;padding:3px 5px!important;font-size:12px!important;color:#463426!important;background:#fff!important}
  .desc-family{width:108px!important;height:30px!important;padding:2px 5px!important;font-size:11px!important;color:#463426!important;background:#fff!important;line-height:normal!important}
- .desc-editable{min-height:150px;padding:12px;outline:0;font-size:14px;line-height:1.6;white-space:pre-wrap}
+  .desc-editable{min-height:150px;padding:12px;outline:0;font-size:14px;line-height:1.6;white-space:pre-wrap}
+  .termo-editable{min-height:52vh;max-height:62vh;overflow:auto;background:#fff}
+  .termo-resumo{display:flex;align-items:center;gap:12px;border:1px solid var(--adm-line);border-radius:8px;padding:11px 12px;margin:8px 0 14px;background:#fff}
+  .termo-resumo p{flex:1;margin:0;color:var(--adm-mut);font-size:12px;line-height:1.45;max-height:38px;overflow:hidden}
  .desc-editable:empty:before{content:attr(data-placeholder);color:#9A8978}
  .mp-desc{margin-top:9px;padding-top:8px;border-top:1px solid #E6DCCF;color:#6f6258;font-size:11px;line-height:1.45;max-height:105px;overflow:auto;word-break:break-word}
  .mp-desc p{margin:0 0 5px}.mp-desc ul,.mp-desc ol{padding-left:18px;margin:4px 0}
@@ -1579,33 +1582,72 @@ function criarCupom() {
   rPromocoes();
 }
 
+let termoRascunho = null;
+let termoEditando = null;
+let selecaoTermo = null;
+const TERMOS_CAMPOS = [
+  ['arrependimento', 'Política de devolução por arrependimento', 'Explique o prazo e as condições para desistência.'],
+  ['devolucao', 'Como funciona a devolução', 'Explique o recebimento da peça e o reembolso.'],
+  ['frete', 'Frete da devolução', 'Informe quem paga o frete de devolução.'],
+  ['defeito', 'Produto com defeito', 'Explique o prazo e o procedimento para defeitos.'],
+  ['higiene', 'Regras de higiene', 'Informe quais produtos não podem ser trocados.'],
+  ['solicitacao', 'Como solicitar', 'Oriente a cliente sobre pedido e fotos.']
+];
+function guardarSelecaoTermo() {
+  const ed = document.getElementById('termoEditor'), sel = window.getSelection();
+  if (!ed || !sel || !sel.rangeCount) return;
+  const r = sel.getRangeAt(0); if (ed.contains(r.commonAncestorContainer)) selecaoTermo = r.cloneRange();
+}
+function restaurarSelecaoTermo() {
+  if (!selecaoTermo) return;
+  const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(selecaoTermo);
+}
+function formatarTermo(cmd, valor) {
+  const ed = document.getElementById('termoEditor'); if (!ed) return;
+  restaurarSelecaoTermo(); ed.focus();
+  document.execCommand(cmd, false, valor || null);
+  guardarSelecaoTermo();
+}
+function colorirTermo(cor) { formatarTermo('foreColor', cor); }
+function tamanhoTermo(tamanho) {
+  const px = Math.max(8, Math.min(72, +tamanho || 14));
+  formatarTermo('fontSize', '7');
+  const ed = document.getElementById('termoEditor');
+  if (ed) ed.querySelectorAll('font[size="7"]').forEach(el => { el.removeAttribute('size'); el.style.fontSize = px + 'px'; });
+}
+function fonteTermo(fonte) { formatarTermo('fontName', fonte); }
+function editarTermo(chave) {
+  const campo = TERMOS_CAMPOS.find(x => x[0] === chave); if (!campo) return;
+  termoEditando = chave; selecaoTermo = null;
+  const valor = termoRascunho && termoRascunho[chave] || '';
+  abrirModal(`<div class="modal-mini" style="max-width:900px;width:96vw"><h3>${campo[1]}</h3><p class="chip-status">Use a barra para formatar o texto. O conteúdo será sanitizado antes de ser salvo.</p>
+    <div class="desc-editor"><div class="desc-toolbar"><button type="button" title="Negrito" onmousedown="event.preventDefault()" onclick="formatarTermo('bold')"><b>B</b></button><button type="button" title="Itálico" onmousedown="event.preventDefault()" onclick="formatarTermo('italic')"><i>I</i></button><button type="button" title="Sublinhado" onmousedown="event.preventDefault()" onclick="formatarTermo('underline')"><u>U</u></button><button type="button" title="Lista" onmousedown="event.preventDefault()" onclick="formatarTermo('insertUnorderedList')">☷</button><select class="desc-family" title="Fonte" onchange="fonteTermo(this.value)"><option value="Arial">Arial</option><option value="Georgia">Georgia</option><option value="Verdana">Verdana</option><option value="Tahoma">Tahoma</option><option value="Courier New">Courier New</option><option value="Times New Roman">Times New Roman</option></select><input class="desc-font-number" type="number" min="8" max="72" value="14" title="Tamanho em pixels" onchange="tamanhoTermo(this.value)"><input type="color" title="Cor do texto" value="#38271D" onchange="colorirTermo(this.value)"></div><div id="termoEditor" class="desc-editable termo-editable" contenteditable="true" data-placeholder="Escreva o termo completo...">${descricaoInicial(valor)}</div></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px"><button class="btn btn-borda" type="button" onclick="fecharModal()">Cancelar</button><button class="btn btn-preto" type="button" onclick="aplicarTermoEditado()">Aplicar</button></div></div>`);
+  const ed = document.getElementById('termoEditor'); if (ed) ed.addEventListener('keyup', guardarSelecaoTermo);
+}
+function aplicarTermoEditado() {
+  const ed = document.getElementById('termoEditor'); if (!ed || !termoEditando) return;
+  termoRascunho[termoEditando] = sanitizarDescricao(ed.innerHTML).trim();
+  termoEditando = null; selecaoTermo = null; fecharModal(); rTermos(); mostrarAvisoNaoSalvo();
+}
 function rTermos() {
   const s = DB.getSettings();
   const t = s.termos || {};
+  termoRascunho = Object.assign({}, t, termoRascunho || {});
   const esc = valor => String(valor == null ? '' : valor).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  const campo = (id, label, valor, placeholder) => `<label>${label}</label><textarea id="${id}" rows="3" placeholder="${placeholder}">${esc(valor)}</textarea>`;
-  $('#admMain').innerHTML = `<div class="secao on"><h2>Termos</h2><p class="adm-sub">Edite as regras de trocas e devoluções exibidas para suas clientes.</p>
-    <div class="card form">
-      ${campo('termoArrependimento', 'Política de devolução por arrependimento', t.arrependimento, 'Ex: Você tem 7 dias corridos após o recebimento...')}
-      ${campo('termoDevolucao', 'Como funciona a devolução', t.devolucao, 'Explique o recebimento da peça e o reembolso.')}
-      ${campo('termoFrete', 'Frete da devolução', t.frete, 'Informe quem paga o frete de devolução.')}
-      ${campo('termoDefeito', 'Produto com defeito', t.defeito, 'Explique o prazo e o procedimento para defeitos.')}
-      ${campo('termoHigiene', 'Regras de higiene', t.higiene, 'Informe quais produtos não podem ser trocados.')}
-      ${campo('termoSolicitacao', 'Como solicitar', t.solicitacao, 'Oriente a cliente sobre pedido e fotos.')}
-      <button class="btn btn-preto" style="margin-top:14px" onclick="salvarTermos()">Salvar termos</button>
-    </div></div>`;
+  const resumo = (valor, placeholder) => {
+    const texto = String(valor || '').replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    return esc(texto || placeholder);
+  };
+  const campo = ([id, label, placeholder]) => `<label>${label}</label><div class="termo-resumo"><p>${resumo(termoRascunho[id], placeholder)}</p><button class="btn-mini" type="button" onclick="editarTermo('${id}')">Editar</button></div>`;
+  $('#admMain').innerHTML = `<div class="secao on"><h2>Termos</h2><p class="adm-sub">Edite as regras de trocas e devoluções exibidas para suas clientes. Clique em Editar para abrir o editor completo.</p>
+    <div class="card form">${TERMOS_CAMPOS.map(campo).join('')}<button class="btn btn-preto" style="margin-top:14px" onclick="salvarTermos()">Salvar termos</button></div></div>`;
 }
 function salvarTermos() {
   const s = DB.getSettings();
-  s.termos = {
-    arrependimento: $('#termoArrependimento').value.trim(),
-    devolucao: $('#termoDevolucao').value.trim(),
-    frete: $('#termoFrete').value.trim(),
-    defeito: $('#termoDefeito').value.trim(),
-    higiene: $('#termoHigiene').value.trim(),
-    solicitacao: $('#termoSolicitacao').value.trim()
-  };
+  s.termos = Object.fromEntries(TERMOS_CAMPOS.map(([id]) => [id, sanitizarDescricao((termoRascunho && termoRascunho[id]) || '').trim()]));
   DB.saveSettings(s);
+  termoRascunho = Object.assign({}, s.termos);
   ocultarAvisoNaoSalvo();
   toast('Termos atualizados!');
 }
