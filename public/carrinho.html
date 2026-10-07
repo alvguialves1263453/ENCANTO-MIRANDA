@@ -27,10 +27,10 @@
 <div id="lista"></div>
 <div class="resumo">
 <h3>Resumo</h3>
-<div class="campo" style="margin-top:10px"><label>Seu nome</label><input id="cliNome" placeholder="Como podemos te chamar?"></div>
-<div class="campo"><label>Seu WhatsApp</label><input id="cliFone" inputmode="tel" placeholder="(11) 99999-9999"></div>
-<div class="campo"><label>Seu endereço</label><input id="cliEndereco" placeholder="Rua, número, bairro, cidade - UF"></div>
-<div class="campo" id="cartPagWrap"><label>Pagamento</label><select id="pag"></select></div>
+<div class="campo" style="margin-top:10px"><label>Seu nome</label><input id="cliNome" placeholder="Como podemos te chamar?" required aria-required="true"></div>
+<div class="campo"><label>Seu WhatsApp</label><input id="cliFone" inputmode="tel" placeholder="(11) 99999-9999" required aria-required="true"></div>
+<div class="campo"><label>Seu endereço</label><input id="cliEndereco" placeholder="Rua, número, bairro, cidade - UF" required aria-required="true"></div>
+<div class="campo" id="cartPagWrap"><label>Pagamento</label><select id="pag" required aria-required="true"></select></div>
 <div class="campo"><label>Cupom de desconto (se tiver)</label><div style="display:flex;gap:8px"><input id="cupom" placeholder="CÓDIGO" style="flex:1;text-transform:uppercase"><button class="btn btn-borda" type="button" onclick="aplicarCupom()">OK</button></div></div>
  <div class="linha"><span>Subtotal (<span id="qtdT">0</span> peças)</span><b id="subT">R$0</b></div>
  <div class="linha" id="linhaFrete"><span>Frete</span><b id="freteT">R$0</b></div>
@@ -172,11 +172,12 @@ function finalizar(){
   const endereco=document.getElementById('cliEndereco').value.trim();
   if(!nome) return toast('Diga seu nome para finalizar.');
   if(fone.replace(/\D/g,'').length<10) return toast('Digite seu WhatsApp com DDD.');
-  if(!endereco) return toast('Digite seu endereço para entrega.');
+   if(!endereco) return toast('Digite seu endereço para entrega.');
+   const pag=document.getElementById('pag');
+   if(document.getElementById('cartPagWrap').style.display!=='none' && !pag.value) return toast('Selecione a forma de pagamento.');
    const {sub, desc, frete, freteGratis, total}=calcTotal();
   const itens=cart.map(i=>{const p=prodById(i.id);return {id:p.id, nome:p.nome, cor:i.cor, tam:i.tam, qtd:i.qtd, preco:p.preco};});
-  const pag=document.getElementById('pag');
-  const pagTxt=pag.options[pag.selectedIndex]?pag.options[pag.selectedIndex].text:'';
+   const pagTxt=pag.options[pag.selectedIndex]?pag.options[pag.selectedIndex].text:'';
   let numero='—';
   try{
     if(typeof DB!=='undefined'){
