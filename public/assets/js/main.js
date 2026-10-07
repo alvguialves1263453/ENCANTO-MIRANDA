@@ -166,14 +166,24 @@ document.addEventListener('DOMContentLoaded', ()=>{
            document.documentElement.style.setProperty('--brown-dark','color-mix(in srgb, '+st.cor+' 62%, black)');
            document.documentElement.style.setProperty('--brown-light','color-mix(in srgb, '+st.cor+' 10%, white)');
         }
-         if(st.whatsapp){
-           const zap=String(st.whatsapp).replace(/\D/g,'');
-           document.querySelectorAll('[data-loja-info="telefone"]').forEach(el=>{ el.textContent=telefoneExibicao(zap); });
-           document.querySelectorAll('a[href*="wa.me/"]').forEach(a=>{
-             a.href=a.href.replace(/wa\.me\/\d+/, 'wa.me/'+zap);
-           });
-         }
-         if(st.nomeLoja){
+          if(st.whatsapp){
+            const zap=String(st.whatsapp).replace(/\D/g,'');
+            document.querySelectorAll('[data-loja-info="telefone"]').forEach(el=>{ el.textContent=telefoneExibicao(zap); });
+            document.querySelectorAll('a[href*="wa.me/"]').forEach(a=>{
+              a.href=a.href.replace(/wa\.me\/\d+/, 'wa.me/'+zap);
+            });
+          }
+          document.querySelectorAll('[data-loja-instagram]').forEach(a=>{
+            let url='';
+            try{
+              const parsed=new URL(String(st.instagram||'').trim());
+              if(parsed.protocol==='http:' || parsed.protocol==='https:') url=parsed.href;
+            }catch{}
+            a.hidden=!url;
+            a.setAttribute('aria-hidden',url?'false':'true');
+            if(url) a.href=url;
+          });
+          if(st.nomeLoja){
            document.querySelectorAll('.copy').forEach(el=>{ el.innerHTML=el.innerHTML.replace(/Encanto Miranda/g, st.nomeLoja); });
          }
          if(st.endereco){

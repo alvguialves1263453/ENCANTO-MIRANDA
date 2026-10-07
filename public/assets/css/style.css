@@ -662,6 +662,26 @@ footer{background:var(--brown-dark);color:var(--brown-light)}
 }
 .whats img{width:62px!important;height:62px!important;object-fit:contain;display:block}
 
+/* Instagram flutuante: fica acima do WhatsApp e só aparece quando configurado. */
+.instagram{
+  position:fixed;
+  z-index:20;
+  right:20px;
+  bottom:92px;
+  width:68px;
+  height:68px;
+  padding:0;
+  border:0;
+  background:transparent;
+  box-shadow:none;
+}
+.instagram[hidden]{display:none}
+.instagram img{width:62px;height:62px;object-fit:contain;display:block}
+@media(max-width:600px){
+  .instagram{right:14px;bottom:78px;width:48px;height:48px}
+  .instagram img{width:48px;height:48px}
+}
+
 /* Galeria vertical do produto: miniaturas em uma janela fixa, sem esticar a página. */
 .thumbs-carousel{display:flex;flex-direction:column;align-items:stretch;gap:6px;min-width:0}
 .thumbs-carousel>button{height:26px;border:1px solid var(--line);border-radius:5px;background:var(--surface);color:var(--brown);font-weight:800;cursor:pointer;line-height:1}
