@@ -29,11 +29,11 @@
 </div>
  <div class="layout-2 contato-layout">
 <div class="form-card"><h3>Envie uma mensagem</h3><br>
-<div class="form-grid"><div class="campo"><label>Nome</label><input id="n" placeholder="Seu nome"></div>
-<div class="campo"><label>WhatsApp</label><input id="w" placeholder="(11) 99999-9999"></div>
-<div class="campo"><label>E-mail</label><input id="e" placeholder="voce@loja.com"></div>
-<div class="campo"><label>Assunto</label><select id="a"><option>Atendimento ao cliente</option><option>Dúvida de pedido</option><option>Troca / defeito</option><option>Parceria</option></select></div>
-<div class="campo full"><label>Mensagem</label><textarea id="m" rows="5" placeholder="Olá! Gostaria de saber..."></textarea></div></div>
+<div class="form-grid"><div class="campo"><label>Nome</label><input id="n" placeholder="Seu nome" required aria-required="true"></div>
+<div class="campo"><label>WhatsApp</label><input id="w" placeholder="(11) 99999-9999" required aria-required="true"></div>
+<div class="campo"><label>E-mail</label><input id="e" type="email" placeholder="voce@loja.com" required aria-required="true"></div>
+<div class="campo"><label>Assunto</label><select id="a" required aria-required="true"><option value="">Selecione o assunto</option><option>Atendimento ao cliente</option><option>Dúvida de pedido</option><option>Troca / defeito</option><option>Parceria</option></select></div>
+<div class="campo full"><label>Mensagem</label><textarea id="m" rows="5" placeholder="Olá! Gostaria de saber..." required aria-required="true"></textarea></div></div>
 <br><button class="btn btn-rosa" style="width:100%" onclick="enviar()">ENVIAR VIA WHATSAPP →</button></div>
 <div class="form-card"><h3>Perguntas frequentes</h3><div class="tabs" style="border:0;margin-top:10px">
 <details open><summary>Qual o prazo de envio?</summary><p class="texto">Enviamos em até 2 dias úteis após a confirmação do pagamento, com código de rastreio.</p></details>
@@ -47,5 +47,5 @@
 <a class="whats" href="https://wa.me/5511968422230" target="_blank" aria-label="Falar no WhatsApp"><img src="assets/img/WhatsApp.png" alt="WhatsApp"></a>
 <script src="assets/js/data.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2"><\/script>')</script><script src="assets/js/supabase.js?v=2"></script><script src="assets/js/loja-db.js?v=9"></script><script src="assets/js/main.js?v=7"></script>
 <script>
-function enviar(){const nome=document.getElementById('n').value.trim()||'cliente';const assunto=document.getElementById('a').value;const mensagem=document.getElementById('m').value.trim()||'Gostaria de receber atendimento.';const whatsapp=document.getElementById('w').value.trim()||'não informado';const t=`Olá! Sou ${nome} e gostaria de solicitar o atendimento ao cliente para ${assunto}.\n\nMensagem: ${mensagem}\n\nMeu WhatsApp: ${whatsapp}`;const zap=(typeof DB!=='undefined'?DB.getSettings().whatsapp:'');window.open('https://wa.me/'+zap+'?text='+encodeURIComponent(t),'_blank');toast('Abrindo WhatsApp...');}
+function enviar(){const campos=[['n','nome'],['w','WhatsApp'],['e','e-mail'],['a','assunto'],['m','mensagem']];for(const [id,nomeCampo] of campos){const el=document.getElementById(id);if(!el.value.trim()){el.focus();toast('Preencha o campo '+nomeCampo+'.');return;}}const email=document.getElementById('e');if(!email.checkValidity()){email.focus();toast('Digite um e-mail válido.');return;}const nome=document.getElementById('n').value.trim();const assunto=document.getElementById('a').value;const mensagem=document.getElementById('m').value.trim();const whatsapp=document.getElementById('w').value.trim();const t=`Olá! Sou ${nome} e gostaria de solicitar o atendimento ao cliente para ${assunto}.\n\nMensagem: ${mensagem}\n\nMeu WhatsApp: ${whatsapp}`;const zap=(typeof DB!=='undefined'?DB.getSettings().whatsapp:'');window.open('https://wa.me/'+zap+'?text='+encodeURIComponent(t),'_blank');toast('Abrindo WhatsApp...');}
 </script></body></html>
