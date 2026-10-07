@@ -2,6 +2,12 @@
 const BRL = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const getCart = () => { try{return JSON.parse(localStorage.getItem('em_cart')||'[]')}catch{return[]} };
 const saveCart = c => { localStorage.setItem('em_cart', JSON.stringify(c)); updateCartBadge(); };
+function descricaoSegura(valor){
+  const s=String(valor==null?'':valor); if(!s.includes('<')) return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+  const box=document.createElement('div'); box.innerHTML=s; const ok=new Set(['B','STRONG','I','EM','U','BR','P','DIV','SPAN','FONT']);
+  box.querySelectorAll('*').forEach(el=>{ if(!ok.has(el.tagName)){el.replaceWith(document.createTextNode(el.textContent||''));return;} [...el.attributes].forEach(a=>{const f=el.tagName==='FONT'&&(a.name==='size'||(a.name==='color'&&/^#[0-9a-f]{3,8}$/i.test(a.value)));if(a.name!=='style'&&!f)el.removeAttribute(a.name);}); if(el.hasAttribute('style')){const st=String(el.getAttribute('style')).split(';').filter(x=>/^(\s*)(color|font-size|font-weight|text-align)\s*:/i.test(x)).join(';');st?el.setAttribute('style',st):el.removeAttribute('style');}});
+  return box.innerHTML;
+}
 // O banco local (loja-db.js) já se aplica sozinho ao carregar.
 function updateCartBadge(){
   const c = getCart();
