@@ -551,9 +551,12 @@ function popupPrompt(o) {
 }
 
 // ---------- INÍCIO ----------
+function estoqueNaoControlado(p) {
+  return !!p && !p.controlaEstoquePorCor && (+p.estoque || 0) >= 9999;
+}
 function rInicio() {
-  const baixo = DB.listProducts(false).filter(p => (p.estoque || 0) > 0 && (p.estoque || 0) <= 5);
-  const esgot = DB.listProducts(false).filter(p => !(p.estoque > 0));
+  const baixo = DB.listProducts(false).filter(p => (p.controlaEstoquePorCor || (+p.estoque || 0) < 9999) && (p.estoque || 0) > 0 && (p.estoque || 0) <= 5);
+  const esgot = DB.listProducts(false).filter(p => (p.controlaEstoquePorCor || (+p.estoque || 0) < 9999) && !(p.estoque > 0));
   const total = DB.listProducts(false).length;
   const pend = (typeof DB !== 'undefined' && DB.pendencias) ? DB.pendencias() : 0;
   $('#admMain').innerHTML = `<div class="secao on"><h2>Olá! Como está sua loja hoje?</h2><p class="adm-sub">Tudo importante num só lugar.</p>
@@ -580,7 +583,7 @@ function rProdutos() {
     (!buscaP || (p.nome + ' ' + (p.tecido || '') + ' ' + codigo(p.id)).toLowerCase().includes(buscaP)) &&
     (!fcP || String(p.cat || '') === String(fcP)) &&
     (!filtroStatus || (filtroStatus === 'rascunho' ? p.rascunho : !p.rascunho)));
-  const badgeEst = p => !(p.estoque > 0) ? '<span class="badge zero">Esgotado</span>' : (p.estoque <= 5 ? `<span class="badge baixo">${p.estoque} un.</span>` : `<span class="badge ok">${p.estoque} un.</span>`);
+  const badgeEst = p => (!p.controlaEstoquePorCor && (+p.estoque || 0) >= 9999) ? '<span class="badge ok">Sempre disponível</span>' : (!(p.estoque > 0) ? '<span class="badge zero">Esgotado</span>' : (p.estoque <= 5 ? `<span class="badge baixo">${p.estoque} un.</span>` : `<span class="badge ok">${p.estoque} un.</span>`));
   $('#admMain').innerHTML = `<div class="secao on"><h2>Produtos</h2><p class="adm-sub">Tudo que sua loja vende está aqui.</p>
    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px"><button class="btn btn-preto btn-grande" onclick="novoProduto()">+ Adicionar produto</button><button class="btn btn-borda" onclick="abrirDestaquesMassa()">★ Gerenciar destaques</button>
   </div>
@@ -1092,28 +1095,29 @@ let soBaixo = false, buscaEst = '', filtroCatEst = '';
 function rEstoque() {
   const codigo = id => { const s = String(id == null ? '' : id); if (/^p\d+$/i.test(s)) return 'P' + s.slice(1); let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return 'P' + (h % 60466176).toString(36).toUpperCase().padStart(5, '0'); };
   const todos = DB.listProducts(false);
-  const totalPecas = todos.reduce((s, p) => s + (+p.estoque || 0), 0);
-  const nBaixo = todos.filter(p => (p.estoque || 0) > 0 && (p.estoque || 0) <= 5).length;
-  const nEsgot = todos.filter(p => !(p.estoque > 0)).length;
+  const totalPecas = todos.reduce((s, p) => s + (estoqueNaoControlado(p) ? 0 : (+p.estoque || 0)), 0);
+  const nBaixo = todos.filter(p => !estoqueNaoControlado(p) && (p.estoque || 0) > 0 && (p.estoque || 0) <= 5).length;
+  const nEsgot = todos.filter(p => !estoqueNaoControlado(p) && !(p.estoque > 0)).length;
   const catsEst = DB.listCategories();
    let lista = todos.filter(p => !buscaEst || ((p.nome || '') + ' ' + codigo(p.id)).toLowerCase().includes(buscaEst));
   if (filtroCatEst) lista = lista.filter(p => String(p.cat || '') === String(filtroCatEst));
-  if (soBaixo) lista = lista.filter(p => (p.estoque || 0) <= 5);
-  const badge = p => !(p.estoque > 0) ? '<span class="badge zero">Esgotado</span>' : ((p.estoque || 0) <= 5 ? '<span class="badge baixo">Está acabando</span>' : '<span class="badge ok">OK</span>');
+  if (soBaixo) lista = lista.filter(p => !estoqueNaoControlado(p) && (p.estoque || 0) <= 5);
+  const badge = p => estoqueNaoControlado(p) ? '<span class="badge ok">Sempre disponível</span>' : (!(p.estoque > 0) ? '<span class="badge zero">Esgotado</span>' : ((p.estoque || 0) <= 5 ? '<span class="badge baixo">Está acabando</span>' : '<span class="badge ok">OK</span>'));
   $('#admMain').innerHTML = `<div class="secao on"><h2>Estoque</h2><p class="adm-sub">Controle de peças: chegou, vendeu ou contou tudo.</p>
   <div class="est-resumo"><div class="est-box"><b>${totalPecas}</b><span>peças no total</span></div><div class="est-box"><b>${nBaixo}</b><span>acabando ≤ 5</span></div><div class="est-box"><b>${nEsgot}</b><span>esgotados</span></div></div>
   <div class="toolbar"><input id="qEst" placeholder="🔍 Procurar produto..." value="${buscaEst.replace(/"/g, '')}"><select id="catEst"><option value="">Todas as categorias</option>${catsEst.map(c => `<option value="${c.slug}" ${filtroCatEst === c.slug ? 'selected' : ''}>${c.nome}</option>`).join('')}</select><select id="ckBaixoSel"><option value="">Tudo</option><option value="baixo" ${soBaixo ? 'selected' : ''}>Só quem está acabando</option></select></div>
   <div class="est-grid">${lista.map(p => {
-    const est = +p.estoque || 0;
-    const barra = Math.min(100, Math.round(est / 20 * 100));
+     const ilimitado = estoqueNaoControlado(p);
+     const est = ilimitado ? 0 : (+p.estoque || 0);
+     const barra = ilimitado ? 100 : Math.min(100, Math.round(est / 20 * 100));
     const corBarra = !(est > 0) ? '#E5AAAA' : (est <= 5 ? '#D99A4E' : '#7BAF8A');
      const mapa = p.controlaEstoquePorCor && p.estoquePorCor && typeof p.estoquePorCor === 'object' ? p.estoquePorCor : null;
-     const coresHtml = mapa && Object.keys(mapa).length ? `<div style="display:grid;gap:5px;margin-top:8px">${Object.entries(mapa).map(([cor, qtd]) => `<div style="display:flex;align-items:center;gap:6px;padding:5px 7px;border:1px solid #E6DCCF;border-radius:6px;background:#FCFAF7"><span style="flex:1"><b>${escWiz(cor)}</b><small style="display:block;color:var(--adm-mut)">estoque da cor</small></span><strong>${qtd} un.</strong><button class="btn-mini" onclick="mexerEstoqueCor('${p.id}',${JSON.stringify(cor)},1)">+</button><button class="btn-mini" onclick="mexerEstoqueCor('${p.id}',${JSON.stringify(cor)},-1)">−</button><button class="btn-mini" onclick="corrigirEstoqueCor('${p.id}',${JSON.stringify(cor)})">Corrigir</button></div>`).join('')}</div>` : '';
-     return `<div class="est-card"><div class="est-foto-wrap"><img class="pfoto" src="${fotoSrc(p)}" alt="">${badge(p)}<button class="est-mais" onclick="estoqueRapido('${p.id}',1)" title="Somar 1 sem abrir janela">+</button></div>`
-      + `<div class="est-info"><b>${p.nome}</b><small style="display:block;color:var(--adm-mut);font-size:10px">ID: ${codigo(p.id)}</small><div class="est-num">Você tem <b>${est} un.</b></div><div class="est-bar"><i style="width:${barra}%;background:${corBarra}"></i></div>${coresHtml}</div>`
-    + `<div class="est-acoes"><button class="btn-mini btn-add" onclick="mexerEstoque('${p.id}',1)">+ Adicionar</button>`
-    + `<button class="btn-mini" onclick="mexerEstoque('${p.id}',-1)">− Retirar</button>`
-    + `<button class="btn-mini" onclick="corrigirEstoque('${p.id}')">Corrigir</button></div></div>`;
+      const temCores = mapa && Object.keys(mapa).length;
+      return `<div class="est-card"><div class="est-foto-wrap"><img class="pfoto" src="${fotoSrc(p)}" alt="">${badge(p)}${ilimitado ? '' : `<button class="est-mais" onclick="estoqueRapido('${p.id}',1)" title="Somar 1 sem abrir janela">+</button>`}</div>`
+       + `<div class="est-info"><b>${p.nome}</b><small style="display:block;color:var(--adm-mut);font-size:10px">ID: ${codigo(p.id)}</small><div class="est-num">${ilimitado ? '<b>Sempre disponível</b>' : `Você tem <b>${est} un.</b>`}</div><div class="est-bar"><i style="width:${barra}%;background:${ilimitado ? '#7BAF8A' : corBarra}"></i></div>${temCores ? `<button class="btn-mini" style="margin-top:8px" onclick="verEstoqueCores('${p.id}')">Ver cores (${Object.keys(mapa).length})</button>` : ''}</div>`
+     + (ilimitado ? '<div class="est-acoes"><span class="chip-status">Estoque não controlado</span></div>' : `<div class="est-acoes"><button class="btn-mini btn-add" onclick="mexerEstoque('${p.id}',1)">+ Adicionar</button>`
+     + `<button class="btn-mini" onclick="mexerEstoque('${p.id}',-1)">− Retirar</button>`
+     + `<button class="btn-mini" onclick="corrigirEstoque('${p.id}')">Corrigir</button></div>`) + `</div>`;
   }).join('') || '<div class="vazio">Nada por aqui. Ajuste a busca.</div>'}</div></div>`;
   const q = document.getElementById('qEst');
   if (q) q.addEventListener('input', e => { buscaEst = e.target.value.toLowerCase(); const pos = e.target.selectionStart; rEstoque(); const q2 = document.getElementById('qEst'); if (q2) { q2.focus(); try { q2.setSelectionRange(pos, pos); } catch {} } });
@@ -1123,6 +1127,12 @@ function rEstoque() {
   if (sel) sel.addEventListener('change', e => { soBaixo = e.target.value === 'baixo'; rEstoque(); });
   const ck = document.getElementById('ckBaixo');
   if (ck) ck.addEventListener('change', e => { soBaixo = e.target.checked; rEstoque(); });
+}
+function verEstoqueCores(id) {
+  const p = DB.getProduct(id);
+  if (!p || !p.estoquePorCor) return;
+  const cores = Object.entries(p.estoquePorCor);
+  abrirModal(`<div class="est-modal"><h2 style="font-family:Georgia,serif;font-weight:400;color:#38271D;margin:0">Estoque por cor</h2><p class="chip-status" style="margin:6px 0 12px">${escWiz(p.nome)} &middot; ${cores.reduce((s, [,q]) => s + (+q || 0), 0)} pe&#231;as no total</p><div style="display:grid;gap:8px;max-height:55vh;overflow:auto">${cores.map(([cor, qtd]) => `<div style="display:flex;align-items:center;gap:8px;padding:9px;border:1px solid #E6DCCF;border-radius:8px;background:#FCFAF7"><b style="flex:1">${escWiz(cor)}</b><strong>${+qtd || 0} un.</strong><button class="btn-mini btn-add" onclick="mexerEstoqueCor('${p.id}',${JSON.stringify(cor)},1)">+</button><button class="btn-mini" onclick="mexerEstoqueCor('${p.id}',${JSON.stringify(cor)},-1)">&minus;</button><button class="btn-mini" onclick="corrigirEstoqueCor('${p.id}',${JSON.stringify(cor)})">Corrigir</button></div>`).join('')}</div><button class="btn btn-borda" style="width:100%;margin-top:12px" onclick="fecharModal()">Fechar</button></div>`);
 }
 function estoqueRapido(id, dir) {
   try { DB.adjustStock(id, dir); toast(dir > 0 ? '+1 peça!' : '−1 peça!'); rEstoque(); } catch { toast('Não consegui atualizar.'); }
