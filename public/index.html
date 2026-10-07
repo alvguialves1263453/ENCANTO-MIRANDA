@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Encanto Miranda — Moda Feminina</title>
+<meta name="description" content="Moda feminina: vestidos, croppeds, bodys, jeans e mais. Envio para todo o Brasil.">
+<link rel="stylesheet" href="assets/css/style.css?v=5">
+</head>
+<body>
+<div class="topbar"><div class="container">
+<div></div>
+<div><a href="como-comprar.html">Como comprar</a> &nbsp;&nbsp; <a href="contato.html">Contato</a></div>
+</div></div>
+
+<header class="header"><div class="container">
+<div class="header-top">
+<button class="hamb" id="drawerOpen" aria-label="Abrir categorias"><span></span><span></span><span></span><em>Categorias</em></button>
+<a class="logo" href="index.html"><img src="assets/img/logo.png" alt="Encanto Miranda"></a>
+<div class="h-actions">
+<a class="icon-btn cart" href="carrinho.html">Sacola <span class="cart-count">0</span></a>
+</div></div>
+<form class="busca busca-center"><input placeholder="Buscar por peça, tecido, cor..."><button aria-label="Buscar">—&gt;</button></form>
+</div></header>
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" id="drawer">
+<div class="drawer-head"><span>Categorias</span><button id="drawerClose" aria-label="Fechar">×</button></div>
+<ul class="sidebar-list" id="drawerCats"></ul>
+<div class="side-help">Precisa de ajuda?<br><a href="https://wa.me/5511968422230" target="_blank" style="color:#6B4A32;font-weight:800">Falar no WhatsApp →</a></div>
+</aside>
+
+<main class="container">
+<section class="hero hero-slider" id="heroSlider" aria-label="Destaques da loja">
+<button class="hero-arrow prev" type="button" aria-label="Banner anterior">‹</button><button class="hero-arrow next" type="button" aria-label="Próximo banner">›</button><div class="hero-dots" aria-label="Selecionar banner"></div>
+</section>
+
+<section><div class="sec-titulo" style="margin-top:32px"><h2>Destaques</h2><a href="categoria.html?cat=ver-tudo">Ver catálogo</a></div>
+<div class="grid" id="gridLanc"></div></section>
+
+<section><div class="sec-titulo"><h2>Novidades</h2><a href="categoria.html?cat=ver-tudo&filtro=lanc">Ver todas</a></div>
+<div class="grid" id="gridNov"></div></section>
+
+<section class="benefits">
+<div class="benefit"><b data-info="prazoEnvio">Envio em 2 dias úteis</b><span data-info="envioDetalhe">Correios com rastreio</span></div>
+<div class="benefit"><b data-pag-lista>Pix · Boleto · Cartão</b>Consulte as opções na sacola</div>
+<div class="benefit"><b data-info="atendimento">Atendimento</b><span data-info="horarioAtendimento">Seg a Sáb, 9h–18h</span></div>
+</section>
+</main>
+
+<footer><div class="container foot-grid">
+<div><a class="logo" href="index.html"><img src="assets/img/logo.png" alt="Encanto Miranda"></a><p style="font-size:13px;margin-top:12px">Moda feminina com envio para todo o Brasil.<br><br>Rua Ponche Verde, 49 — SP<br>contato@encantomiranda.com.br<br>(11) 96074-2598 / 96842-2230</p></div>
+<div><h4>Departamentos</h4><div id="footCats"></div></div>
+<div><h4>Ajuda</h4><a href="como-comprar.html">Como comprar</a><a href="trocas.html">Trocas e devoluções</a><a href="contato.html">Contato</a><a href="carrinho.html">Minha sacola</a></div>
+<div><h4>Institucional</h4><p style="font-size:13px">Trocas em até 30 dias<br>Envio em até 2 dias úteis<br><span data-pag-lista>Pix • Boleto • Cartão</span></p></div>
+</div><div class="copy">© 2026 Encanto Miranda — Todos os direitos reservados</div></footer>
+<a class="whats" href="https://wa.me/5511968422230?text=Olá! Gostaria de mais informações" target="_blank" aria-label="WhatsApp"><img src="assets/img/WhatsApp.png" alt="WhatsApp"></a>
+
+<script src="assets/js/data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2"><\/script>')</script>
+<script src="assets/js/supabase.js?v=2"></script>
+<script src="assets/js/loja-db.js?v=9"></script>
+<script src="assets/js/main.js?v=7"></script>
+<script>
+function bootLoja(){
+document.getElementById('footCats').innerHTML=CATEGORIAS.map(c=>`<a href="categoria.html?cat=${c.slug}">${c.nome}</a>`).join('');
+// Sem duplicar: Novidades exclui o que já está em Destaques
+const marcados = PRODUTOS.filter(p => p.destaque === true);
+const lanc = marcados.length ? marcados : PRODUTOS.slice(0, 8);
+const idsLanc = new Set(lanc.map(p => String(p.id)));
+const nov = PRODUTOS.filter(p => p.selo === 'lanc' && !idsLanc.has(String(p.id))).slice(0, 8);
+renderGrade(document.getElementById('gridLanc'), lanc);
+renderGrade(document.getElementById('gridNov'), nov.length ? nov : []);
+// NUVEM MANDA: se Supabase vazio, PRODUTOS/CATEGORIAS já vêm vazios aqui (sem flash do base).
+if(!PRODUTOS.length){document.getElementById('gridLanc').innerHTML='<p>Nenhum produto na nuvem ainda. Cadastre no <a href="admin/index.html">painel</a>.</p>';document.getElementById('gridNov').innerHTML='<p>Nada por aqui.</p>';}
+
+// Banners só-imagem do painel (/admin) — passam sozinhos no topo
+(function renderBanners(){
+  const box=document.getElementById('heroSlider');
+  const banners=((typeof DB!=='undefined'?DB.getSettings().banners:[])||[]).filter(b=>b && b.foto);
+  box.classList.add('banner-img');
+  box.insertAdjacentHTML('afterbegin', banners.map((b,i)=>{
+    const img=`<img src="${b.foto}" alt="Destaque ${i+1}" ${i>0?'loading="lazy"':''}>`;
+    const inner=`<div class="banner-img-wrap">${img}</div>`;
+    return b.link?`<a class="slide${i===0?' ativo':''}" href="${b.link}">${inner}</a>`:`<div class="slide${i===0?' ativo':''}">${inner}</div>`;
+  }).join('') || '<div class="slide ativo"><div class="banner-img-wrap banner-img-vazio">Adicione banners no painel</div></div>');
+})();
+
+// Banner rotativo: crossfade suave, setas, dots, swipe e pausa no hover
+const slider=document.querySelector('.hero-slider');
+if(slider){
+ const slides=[...slider.querySelectorAll('.slide')];
+ const dotsBox=slider.querySelector('.hero-dots');let atual=0, timer, animando=false;
+ slides.forEach((_,i)=>{const b=document.createElement('button');b.className='hero-dot'+(i===0?' ativo':'');b.type='button';b.setAttribute('aria-label','Mostrar banner '+(i+1));b.addEventListener('click',()=>mostrar(i));dotsBox.appendChild(b)});
+ const dots=[...dotsBox.querySelectorAll('.hero-dot')];
+ function mostrar(i){if(animando) return;animando=true;atual=(i+slides.length)%slides.length;slides.forEach((s,n)=>{s.classList.toggle('ativo',n===atual)});dots.forEach((d,n)=>{d.classList.toggle('ativo',n===atual)});reiniciar();setTimeout(()=>animando=false,950)}
+ function reiniciar(){clearInterval(timer);timer=setInterval(()=>{animando=false;mostrar(atual+1)},6000)}
+ slider.querySelector('.prev').addEventListener('click',()=>{animando=false;mostrar(atual-1)});
+ slider.querySelector('.next').addEventListener('click',()=>{animando=false;mostrar(atual+1)});
+ slider.addEventListener('mouseenter',()=>clearInterval(timer));
+ slider.addEventListener('mouseleave',reiniciar);
+ let toqueX=null;
+ slider.addEventListener('touchstart',e=>{toqueX=e.touches[0].clientX;clearInterval(timer)},{passive:true});
+  slider.addEventListener('touchend',e=>{if(toqueX===null) return;const dx=e.changedTouches[0].clientX-toqueX;if(Math.abs(dx)>40){animando=false;mostrar(atual+(dx<0?1:-1))}else reiniciar();toqueX=null},{passive:true});
+  reiniciar();
+}
+// quando o painel muda algo na nuvem, a loja se atualiza sozinha
+window.__syncRender=function(){ clearTimeout(window.__srt); window.__srt=setTimeout(function(){ location.reload(); },1500); };
+} // fim bootLoja
+// Espera a nuvem antes de renderizar: Supabase vazio = site vazio (sem mostrar base fixa)
+if(typeof DB!=='undefined'&&DB.ready&&typeof DB.ready.then==='function'){
+ document.getElementById('gridLanc').innerHTML='<p>Carregando loja...</p>';
+ document.getElementById('gridNov').innerHTML='<p>Carregando...</p>';
+ Promise.race([DB.ready,new Promise(r=>setTimeout(r,8000))]).then(bootLoja).catch(bootLoja);
+}else{bootLoja();}
+</script>
+</body></html>

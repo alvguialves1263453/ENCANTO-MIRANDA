@@ -1,0 +1,13 @@
+{
+  "name": "encanto-miranda",
+  "version": "1.0.0",
+  "description": "Site Encanto Miranda Atacado",
+  "scripts": {
+    "start": "live-server public --port=3000 --host=0.0.0.0 --open=/index.html",
+    "dev": "live-server public --port=3000 --host=0.0.0.0 --open=/index.html --watch=public",
+    "test": "node --test tests/*.test.cjs"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+}

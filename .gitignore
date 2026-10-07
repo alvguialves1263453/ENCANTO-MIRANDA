@@ -1,0 +1,14 @@
+# Dependências locais (não sobem para o Vercel/GitHub)
+node_modules/
+
+# Config do Vercel (gerado pelo CLI)
+.vercel/
+
+# SEGREDO — nunca publicar (chaves do Supabase e ImageKit)
+API.txt
+*.pem
+
+# Logs e sistema
+*.log
+.DS_Store
+Thumbs.db

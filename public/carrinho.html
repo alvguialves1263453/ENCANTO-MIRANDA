@@ -1,0 +1,194 @@
+<!DOCTYPE html><html lang="pt-BR"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Minha sacola — Encanto Miranda</title>
+<link rel="stylesheet" href="assets/css/style.css?v=5"></head><body>
+<div class="topbar"><div class="container"><div>Encanto Miranda · Moda feminina</div><div><a href="index.html">Início</a> &nbsp;&nbsp; <a href="categoria.html?cat=ver-tudo">Continuar comprando</a></div></div></div>
+<header class="header"><div class="container">
+<div class="header-top">
+<button class="hamb" id="drawerOpen" aria-label="Abrir categorias"><span></span><span></span><span></span><em>Categorias</em></button>
+<a class="logo" href="index.html"><img src="assets/img/logo.png" alt="Encanto Miranda"></a>
+<div class="h-actions">
+<a href="login.html">Entrar</a>
+<a class="icon-btn cart" href="carrinho.html">Sacola <span class="cart-count">0</span></a>
+</div></div>
+<form class="busca busca-center"><input placeholder="Buscar por peça, tecido, cor..."><button aria-label="Buscar">—&gt;</button></form>
+</div></header>
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" id="drawer">
+<div class="drawer-head"><span>Categorias</span><button id="drawerClose" aria-label="Fechar">×</button></div>
+<ul class="sidebar-list" id="drawerCats"></ul>
+<div class="side-help">Precisa de ajuda?<br><a href="https://wa.me/5511968422230" target="_blank" style="color:#6B4A32;font-weight:800">Falar no WhatsApp →</a></div>
+</aside>
+
+<main class="container">
+<div class="breadcrumb"><a href="index.html">INÍCIO</a> / <b>MINHA SACOLA</b></div>
+<h1 style="font-size:28px">Minha sacola</h1>
+<div class="cart-layout">
+<div id="lista"></div>
+<div class="resumo">
+<h3>Resumo</h3>
+<div class="campo" style="margin-top:10px"><label>Seu nome</label><input id="cliNome" placeholder="Como podemos te chamar?"></div>
+<div class="campo"><label>Seu WhatsApp</label><input id="cliFone" inputmode="tel" placeholder="(11) 99999-9999"></div>
+<div class="campo"><label>Seu endereço</label><input id="cliEndereco" placeholder="Rua, número, bairro, cidade - UF"></div>
+<div class="campo" id="cartPagWrap"><label>Pagamento</label><select id="pag"></select></div>
+<div class="campo"><label>Cupom de desconto (se tiver)</label><div style="display:flex;gap:8px"><input id="cupom" placeholder="CÓDIGO" style="flex:1;text-transform:uppercase"><button class="btn btn-borda" type="button" onclick="aplicarCupom()">OK</button></div></div>
+<div class="linha"><span>Subtotal (<span id="qtdT">0</span> peças)</span><b id="subT">R$0</b></div>
+<div class="linha" id="linhaDesc" style="display:none"><span>Desconto <b id="cupomNome"></b></span><b id="descT" style="color:#397a49">−R$0</b></div>
+<div class="linha total"><span>Total</span><span id="totalT" style="color:#6B4A32">R$0</span></div>
+<button class="btn btn-rosa" style="width:100%;margin-top:12px" onclick="finalizar()">FINALIZAR NO WHATSAPP →</button>
+<a class="btn btn-borda" style="width:100%;margin-top:8px" href="categoria.html?cat=ver-tudo">CONTINUAR COMPRANDO</a>
+<p style="font-size:12px;color:#6b7280;margin-top:10px">Ao finalizar geramos o pedido e te chamamos no WhatsApp. As formas disponíveis aparecem na sacola.</p>
+</div></div></main>
+
+<footer><div class="container foot-grid">
+<div><a class="logo" href="index.html"><img src="assets/img/logo.png" alt="Encanto Miranda"></a></div>
+<div><h4>AJUDA</h4><a href="como-comprar.html">Como Comprar</a><a href="trocas.html">Trocas</a><a href="contato.html">Contato</a></div>
+<div><h4>ATENDIMENTO</h4><p style="font-size:13px">Atendimento pelo WhatsApp</p></div>
+<div id="cartPagInfo"><h4>PAGAMENTO</h4><p style="font-size:13px" data-pag-lista>Pix • Boleto • Cartão</p></div>
+</div><div class="copy">© 2026 Encanto Miranda — Todos os direitos reservados</div></footer>
+
+<script src="assets/js/data.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2"><\/script>')</script><script src="assets/js/supabase.js?v=2"></script><script src="assets/js/loja-db.js?v=9"></script><script src="assets/js/main.js?v=7"></script>
+<script>
+let cupomAplicado=null;
+function carrinhoValido(){
+  let cart=getCart();
+  const antes=JSON.stringify(cart);
+  cart=cart.filter(it=>{ try{ return !!prodById(it.id); }catch{ return false; } });
+  cart.forEach(it=>{
+    try {
+      const p=prodById(it.id);
+      if(p && (+p.estoque > 0)) it.qtd=Math.max(1,Math.min(it.qtd||1,+p.estoque));
+    } catch {}
+  });
+  if(JSON.stringify(cart)!==antes) saveCart(cart);
+  return cart;
+}
+const itemEsgotado = it => { try { const p=prodById(it.id); return !(p && (+p.estoque > 0)); } catch { return true; } };
+function renderCart(){
+  const cart=carrinhoValido(); const box=document.getElementById('lista');
+  const ok=cart.filter(it=>!itemEsgotado(it));
+  const off=cart.filter(it=>itemEsgotado(it));
+  if(!cart.length){ box.innerHTML=`<div class="form-card" style="text-align:center;padding:50px"><h2>Sua sacola está vazia</h2><p style="color:#6b7280">Veja as novidades e monte seu look.</p><br><a class="btn btn-rosa" href="categoria.html?cat=ver-tudo">COMEÇAR A COMPRAR</a></div>`; }
+  else box.innerHTML=cart.map((it,i)=>{ const p=prodById(it.id); const esg=itemEsgotado(it); return `<div class="cart-item"${esg ? ' style="opacity:.85"' : ''}>
+    <a href="produto.html?id=${encodeURIComponent(p.id)}"><img src="${imgProduto(p,1)}"${esg ? ' style="filter:grayscale(1)"' : ''}></a>
+    <div><b style="font-size:13.5px">${p.nome}</b> ${esg ? '<span class="selo selo-esgotado" style="margin-left:6px">Esgotado</span>' : ''}<div style="font-size:12.5px;color:#6b7280">${it.cor} • Tam ${it.tam} • ${BRL(p.preco)} un.</div>
+    ${esg ? '<div style="font-size:12px;color:#8F2B2B;font-weight:700;margin-top:8px">Sem estoque — não dá para finalizar.</div>' : `<div class="qtd" style="margin-top:8px"><button onclick="altQtd(${i},-1)">−</button><span>${it.qtd}</span><button onclick="altQtd(${i},1)">+</button></div>`}</div>
+    <div style="text-align:right"><b>${esg ? '—' : BRL(p.preco*it.qtd)}</b><br><button onclick="remItem(${i})" style="border:0;background:none;color:#6B4A32;cursor:pointer;font-size:12px;font-weight:800">remover</button></div></div>`; }).join('')
+    + (off.length ? `<div class="alerta">⚠ ${off.length} item(ns) esgotado(s) na sacola — remova para finalizar no WhatsApp.</div>` : '');
+  const qtd=ok.reduce((s,i)=>s+i.qtd,0);
+  const sub=ok.reduce((s,i)=>{ try{ return s+prodById(i.id).preco*i.qtd; }catch{ return s; } },0);
+  document.getElementById('qtdT').textContent=qtd;
+  document.getElementById('subT').textContent=BRL(sub);
+  calcTotal();
+}
+function altQtd(i,d){
+  const c=getCart();
+  try {
+    const p=prodById(c[i].id);
+    if(!(p && (+p.estoque > 0))) { toast('Produto esgotado'); return; }
+    c[i].qtd=Math.max(1,Math.min((+p.estoque),c[i].qtd+d)); saveCart(c); renderCart();
+  } catch { c[i].qtd=Math.max(1,c[i].qtd+d); saveCart(c); renderCart(); }
+}
+function remItem(i){ const c=getCart(); c.splice(i,1); saveCart(c); renderCart(); }
+function subtotal(){ return carrinhoValido().filter(it=>!itemEsgotado(it)).reduce((s,i)=>{ try{ return s+prodById(i.id).preco*i.qtd; }catch{ return s; } },0); }
+function montarPagamento(){
+  const st=(typeof DB!=='undefined')?DB.getSettings():{pagamento:{pix:true,boleto:true,cartao:true,extras:[]}};
+  const pg=st.pagamento||{};
+  const ops=[];
+  if(pg.pix!==false) ops.push('<option value="pix">Pix</option>');
+  if(pg.boleto!==false) ops.push('<option value="boleto">Boleto bancário</option>');
+  if(pg.cartao!==false) ops.push('<option value="cartao">Cartão de crédito em até 6x</option>');
+  (Array.isArray(pg.extras)?pg.extras:[]).forEach(n=>{
+    const nome=String(n||'').trim().slice(0,30);
+    if(!nome) return;
+    const v='extra:'+nome.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+    ops.push(`<option value="${v}">${nome.replace(/</g,'&lt;')}</option>`);
+  });
+  document.getElementById('pag').innerHTML=ops.join('')||'<option value="pix">Pix</option>';
+  const mostrar=pg.mostrarCarrinho!==false;
+  const campo=document.getElementById('cartPagWrap'), info=document.getElementById('cartPagInfo');
+  if(campo) campo.style.display=mostrar?'':'none';
+  if(info) info.style.display=mostrar?'':'none';
+}
+function aplicarCupom(){
+  const cod=document.getElementById('cupom').value.trim();
+  if(!cod) return toast('Digite o código do cupom.');
+  if(typeof DB==='undefined') return toast('Cupom indisponível no momento.');
+  const r=DB.validateCoupon(cod, subtotal());
+  if(r.erro){ cupomAplicado=null; toast(r.erro); }
+  else{ cupomAplicado=r.cupom; toast('Cupom aplicado: '+r.cupom.codigo); }
+  try{ sessionStorage.setItem('em_cupom', cupomAplicado?cupomAplicado.codigo:''); }catch{}
+  calcTotal();
+}
+function calcTotal(){
+  const sub=subtotal();
+  let desc=0;
+  if(cupomAplicado && typeof DB!=='undefined'){
+    const r=DB.validateCoupon(cupomAplicado.codigo, sub);
+    if(r.erro){ cupomAplicado=null; try{sessionStorage.removeItem('em_cupom');}catch{} }
+    else desc=r.desconto;
+  }
+  const total=Math.max(0, sub-desc);
+  document.getElementById('subT').textContent=BRL(sub);
+  document.getElementById('linhaDesc').style.display=desc>0?'flex':'none';
+  if(desc>0){ document.getElementById('cupomNome').textContent='('+cupomAplicado.codigo+')'; document.getElementById('descT').textContent='−'+BRL(desc); }
+  document.getElementById('totalT').textContent=BRL(total);
+  return {sub, desc, total};
+}
+function codigoProduto(id){
+  const s=String(id==null?'':id); if(/^p\d+$/i.test(s)) return 'P'+s.slice(1);
+  let h=0; for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0;
+  return 'P'+(h%60466176).toString(36).toUpperCase().padStart(5,'0');
+}
+function mensagemPedidoWhatsApp(dados){
+  const cfg=(typeof DB!=='undefined'&&DB.getSettings().whatsappConfig)||{};
+  let texto=String(cfg.mensagemPedido||'Olá! Sou [nome], quero finalizar meu pedido [pedido] na [loja].\n\n[itens]\n\nTotal: [valor total]\nPagamento: [pagamento]');
+  const primeiro=dados.itens[0]||{};
+  const valores={
+    '[nome]':dados.nome,'[cliente]':dados.nome,'[telefone]':dados.fone,'[endereco]':dados.endereco,'[pedido]':dados.numero,
+    '[produto]':primeiro.nome ? `${primeiro.nome} (ID: ${codigoProduto(primeiro.id)})` : '', '[id produto]':codigoProduto(primeiro.id),
+    '[itens]':dados.itens.map(i=>`• ${i.qtd}x ${i.nome} (ID: ${codigoProduto(i.id)}) (${i.cor||''}/${i.tam||''})`).join('\n'),
+    '[valor]':BRL(primeiro.preco||0),'[subtotal]':BRL(dados.sub),'[desconto]':BRL(dados.desc),
+    '[valor total]':BRL(dados.total),'[cupom]':dados.cupom||'Nenhum','[pagamento]':dados.pag||'Não informado',
+    '[loja]':(typeof DB!=='undefined'?DB.getSettings().nomeLoja:'Encanto Miranda')
+  };
+  Object.keys(valores).forEach(chave=>{ texto=texto.split(chave).join(valores[chave]); });
+  return texto;
+}
+function finalizar(){
+  let cart=carrinhoValido().filter(it=>!itemEsgotado(it));
+  const removidos=carrinhoValido().length-cart.length;
+  if(removidos>0){ saveCart(cart); renderCart(); toast('Itens esgotados foram removidos.'); }
+  if(!cart.length) return toast('Sua sacola está vazia ou só tem esgotados');
+  const nome=document.getElementById('cliNome').value.trim();
+  const fone=document.getElementById('cliFone').value.trim();
+  const endereco=document.getElementById('cliEndereco').value.trim();
+  if(!nome) return toast('Diga seu nome para finalizar.');
+  if(fone.replace(/\D/g,'').length<10) return toast('Digite seu WhatsApp com DDD.');
+  if(!endereco) return toast('Digite seu endereço para entrega.');
+  const {sub, desc, total}=calcTotal();
+  const itens=cart.map(i=>{const p=prodById(i.id);return {id:p.id, nome:p.nome, cor:i.cor, tam:i.tam, qtd:i.qtd, preco:p.preco};});
+  const pag=document.getElementById('pag');
+  const pagTxt=pag.options[pag.selectedIndex]?pag.options[pag.selectedIndex].text:'';
+  let numero='—';
+  try{
+    if(typeof DB!=='undefined'){
+      const ped=DB.logOrder({nome, fone, endereco, itens, subtotal:sub, desconto:desc, total, pag:pagTxt, cupom:cupomAplicado?cupomAplicado.codigo:''});
+      numero=ped.numero;
+    }
+  }catch{}
+  const txt=encodeURIComponent(mensagemPedidoWhatsApp({nome,fone,endereco,numero,itens,sub,desc,total,pag:pagTxt,cupom:cupomAplicado?cupomAplicado.codigo:''}));
+  saveCart([]); cupomAplicado=null;
+  try{ sessionStorage.removeItem('em_cupom'); }catch{}
+  renderCart();
+  const st=(typeof DB!=='undefined')?DB.getSettings().whatsapp:'5511968422230';
+  window.open(`https://wa.me/${st}?text=${txt}`,'_blank');
+}
+montarPagamento();
+try{ const salvo=sessionStorage.getItem('em_cupom'); if(salvo){ document.getElementById('cupom').value=salvo; const r=DB.validateCoupon(salvo, subtotal()); if(!r.erro) cupomAplicado=r.cupom; } }catch{}
+document.getElementById('pag').addEventListener('change',calcTotal);
+renderCart();
+// quando o painel muda algo na nuvem, a sacola se atualiza sozinha (sem apagar o que você digitou)
+window.__syncRender=function(){ try{ if(window.__rebuildMenus) window.__rebuildMenus(); montarPagamento(); renderCart(); }catch{} };
+try{ if(typeof DB!=='undefined' && DB.ready) DB.ready.then(()=>{ montarPagamento(); renderCart(); }).catch(()=>{}); }catch{}
+</script></body></html>

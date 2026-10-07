@@ -1,0 +1,50 @@
+<!DOCTYPE html><html lang="pt-BR"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Contato — Encanto Miranda</title>
+<link rel="stylesheet" href="assets/css/style.css?v=5"></head><body>
+<div class="topbar"><div class="container"><div>Trocas em até 30 dias</div><div><a href="index.html">Início</a> &nbsp;&nbsp; <a href="login.html">Meus Pedidos</a></div></div></div>
+<header class="header"><div class="container">
+<div class="header-top">
+<button class="hamb" id="drawerOpen" aria-label="Abrir categorias"><span></span><span></span><span></span><em>Categorias</em></button>
+<a class="logo" href="index.html"><img src="assets/img/logo.png" alt="Encanto Miranda"></a>
+<div class="h-actions">
+<a href="login.html">Entrar</a>
+<a class="icon-btn cart" href="carrinho.html">Sacola <span class="cart-count">0</span></a>
+</div></div>
+<form class="busca busca-center"><input placeholder="Buscar por peça, tecido, cor..."><button aria-label="Buscar">—&gt;</button></form>
+</div></header>
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" id="drawer">
+<div class="drawer-head"><span>Categorias</span><button id="drawerClose" aria-label="Fechar">×</button></div>
+<ul class="sidebar-list" id="drawerCats"></ul>
+<div class="side-help">Precisa de ajuda?<br><a href="https://wa.me/5511968422230" target="_blank" style="color:#6B4A32;font-weight:800">Falar no WhatsApp →</a></div>
+</aside>
+<main class="container">
+<div class="breadcrumb"><a href="index.html">INÍCIO</a> / <b>CONTATO</b></div>
+<h1>Contato</h1><p style="color:#6b7280">Dúvidas sobre produtos, status de pedido ou trocas? <span data-info="atendimento">Atendimento</span> de <span data-info="horarioAtendimento">Seg a Sáb, 9h–18h</span>.</p>
+<div class="info-contato">
+<div class="benefit"><div><b>(11) 96074-2598</b>(11) 96842-2230 WhatsApp</div></div>
+<div class="benefit"><div><b>contato@encantomiranda.com.br</b>respondemos em 1 dia útil</div></div>
+<div class="benefit"><div><b>Rua Ponche Verde, 49 - SP</b>CEP 03588-000 • <span data-info="horarioAtendimento">Seg a Sáb, 9h–18h</span></div></div>
+</div>
+<div class="layout-2">
+<div class="form-card"><h3>Envie uma mensagem</h3><br>
+<div class="form-grid"><div class="campo"><label>Nome</label><input id="n" placeholder="Seu nome"></div>
+<div class="campo"><label>WhatsApp</label><input id="w" placeholder="(11) 99999-9999"></div>
+<div class="campo"><label>E-mail</label><input id="e" placeholder="voce@loja.com"></div>
+<div class="campo"><label>Assunto</label><select id="a"><option>Atendimento ao cliente</option><option>Dúvida de pedido</option><option>Troca / defeito</option><option>Parceria</option></select></div>
+<div class="campo full"><label>Mensagem</label><textarea id="m" rows="5" placeholder="Olá! Gostaria de saber..."></textarea></div></div>
+<br><button class="btn btn-rosa" style="width:100%" onclick="enviar()">ENVIAR VIA WHATSAPP →</button></div>
+<div class="form-card"><h3>Perguntas frequentes</h3><div class="tabs" style="border:0;margin-top:10px">
+<details open><summary>Qual o prazo de envio?</summary><p class="texto">Enviamos em até 2 dias úteis após a confirmação do pagamento, com código de rastreio.</p></details>
+<details><summary>Vocês enviam para todo Brasil?</summary><p class="texto">Sim, via Correios. O frete é calculado na sacola pelo CEP.</p></details>
+<details><summary>Quais formas de pagamento?</summary><p class="texto">As formas de pagamento habilitadas aparecem na sacola e podem ser conferidas antes de finalizar o pedido.</p></details>
+<details><summary>Tem loja física?</summary><p class="texto">Retirada em SP na Rua Ponche Verde, 49. Fale no WhatsApp antes.</p></details>
+</div><br><a class="btn btn-preto" style="width:100%" href="como-comprar.html">VER COMO COMPRAR</a></div>
+</div></main>
+<footer><div class="container foot-grid"><div><a class="logo" href="index.html"><img src="assets/img/logo.png" alt="Encanto Miranda"></a></div><div><h4>AJUDA</h4><a href="como-comprar.html">Como Comprar</a><a href="trocas.html">Trocas</a></div><div><h4>ENTREGA</h4><p style="font-size:13px">Envio em até 2 dias úteis</p></div><div><h4>CONTATO</h4><p style="font-size:13px">(11) 96074-2598<br>contato@encantomiranda.com.br</p></div></div><div class="copy">© 2026 Encanto Miranda — Todos os direitos reservados</div></footer>
+<a class="whats" href="https://wa.me/5511968422230" target="_blank" aria-label="Falar no WhatsApp"><img src="assets/img/WhatsApp.png" alt="WhatsApp"></a>
+<script src="assets/js/data.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2"><\/script>')</script><script src="assets/js/supabase.js?v=2"></script><script src="assets/js/loja-db.js?v=9"></script><script src="assets/js/main.js?v=7"></script>
+<script>
+function enviar(){const t=`Olá! Sou ${document.getElementById('n').value} - ${document.getElementById('a').value}: ${document.getElementById('m').value} (Meu zap: ${document.getElementById('w').value})`;window.open('https://wa.me/5511968422230?text='+encodeURIComponent(t),'_blank');toast('Abrindo WhatsApp...');}
+</script></body></html>

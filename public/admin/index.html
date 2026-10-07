@@ -1,0 +1,1719 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin — Encanto Miranda</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="../assets/css/style.css?v=5">
+<style>
+:root{--adm:#78583E;--adm-dark:#38271D;--adm-bg:#F8F5F0;--adm-card:#fffdfa;--adm-line:#E6DCCF;--adm-mut:#857568}
+body{background:var(--adm-bg)}
+.login-card{max-width:400px;margin:8vh auto;background:var(--adm-card);border:1px solid var(--adm-line);border-radius:10px;padding:36px 32px;box-shadow:0 24px 60px -24px rgba(56,39,29,.28);text-align:center}
+.login-card img{height:56px;margin:0 auto 16px}
+.login-card h1{font-family:Georgia,serif;font-weight:400;font-size:26px;color:var(--adm-dark);margin-bottom:6px}
+.login-card p{font-size:13px;color:var(--adm-mut);margin-bottom:20px}
+.login-card .campo{text-align:left;margin-bottom:12px}
+.login-card .campo input{width:100%}
+.login-erro{display:none;background:#FDECEC;border:1px solid #F3B8B8;color:#8F2B2B;font-size:13px;border-radius:6px;padding:10px;margin-bottom:12px}
+.login-dica{margin-top:14px;font-size:11px;color:#9A8978}
+#app{display:none;min-height:100vh}
+.adm-shell{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
+.adm-side{background:var(--adm-dark);color:#D7C8B7;padding:20px 12px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.adm-side .logo img{height:38px;filter:brightness(0) invert(1);margin:0 0 4px 8px}
+.adm-side small{display:block;font-size:10px;letter-spacing:.14em;color:#B8A592;margin:0 0 16px 8px}
+.adm-nav button{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;color:#D7C8B7;font-size:13.5px;font-weight:600;padding:12px 12px;border-radius:8px;cursor:pointer;margin-bottom:2px;text-align:left}
+.adm-nav button i{font-style:normal;width:22px;text-align:center;font-size:16px}
+.adm-nav button:hover{background:color-mix(in srgb,var(--adm) 55%,white);color:#fff}
+.adm-nav button.ativo{background:var(--adm);color:#fff}
+.adm-main{padding:28px clamp(16px,3vw,36px) 70px;max-width:1050px}
+.adm-main h2{font-family:Georgia,serif;font-weight:400;font-size:30px;color:var(--adm-dark);margin-bottom:4px}
+.adm-sub{font-size:13.5px;color:var(--adm-mut);margin-bottom:20px}
+.card{background:var(--adm-card);border:1px solid var(--adm-line);border-radius:10px;padding:20px;box-shadow:0 8px 22px -12px rgba(56,39,29,.18);margin-bottom:14px}
+.btn-grande{font-size:14px!important;padding:16px 26px!important}
+.frase{font-size:15px;color:#463426;padding:12px 0;border-bottom:1px dashed var(--adm-line)}
+.frase:last-child{border-bottom:0}
+.frase b{color:var(--adm-dark)}
+.atalhos{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+table.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--adm-mut);padding:10px;border-bottom:1px solid var(--adm-line)}
+.tbl td{padding:10px;border-bottom:1px solid #EFE7DB;vertical-align:middle}
+.tbl tr:hover td{background:#FBF7F1}
+.pfoto{width:46px;height:58px;object-fit:cover;border-radius:6px;border:1px solid var(--adm-line)}
+.badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:999px;background:#F1E7DA;color:#5A422F;white-space:nowrap}
+.badge.promo{background:var(--adm);color:#fff}
+.badge.lanc{background:#E4EFE4;color:#397a49}
+.badge.baixo{background:#FBEEDF;color:#9A5B1E}
+.badge.zero{background:#FDECEC;color:#8F2B2B}
+.badge.ok{background:#E4EFE4;color:#397a49}
+.btn-mini{border:1px solid #DCCDBB;background:#fff;border-radius:6px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;color:#5A422F;margin:2px}
+.btn-mini:hover{background:#F2E8DC}
+.btn-mini.perigo{color:#8F2B2B;border-color:#E5AAAA}
+.toolbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.toolbar input,.toolbar select{padding:12px 14px;border:1px solid #DCCDBB;border-radius:8px;font-size:13px;background:#fff;flex:1;min-width:180px}
+.form label{display:block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--adm-mut);margin:14px 0 6px}
+.form input[type=text],.form input[type=number],.form input[type=date],.form select,.form textarea{width:100%;padding:12px 14px;border:1px solid #DCCDBB;border-radius:8px;font-size:14px;background:#fff;font-family:inherit}
+.form textarea{min-height:80px;resize:vertical}
+.form input:focus,.form select:focus,.form textarea:focus{border-color:var(--adm);outline:none;box-shadow:0 0 0 3px rgba(120,88,62,.12)}
+.passos{display:flex;gap:6px;margin-bottom:18px}
+.passos span{flex:1;text-align:center;font-size:11px;font-weight:700;color:var(--adm-mut);padding:8px 4px;border-radius:6px;background:#F1E7DA}
+.passos span.on{background:var(--adm);color:#fff}
+.modal-fundo{position:fixed;inset:0;background:rgba(36,26,20,.5);z-index:200;display:none;align-items:flex-start;justify-content:center;padding:24px 12px;overflow-y:auto}
+.modal-fundo.aberto{display:flex}
+.modal{background:var(--adm-card);border-radius:12px;max-width:640px;width:100%;padding:26px;box-shadow:0 30px 80px -20px rgba(0,0,0,.4)}
+.galeria{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:8px}
+.galeria img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:6px;border:2px solid transparent;cursor:pointer}
+.galeria img.sel{border-color:var(--adm)}
+.prev-foto{width:110px;height:140px;object-fit:cover;border-radius:8px;border:1px solid var(--adm-line);margin-top:8px}
+.chip-status{font-size:12px;color:var(--adm-mut)}
+.pedido{border:1px solid var(--adm-line);border-radius:10px;padding:16px;margin-bottom:12px;background:#fff}
+.pedido .det{display:none;margin-top:12px;border-top:1px dashed var(--adm-line);padding-top:12px;font-size:13px}
+.pedido.aberto .det{display:block}
+.swatches{display:flex;gap:8px;margin:8px 0}
+.swatches button{width:38px;height:38px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #DCCDBB;cursor:pointer}
+.swatches button.sel{box-shadow:0 0 0 2px var(--adm-dark)}
+.ajuda-card h3{font-family:Georgia,serif;font-weight:400;font-size:19px;color:var(--adm-dark);margin-bottom:8px}
+.ajuda-card ol{padding-left:20px;font-size:13.5px;color:#463426;line-height:1.9}
+.vazio{text-align:center;padding:36px;color:var(--adm-mut);font-size:14px}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px}
+.pcard{background:var(--adm-card);border:1px solid var(--adm-line);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 22px -12px rgba(56,39,29,.18)}
+.pimg{position:relative;aspect-ratio:3/4;background:#EEE4D8;overflow:hidden}
+.pimg img{width:100%;height:100%;object-fit:cover;display:block}
+.pimg .badge{position:absolute;top:6px;left:6px;font-size:9px;padding:3px 8px}
+.pbody{padding:10px;display:flex;flex-direction:column;gap:5px;flex:1}
+.pbody b{font-size:12px;color:#38271D;line-height:1.35}
+.pinfo{font-size:11.5px;color:var(--adm-mut)}
+.pbtns{display:flex;gap:5px;flex-wrap:wrap;margin-top:auto;padding-top:5px}
+.pbtns .btn-mini{flex:1;text-align:center;white-space:nowrap;padding:6px 6px;font-size:11px}
+.secao{display:none}
+.secao.on{display:block;animation:entrar .35s ease}
+@keyframes entrar{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.topo-mobile{display:none;background:var(--adm-dark);color:#fff;padding:12px 16px;position:sticky;top:0;z-index:100}
+.topo-mobile select{width:100%;padding:10px;border-radius:8px;border:0;font-size:14px}
+@media(max-width:860px){
+  .adm-shell{grid-template-columns:1fr}
+  .adm-side{display:none}
+  .topo-mobile{display:block}
+  .galeria{grid-template-columns:repeat(4,1fr)}
+  .tbl th:nth-child(1),.tbl td:nth-child(1){display:none}
+}
+/* Editor de produto: seções, prévia e atalhos */
+.modal-fundo{align-items:center;padding:12px}
+.modal.modal-mini{max-width:820px;padding:0;overflow:hidden}
+.modal-mini .wiz-head{padding:18px 20px 12px;border-bottom:1px solid var(--adm-line);background:#fff}
+.modal-mini .wiz-head h2{font-family:Georgia,serif;font-weight:400;color:var(--adm-dark);font-size:22px;margin:0}
+.modal-mini .wiz-head p{margin:4px 0 0}
+.modal-mini .wiz-body{padding:14px 16px;background:#F8F5F0;max-height:72vh;overflow-y:auto}
+.modal-mini .wiz-foot{padding:12px 16px;border-top:1px solid var(--adm-line);background:#fff;display:flex;gap:8px;position:sticky;bottom:0}
+.mini-layout{display:grid;grid-template-columns:1fr 230px;gap:14px;align-items:start}
+.wiz-sec{background:#fff;border:1px solid var(--adm-line);border-radius:12px;padding:12px;margin-bottom:10px}
+.wiz-sec h3{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--adm-dark);margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.wiz-sec h3 .n{width:20px;height:20px;border-radius:50%;background:var(--adm);color:#fff;font-size:11px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+.wiz-sec .hint{font-size:12px;color:var(--adm-mut);margin-top:6px;line-height:1.5}
+.fld-req{color:#B3261E;font-weight:800}
+.chip-pick{display:inline-flex;align-items:center;border:1px solid #DCCDBB;background:#fff;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;color:#5A422F;margin:0 6px 6px 0}
+.chip-pick.on{background:var(--adm-dark);border-color:var(--adm-dark);color:#fff}
+.est-row{display:flex;gap:8px;align-items:center}
+.est-row input{text-align:center}
+.step-btn{width:38px;height:38px;border-radius:8px;border:1px solid #DCCDBB;background:#fff;font-size:18px;font-weight:800;cursor:pointer;color:#5A422F;flex:0 0 auto}
+.step-btn:hover{background:#F2E8DC}
+.switch-row{display:flex;gap:10px;align-items:center;background:#F8F5F0;border:1px dashed var(--adm-line);border-radius:8px;padding:8px 10px;margin-top:8px;font-size:13px;color:#5A422F}
+.foto-drop{border:1.5px dashed #CBB89F;border-radius:10px;background:#FFFEFB;padding:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.mini-prev-card{border:1px solid var(--adm-line);border-radius:10px;overflow:hidden;background:#fff;position:sticky;top:0}
+.mini-prev-card .mp-img{aspect-ratio:3/4;background:#EEE4D8;overflow:hidden}
+.mini-prev-card .mp-img img{width:100%;height:100%;object-fit:cover;display:block}
+.mini-prev-card .mp-body{padding:10px 10px 12px}
+.mini-prev-card .mp-body b{display:block;font-size:12.5px;color:#38271D;line-height:1.35;min-height:34px}
+.mini-prev-card .mp-cat{font-size:10px;letter-spacing:.08em;color:#9A8978;text-transform:uppercase}
+.mini-prev-card .mp-preco{font-size:17px;font-weight:800;color:#38271D;margin-top:4px}
+.mini-prev-card .mp-ant{font-size:11.5px;color:#9A8978;text-decoration:line-through}
+.mini-prev-card .mp-est{font-size:11px;color:#857568;margin-top:2px}
+@media(max-width:640px){.modal.modal-mini{max-width:480px}.mini-layout{grid-template-columns:1fr}.mini-prev-card{order:-1}.mini-prev-card .mp-img{aspect-ratio:16/9}}
+.mini-grid{display:grid;grid-template-columns:1fr 110px 90px;gap:8px}
+.mini-grid .form label{margin:8px 0 4px}
+.mini-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.form.compacto label{margin:8px 0 4px}
+.form.compacto input[type=text],.form.compacto input[type=number],.form.compacto select{padding:9px 10px;font-size:13.5px}
+.fotos-mini{display:flex;gap:6px;overflow-x:auto;padding:6px 2px;max-width:100%}
+.fotos-mini img{width:44px;height:56px;object-fit:cover;border-radius:6px;border:2px solid transparent;cursor:pointer;flex:0 0 auto}
+.fotos-mini img.sel{border-color:var(--adm)}
+.mini-top{display:flex;gap:10px;align-items:center}
+.mini-prev{width:52px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--adm-line);flex:0 0 auto}
+.wgal{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px}
+.wfoto{position:relative;aspect-ratio:3/4;border-radius:8px;overflow:hidden;border:2px solid transparent;background:#EEE4D8;cursor:grab}
+.wfoto.capa{border-color:var(--adm)}
+.wfoto img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.wfoto .xc{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(0,0,0,.65);color:#fff;font-size:13px;line-height:1;cursor:pointer}
+.wfoto .tagc{position:absolute;left:4px;bottom:4px;font-size:9px;font-weight:800;letter-spacing:.06em;background:var(--adm);color:#fff;border-radius:999px;padding:3px 8px;text-transform:uppercase}
+.wfoto.arrast{opacity:.4}
+.wfoto.loading{display:flex;align-items:center;justify-content:center;background:linear-gradient(100deg,#EFE7DB 40%,#F8F3EC 50%,#EFE7DB 60%);background-size:200% 100%;animation:wload 1.2s infinite;cursor:wait}
+.wfoto.loading .spin{width:22px;height:22px;border-radius:50%;border:3px solid #DCCDBB;border-top-color:var(--adm);animation:girar .8s linear infinite}
+@keyframes wload{to{background-position:-200% 0}}
+@keyframes girar{to{transform:rotate(360deg)}}
+details.mini-opt{margin-top:8px;border:1px dashed var(--adm-line);border-radius:8px;padding:8px 10px}
+details.mini-opt summary{cursor:pointer;font-size:13px;font-weight:700;color:#5A422F}
+/* Estoque: resumo + cartões + modal de movimentação */
+.est-resumo{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.est-box{background:var(--adm-card);border:1px solid var(--adm-line);border-radius:10px;padding:12px;text-align:center}
+.est-box b{display:block;font-size:22px;color:var(--adm-dark)}
+.est-box span{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--adm-mut);font-weight:700}
+.est-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:12px}
+.est-card{background:var(--adm-card);border:1px solid var(--adm-line);border-radius:12px;padding:0;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 22px -14px rgba(56,39,29,.25)}
+.est-foto-wrap{position:relative;background:#EEE4D8;aspect-ratio:4/3;overflow:hidden}
+.est-foto-wrap .pfoto{width:100%;height:100%;border:0;border-radius:0;object-fit:cover}
+.est-foto-wrap .badge{position:absolute;top:8px;left:8px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.est-foto-wrap .est-mais{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;border:0;background:rgba(56,39,29,.85);color:#fff;font-size:16px;font-weight:800;cursor:pointer;line-height:1}
+.est-info{flex:1;min-width:0;padding:10px 12px 0}
+.est-info b{display:block;font-size:13px;color:#38271D;line-height:1.4;min-height:36px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.est-num{font-size:12.5px;color:#5A422F;margin:6px 0 2px;display:flex;align-items:center;gap:6px}
+.est-num b{font-size:17px;display:inline;color:#38271D}
+.est-bar{height:6px;background:#F1E7DA;border-radius:99px;overflow:hidden;margin:6px 0 10px}
+.est-bar i{display:block;height:100%;background:var(--adm);border-radius:99px}
+.est-acoes{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 12px 12px}
+.est-acoes .btn-mini{margin:0;text-align:center;padding:9px 6px}
+.est-acoes .btn-add{grid-column:1/-1;background:var(--adm-dark);color:#fff;border-color:var(--adm-dark)}
+.est-acoes .btn-add:hover{background:#5a412f}
+.est-modal{max-width:420px;width:100%;margin:0 auto;text-align:center}
+.est-modal .est-prod,.est-modal .est-prev{text-align:left}
+.est-modal .est-prod .badge{margin-left:auto}
+/* Banners só-imagem: cards + editor ampliado */
+.banner-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin:14px 0}
+.banner-card{border:1px solid var(--adm-line);border-radius:12px;overflow:hidden;background:#FBF7F1;padding:0;text-align:left;cursor:pointer;transition:transform .18s,box-shadow .18s,border-color .18s}
+.banner-card:hover{transform:translateY(-2px);border-color:#B99A7B;box-shadow:0 12px 24px -16px rgba(56,39,29,.45)}
+.banner-card-thumb{border:0;background:#EEE4D8;aspect-ratio:16/7;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.banner-card-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.banner-card-info{padding:10px 11px;display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--adm-dark);font-size:13px}
+.banner-card-info small{color:var(--adm-mut);font-size:11px;white-space:nowrap}
+.banner-prev{border:1px solid var(--adm-line);border-radius:10px;overflow:hidden;background:#EEE4D8;aspect-ratio:16/7;display:flex;align-items:center;justify-content:center}
+.banner-prev img{width:100%;height:100%;object-fit:cover;display:block}
+.banner-vazio{text-align:center;color:var(--adm-mut);font-size:13px;line-height:1.6;padding:20px;display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;width:100%}
+.banner-vazio .spin{width:24px;height:24px;border-radius:50%;border:3px solid #DCCDBB;border-top-color:var(--adm);animation:girar .8s linear infinite}
+.modal.banner-modal-box{max-width:980px}
+.banner-editor-modal{padding:0!important}
+.banner-editor-modal h2{font-family:Georgia,serif;font-weight:400;color:var(--adm-dark);margin:0}
+.banner-editor-modal .banner-prev{aspect-ratio:21/8;max-height:440px}
+@media(max-width:640px){.banner-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.banner-card-info{padding:8px;font-size:12px}.banner-card-info small{font-size:10px}.banner-editor-modal{padding:18px!important}}
+/* Promoções: formulário + tickets */
+.promo-layout{display:grid;grid-template-columns:360px 1fr;gap:14px;align-items:start}
+.promo-ticket{background:var(--adm-card);border:1.5px dashed #CBB89F;border-radius:12px;padding:14px;position:relative}
+.promo-ticket.vencido{opacity:.65;border-color:#E5AAAA}
+.promo-code{font-size:18px;font-weight:800;letter-spacing:.08em;color:#38271D;background:#F8F5F0;border:1px solid var(--adm-line);border-radius:8px;padding:8px 10px;text-align:center;margin:8px 0}
+.promo-desc{font-size:15px;font-weight:800;color:#78583E}
+.promo-meta{font-size:12px;color:var(--adm-mut);margin-top:4px}
+.promo-acoes{display:flex;gap:6px;margin-top:10px}
+.promo-acoes .btn-mini{flex:1;margin:0;text-align:center}
+.tipo-seg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.tipo-seg button{border:1px solid #DCCDBB;background:#fff;border-radius:8px;padding:10px;font-size:13px;font-weight:800;cursor:pointer;color:#5A422F}
+.tipo-seg button.on{background:var(--adm-dark);color:#fff;border-color:var(--adm-dark)}
+.quick-cups{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+@media(max-width:860px){.promo-layout{grid-template-columns:1fr}}
+.est-prod{display:flex;gap:12px;align-items:center;background:#F8F5F0;border:1px solid var(--adm-line);border-radius:10px;padding:10px;margin:12px 0}
+.est-prod img{width:48px;height:60px;object-fit:cover;border-radius:8px;border:1px solid var(--adm-line)}
+.est-step{display:flex;gap:8px;align-items:center;justify-content:center;margin:10px 0}
+.est-step input{width:90px;text-align:center;font-size:20px;font-weight:800;padding:10px;border:1px solid #DCCDBB;border-radius:10px}
+.qchips{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:10px}
+.qchip{border:1px solid #DCCDBB;background:#fff;border-radius:999px;padding:8px 14px;font-size:13px;font-weight:800;cursor:pointer;color:#5A422F}
+.qchip.on{background:var(--adm-dark);color:#fff;border-color:var(--adm-dark)}
+.est-prev{text-align:center;font-size:14px;color:#463426;background:#F8F5F0;border-radius:8px;padding:10px;margin-bottom:4px}
+.est-prev b{color:var(--adm-dark)}
+@media(max-width:640px){.est-resumo{grid-template-columns:1fr 1fr 1fr}.est-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.est-info b{font-size:12px;min-height:34px}.est-acoes{grid-template-columns:1fr 1fr}}
+/* Os estilos globais da loja vêm antes deste bloco, então os botões do painel
+   precisam usar explicitamente as variáveis do tema administrativo. */
+.btn-rosa,.btn-preto{background:var(--adm)!important;border-color:var(--adm)!important;color:#fff!important}
+.btn-rosa:hover,.btn-preto:hover{background:var(--adm-dark)!important;border-color:var(--adm-dark)!important}
+.btn-borda{background:transparent!important;border-color:var(--adm)!important;color:var(--adm-dark)!important}
+.btn-borda:hover{background:var(--adm)!important;border-color:var(--adm)!important;color:#fff!important}
+ .btn-mini{border-color:var(--adm-line);color:var(--adm-dark)}
+ .btn-mini:hover{background:var(--adm-bg)}
+ /* Cards de produtos: leitura limpa e botões sem quebra estranha. */
+ .pgrid{grid-template-columns:repeat(auto-fill,minmax(175px,210px));gap:12px;align-items:start}
+ .pcard{border-radius:14px;box-shadow:0 8px 24px rgba(56,39,29,.12);transition:transform .18s ease,box-shadow .18s ease}
+ .pcard:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(56,39,29,.16)}
+ .pimg{aspect-ratio:4/5;background:#eee6dc}
+ .pbody{padding:10px;gap:5px}
+ .pbody>b{font-size:11.5px;letter-spacing:.02em;text-transform:uppercase}
+ .pbody .chip-status{font-size:10px;background:var(--adm-bg);border-radius:5px;padding:3px 6px;width:max-content;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+ .pinfo{font-size:10.5px;line-height:1.35}
+ .pbtns{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px;padding-top:6px;border-top:1px solid var(--adm-line)}
+ .pbtns .btn-mini{padding:6px 4px;font-size:10px;border-radius:6px}
+ .pbtns .btn-mini.perigo{grid-column:1/-1}
+ .whatsapp-editor{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,.8fr);gap:18px;align-items:start}
+ .wa-msg{min-height:420px;height:420px;resize:vertical;font-size:14px;line-height:1.5}
+ .wa-placeholders{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+ .wa-presets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:8px 0 14px}
+ .wa-preset{border:1px solid var(--adm-line);background:var(--adm-bg);color:var(--adm-dark);border-radius:8px;padding:10px 8px;cursor:pointer;font-size:12px;font-weight:700;text-align:center}
+ .wa-preset:hover{background:color-mix(in srgb,var(--adm) 18%,white);border-color:var(--adm)}
+ .wa-placeholder{border:1px solid var(--adm-line);background:var(--adm-bg);color:var(--adm-dark);border-radius:999px;padding:7px 10px;cursor:pointer;font-size:12px;font-weight:700}
+ .wa-placeholder:hover{background:color-mix(in srgb,var(--adm) 18%,white);border-color:var(--adm);color:var(--adm-dark)}
+ .wa-phone{width:320px;max-width:100%;height:580px;margin:auto;position:relative;background:#111;border:8px solid #17191b;border-radius:34px;overflow:hidden;box-shadow:0 14px 32px rgba(0,0,0,.28);padding:7px}
+ .wa-screen{width:100%;height:100%;border-radius:24px;overflow:hidden;background:#efeae2;display:flex;flex-direction:column;position:relative}
+ .wa-screen:before{content:"";position:absolute;z-index:3;top:0;left:50%;transform:translateX(-50%);width:88px;height:20px;background:#17191b;border-radius:0 0 14px 14px}
+ .wa-phone-head{height:62px;flex:0 0 62px;background:#075e54;color:#fff;display:flex;align-items:center;gap:10px;padding:0 14px;font-size:13px;font-weight:700}
+ .wa-phone-avatar{width:34px;height:34px;border-radius:50%;background:#25d366;color:#fff;display:grid;place-items:center;font-size:16px;overflow:hidden}
+ .wa-phone-avatar img{width:100%;height:100%;object-fit:cover}
+ .wa-phone-status{display:block;font-size:10px;font-weight:400;opacity:.8;margin-top:2px}
+ .wa-chat{margin:16px 10px;background:#d9fdd3;border-radius:8px;padding:11px;color:#202124;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;line-height:1.45;font-size:13px;box-shadow:0 1px 1px rgba(0,0,0,.12);position:relative;align-self:stretch;overflow-x:hidden;overflow-y:auto;min-width:0}
+ .wa-chat:after{content:"";position:absolute;right:-7px;top:0;border-style:solid;border-width:0 0 9px 9px;border-color:transparent transparent transparent #d9fdd3}
+ @media(max-width:760px){.whatsapp-editor{grid-template-columns:1fr}}
+ .info-texto.info-desabilitado{background:#eeeeee!important;border-color:#d2d2d2!important;color:#999!important;cursor:not-allowed;opacity:.8}
+ .check-info{display:flex;align-items:center;gap:8px;color:var(--adm-mut);font-size:12px!important;margin:6px 0 14px!important;cursor:pointer}
+ .check-info.info-desabilitado{color:#aaa!important}
+ .check-info input{width:auto!important;margin:0;accent-color:var(--adm)}
+ #avisoNaoSalvo{display:none;position:fixed;right:18px;bottom:18px;z-index:300;background:#B3261E;color:#fff;border-radius:8px;padding:12px 16px;box-shadow:0 8px 24px rgba(80,0,0,.28);font-size:13px;font-weight:800;max-width:300px;line-height:1.35}
+ #avisoNaoSalvo.mostrar{display:block;animation:avisoEntrar .2s ease}
+ @keyframes avisoEntrar{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+ @media(max-width:640px){#avisoNaoSalvo{right:10px;bottom:10px;left:10px;max-width:none;text-align:center}}
+</style>
+</head>
+<body>
+
+<div class="login-card" id="telaLogin">
+  <img src="../assets/img/logo.png" alt="Encanto Miranda">
+  <h1>Painel da Loja</h1>
+  <p>Área restrita para quem cuida da loja.</p>
+  <div class="login-erro" id="loginErro">Usuário ou senha errados. Tente de novo.</div>
+  <form id="formLogin" autocomplete="off">
+    <div class="campo"><label>E-mail</label><input id="loginUser" placeholder="voce@sualoja.com" autocomplete="username"></div>
+    <div class="campo"><label>Senha</label><input id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="btn btn-preto btn-grande" type="submit" style="width:100%;margin-top:6px">Entrar</button>
+  </form>
+  <div class="login-dica">Use o e-mail e a senha do administrador.</div>
+</div>
+
+<div id="app">
+  <div class="topo-mobile"><select id="navMobile" aria-label="Menu"></select></div>
+  <div class="adm-shell">
+    <aside class="adm-side">
+      <div class="logo"><img src="../assets/img/logo.png" alt=""></div>
+      <small>PAINEL DA LOJA</small>
+      <nav class="adm-nav" id="admNav"></nav>
+    </aside>
+    <div class="adm-main" id="admMain"></div>
+  </div>
+</div>
+
+<div class="modal-fundo" id="modalFundo"><div class="modal" id="modalBox"></div></div>
+<div id="avisoNaoSalvo" role="status" aria-live="polite">⚠ Você tem alterações não salvas!</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2"><\/script>')</script>
+<script src="../assets/js/supabase.js?v=2"></script>
+<script src="../assets/js/loja-db.js?v=9"></script>
+<script src="../assets/js/main.js?v=7"></script>
+<script>
+const MENU = [
+  { id: 'inicio', nome: 'Início', icone: '⌂' },
+  { id: 'produtos', nome: 'Produtos', icone: '◈' },
+  { id: 'categorias', nome: 'Categorias', icone: '▤' },
+  { id: 'estoque', nome: 'Estoque', icone: '▦' },
+  { id: 'personalizar', nome: 'Personalizar site', icone: '✎' },
+  { id: 'whatsapp', nome: 'WhatsApp', icone: '◉' },
+  { id: 'promocoes', nome: 'Promoções', icone: '%' },
+  { id: 'config', nome: 'Configurações', icone: '⚙' },
+  { id: 'testes', nome: 'Testes', icone: '✓' },
+  { id: 'ajuda', nome: 'Ajuda', icone: '?' }
+];
+let TELA = 'inicio';
+const $ = s => document.querySelector(s);
+// Código curto para mostrar à cliente; o ID técnico do banco continua interno.
+function codigoProduto(id) {
+  const s = String(id == null ? '' : id);
+  if (/^p\d+$/i.test(s)) return 'P' + s.slice(1);
+  let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return 'P' + (h % 60466176).toString(36).toUpperCase().padStart(5, '0');
+}
+function mostrarAvisoNaoSalvo() {
+  const el = document.getElementById('avisoNaoSalvo');
+  if (el) el.classList.add('mostrar');
+}
+function ocultarAvisoNaoSalvo() {
+  const el = document.getElementById('avisoNaoSalvo');
+  if (el) el.classList.remove('mostrar');
+}
+// Detecta edições mesmo em formulários que são recriados pelo painel.
+document.addEventListener('input', e => {
+  if (!e.target.closest('#app')) return;
+  if (['qEst', 'cupVen'].includes(e.target.id) && TELA === 'estoque') return;
+  mostrarAvisoNaoSalvo();
+}, true);
+document.addEventListener('change', e => {
+  if (e.target.closest('#app')) mostrarAvisoNaoSalvo();
+}, true);
+// Alguns controles alteram dados sem disparar input (chips, banners e extras).
+document.addEventListener('click', e => {
+  const b = e.target.closest('#app button');
+  if (!b) return;
+  const acao = b.getAttribute('onclick') || '';
+  if (/trocarCor|alternarTam|alternarCor|mudaEst|removerFoto|removerFotoIdx|moverBanner|addBanner|delBanner|bannerRemoveFoto|addPagExtra|removePagExtra|modeloCupom|setTipoCup|setQtdEst/.test(acao)) mostrarAvisoNaoSalvo();
+}, true);
+const fotoSrc = p => {
+  try {
+    if (p && Array.isArray(p.fotos) && p.fotos[0]) {
+      const f = p.fotos[0];
+      if (f.startsWith('data:') || f.startsWith('http')) return f;
+      return '../' + String(f).replace(/^\.\.\//, '');
+    }
+    if (p && typeof p.foto === 'string' && p.foto.trim().startsWith('[')) {
+      try { const a = JSON.parse(p.foto); if (a[0]) { const f = a[0]; if (f.startsWith('data:') || f.startsWith('http')) return f; return '../' + String(f).replace(/^\.\.\//, ''); } } catch {}
+    }
+  } catch {}
+  if (p && p.foto) {
+    if (p.foto.startsWith('data:') || p.foto.startsWith('http')) return p.foto;
+    return '../' + p.foto.replace(/^\.\.\//, '');
+  }
+  try { if (typeof DB !== 'undefined' && DB.semFoto) return DB.semFoto; } catch {}
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400"><rect width="300" height="400" fill="#EEE4D8"/><text x="150" y="195" font-family="Georgia,serif" font-size="22" fill="#9A8978" text-anchor="middle">Sem foto</text></svg>');
+};
+const GALERIA = [];
+const dataFmt = iso => { try { return new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); } catch { return ''; } };
+const statusPed = s => ({ 'Novo': 'lanc', 'Em preparação': 'baixo', 'Enviado': 'promo', 'Concluído': 'ok', 'Cancelado': 'zero' }[s] || '');
+
+// ---------- login (de verdade, na nuvem; com reserva local sem internet) ----------
+$('#formLogin').addEventListener('submit', async e => {
+  e.preventDefault();
+  const id = $('#loginUser').value.trim();
+  const pw = $('#loginPass').value;
+  $('#loginErro').style.display = 'none';
+  if (typeof SB !== 'undefined' && SB.ok()) {
+    try {
+      const r = await SB.login(id, pw);
+      if (!r.erro) { sessionStorage.setItem('em_admin', '1'); entrar(); return; }
+      if (r.erro !== 'Sem conexão com a nuvem.') { $('#loginErro').textContent = r.erro; $('#loginErro').style.display = 'block'; return; }
+    } catch {}
+  }
+  if ((id === 'admin' || id === 'admin@encantomiranda.com.br') && pw === (localStorage.getItem('em_admin_pass') || 'encanto123')) {
+    sessionStorage.setItem('em_admin', '1');
+    entrar();
+    toast('Sem internet: entrando neste aparelho.');
+  } else { $('#loginErro').textContent = 'E-mail ou senha errados. Tente de novo.'; $('#loginErro').style.display = 'block'; }
+});
+async function entrar() {
+  await DB.ready;
+  aplicarCorAdmin(DB.getSettings().cor);
+  $('#telaLogin').style.display = 'none';
+  $('#app').style.display = 'block';
+  $('#admNav').innerHTML = MENU.map(m => `<button data-tela="${m.id}"><i>${m.icone}</i>${m.nome}</button>`).join('') +
+    `<div style="border-top:1px solid #4A3525;margin:12px 0"></div>
+     <button data-acao="verloja"><i>○</i>Ver minha loja</button>
+     <button data-acao="sair"><i>×</i>Sair</button>`;
+  $('#navMobile').innerHTML = MENU.map(m => `<option value="${m.id}">${m.nome}</option>`).join('');
+  // selo de modo: nuvem conectada ou só neste aparelho
+  (async () => {
+    let nuvem = false;
+    try { if (typeof SB !== 'undefined' && SB.ok() && await SB.session()) nuvem = true; } catch {}
+    const el = document.querySelector('.adm-side small');
+    if (el) { el.textContent = nuvem ? '● NUVEM CONECTADA' : '● SÓ NESTE APARELHO'; el.style.color = nuvem ? '#9FD6A4' : '#E8B34B'; }
+  })();
+  // ao entrar, manda a fila pendente e busca o novo da nuvem
+  try { if (typeof DB !== 'undefined' && DB.sincronizar) DB.sincronizar().then(mudou => { if (mudou) RENDER[TELA](); checaNuvem(); }).catch(() => {}); } catch {}
+  setTimeout(checaNuvem, 6000);
+  armaSyncAdmin();
+  ir('inicio');
+}
+async function checaNuvem() {
+  let ok = false;
+  try { if (typeof SB !== 'undefined' && SB.ok() && await SB.session()) ok = true; } catch {}
+  let bar = document.getElementById('barraNuvem');
+  if (ok) { if (bar) bar.remove(); return; }
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'barraNuvem';
+    bar.style.cssText = 'background:#8F2B2B;color:#fff;font-size:13px;font-weight:700;padding:10px 16px;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap';
+    document.getElementById('app').prepend(bar);
+  }
+  bar.innerHTML = 'SEM LOGIN NA NUVEM — mudanças ficam só neste aparelho. <button id="btnEntrarNuvem" style="background:#fff;color:#8F2B2B;border:0;border-radius:6px;padding:8px 16px;font-weight:800;cursor:pointer">Entrar agora</button>';
+  document.getElementById('btnEntrarNuvem').addEventListener('click', async () => {
+    try { if (typeof SB !== 'undefined' && SB.ok()) await SB.logout(); } catch {}
+    sessionStorage.removeItem('em_admin');
+    location.reload();
+  });
+}
+// força envio da fila + busca da nuvem, com retorno visível
+async function sincAgora() {
+  toast('Sincronizando...');
+  try {
+    const mudou = await DB.sincronizar();
+    try { if (typeof DB.pendencias === 'function' && DB.pendencias() > 0) { toast('Ainda há pendências. Confira login e internet.'); RENDER[TELA](); return; } } catch {}
+    toast(mudou ? 'Pronto! Lista atualizada.' : 'Tudo certo, nada novo.');
+    RENDER[TELA]();
+  } catch { toast('Falha. Confira internet e login.'); }
+}
+// quando algo muda na nuvem (outro aparelho), atualiza sozinho — sem apagar o que está digitando
+function armaSyncAdmin() {
+  window.__syncRender = function () {
+    try {
+      const el = document.activeElement;
+      const digitando = el && /INPUT|TEXTAREA|SELECT/.test(el.tagName);
+      const modal = document.getElementById('modalFundo').classList.contains('aberto');
+      if (!digitando && !modal) RENDER[TELA]();
+    } catch {}
+  };
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('#admNav button');
+  if (!b) return;
+  if (b.dataset.acao === 'sair') { (async () => { try { if (typeof SB !== 'undefined' && SB.ok()) await SB.logout(); } catch {} sessionStorage.removeItem('em_admin'); location.reload(); })(); return; }
+  if (b.dataset.acao === 'verloja') { window.open('../index.html', '_blank'); return; }
+  ir(b.dataset.tela);
+});
+$('#navMobile').addEventListener('change', e => ir(e.target.value));
+function ir(tela) {
+  TELA = tela;
+  document.querySelectorAll('#admNav button').forEach(b => b.classList.toggle('ativo', b.dataset.tela === tela));
+  $('#navMobile').value = tela;
+  RENDER[tela]();
+  window.scrollTo(0, 0);
+}
+
+// ---------- modal ----------
+function abrirModal(html) { $('#modalBox').classList.remove('banner-modal-box'); $('#modalBox').innerHTML = html; $('#modalFundo').classList.add('aberto'); }
+function fecharModal() {
+  $('#modalFundo').classList.remove('aberto');
+  $('#modalBox').classList.remove('banner-modal-box');
+  // se tinha um popup com promessa pendente e fechou pelo X/fundo/ESC, resolve como cancelado
+  try { if (window.__popCanc) { const c = window.__popCanc; window.__popCanc = null; c(); } } catch {}
+}
+$('#modalFundo').addEventListener('click', e => { if (e.target.id === 'modalFundo') fecharModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('modalFundo').classList.contains('aberto')) fecharModal(); });
+
+// ---------- popups do site (substituem confirm/prompt do navegador) ----------
+function popupConfirm(o) {
+  o = o || {};
+  const titulo = o.titulo || 'Tem certeza?';
+  const texto = o.texto || '';
+  const okTxt = o.ok || 'Confirmar';
+  const cancelTxt = o.cancelar || 'Cancelar';
+  const perigo = !!o.perigo;
+  return new Promise(resolve => {
+    window.__popCanc = () => resolve(false);
+    abrirModal(`<h2 style="font-family:Georgia,serif;font-weight:400;color:#38271D;margin-bottom:8px">${titulo}</h2>`
+      + (texto ? `<p style="font-size:14px;color:#463426;line-height:1.6;margin-bottom:6px">${texto}</p>` : '')
+      + `<div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap">`
+      + `<button class="btn btn-borda" id="popCancel" style="flex:1">${cancelTxt}</button>`
+      + `<button class="btn ${perigo ? '' : 'btn-preto'}" id="popOk" style="flex:1;${perigo ? 'background:#8F2B2B;color:#fff;border:0;border-radius:8px;padding:12px 18px;font-weight:700;cursor:pointer' : ''}">${okTxt}</button></div>`);
+    const okB = document.getElementById('popOk'), cB = document.getElementById('popCancel');
+    if (cB) cB.onclick = () => { window.__popCanc = null; fecharModal(); resolve(false); };
+    if (okB) { okB.onclick = () => { window.__popCanc = null; fecharModal(); resolve(true); }; setTimeout(() => { try { okB.focus(); } catch {} }, 50); }
+  });
+}
+function popupPrompt(o) {
+  o = o || {};
+  const titulo = o.titulo || 'Digite';
+  const texto = o.texto || '';
+  const valor = (o.valor !== undefined && o.valor !== null) ? String(o.valor) : '';
+  const place = o.placeholder || '';
+  const tipo = o.tipo || 'text';
+  const okTxt = o.ok || 'Salvar';
+  return new Promise(resolve => {
+    window.__popCanc = () => resolve(null);
+    const esc = s => String(s).replace(/"/g, '&quot;');
+    abrirModal(`<h2 style="font-family:Georgia,serif;font-weight:400;color:#38271D;margin-bottom:8px">${titulo}</h2>`
+      + (texto ? `<p style="font-size:14px;color:#463426;margin-bottom:6px">${texto}</p>` : '')
+      + `<div class="form"><input id="popInput" type="${tipo}" value="${esc(valor)}" placeholder="${esc(place)}" style="font-size:16px"></div>`
+      + `<div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">`
+      + `<button class="btn btn-borda" id="popCancel" style="flex:1">Cancelar</button>`
+      + `<button class="btn btn-preto" id="popOk" style="flex:1">${okTxt}</button></div>`);
+    const inp = document.getElementById('popInput'), okB = document.getElementById('popOk'), cB = document.getElementById('popCancel');
+    const fim = v => { window.__popCanc = null; fecharModal(); resolve(v); };
+    if (cB) cB.onclick = () => fim(null);
+    const okFn = () => fim(inp ? inp.value : '');
+    if (okB) okB.onclick = okFn;
+    if (inp) {
+      setTimeout(() => { try { inp.focus(); inp.select(); } catch {} }, 50);
+      inp.addEventListener('keydown', e => { if (e.key === 'Enter') okFn(); });
+    }
+  });
+}
+
+// ---------- INÍCIO ----------
+function rInicio() {
+  const baixo = DB.listProducts(false).filter(p => (p.estoque || 0) > 0 && (p.estoque || 0) <= 5);
+  const esgot = DB.listProducts(false).filter(p => !(p.estoque > 0));
+  const total = DB.listProducts(false).length;
+  const pend = (typeof DB !== 'undefined' && DB.pendencias) ? DB.pendencias() : 0;
+  $('#admMain').innerHTML = `<div class="secao on"><h2>Olá! Como está sua loja hoje?</h2><p class="adm-sub">Tudo importante num só lugar.</p>
+  <div class="card">
+    <div class="frase">Você tem <b>${total} produto(s)</b> na loja.</div>
+    <div class="frase">${baixo.length ? `<b>${baixo.length} produto(s)</b> com estoque baixo: ${baixo.slice(0, 3).map(p => p.nome).join(' · ')}${baixo.length > 3 ? '...' : ''}` : 'Nenhum produto com estoque baixo.'}</div>
+    <div class="frase">${esgot.length ? `<b>${esgot.length} produto(s) esgotado(s).</b> Que tal repor?` : 'Nenhum produto esgotado.'}</div>
+    ${pend ? `<div class="frase" style="background:#FDF3E7;border-radius:8px;padding:10px 12px">⚠ <b>${pend} mudança(s)</b> neste aparelho ainda não subiram para a nuvem. Confira internet e login. <button class="btn-mini" onclick="sincAgora()">Sincronizar agora</button></div>` : ''}
+    <div class="atalhos">
+      <button class="btn btn-preto" onclick="ir('produtos');setTimeout(()=>novoProduto(),50)">+ Adicionar produto</button>
+      <button class="btn btn-borda" onclick="ir('estoque')">Ver estoque</button>
+      <button class="btn btn-borda" onclick="ir('personalizar')">Personalizar site</button>
+    </div>
+  </div></div>`;
+}
+
+// ---------- PRODUTOS ----------
+let buscaP = '', filtroStatus = '', filtroCatP = '';
+function rProdutos() {
+  const codigo = id => { const s = String(id == null ? '' : id); if (/^p\d+$/i.test(s)) return 'P' + s.slice(1); let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return 'P' + (h % 60466176).toString(36).toUpperCase().padStart(5, '0'); };
+  const catsP = DB.listCategories();
+  const fcP = (typeof filtroCatP !== 'undefined' ? filtroCatP : '');
+  const lista = DB.listProducts(true).filter(p =>
+    (!buscaP || (p.nome + ' ' + (p.tecido || '') + ' ' + codigo(p.id)).toLowerCase().includes(buscaP)) &&
+    (!fcP || String(p.cat || '') === String(fcP)) &&
+    (!filtroStatus || (filtroStatus === 'rascunho' ? p.rascunho : !p.rascunho)));
+  const badgeEst = p => !(p.estoque > 0) ? '<span class="badge zero">Esgotado</span>' : (p.estoque <= 5 ? `<span class="badge baixo">${p.estoque} un.</span>` : `<span class="badge ok">${p.estoque} un.</span>`);
+  $('#admMain').innerHTML = `<div class="secao on"><h2>Produtos</h2><p class="adm-sub">Tudo que sua loja vende está aqui.</p>
+   <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px"><button class="btn btn-preto btn-grande" onclick="novoProduto()">+ Adicionar produto</button><button class="btn btn-borda" onclick="abrirDestaquesMassa()">★ Gerenciar destaques</button>
+  </div>
+  <div class="toolbar"><input id="q" placeholder="🔍 Procurar pelo nome..." value="${buscaP.replace(/"/g, '')}">
+  <select id="fc"><option value="">Todas as categorias</option>${catsP.map(c => `<option value="${c.slug}" ${fcP === c.slug ? 'selected' : ''}>${c.nome}</option>`).join('')}</select>
+  <select id="fs"><option value="">Tudo</option><option value="pub" ${filtroStatus === 'pub' ? 'selected' : ''}>Publicados</option><option value="rascunho" ${filtroStatus === 'rascunho' ? 'selected' : ''}>Rascunhos</option></select></div>
+  <div class="pgrid">
+  ${lista.map(p => `<div class="pcard" data-id="${p.id}">
+     <div class="pimg"><img src="${fotoSrc(p)}" alt="" loading="lazy">${p.rascunho ? '<span class="badge">Rascunho</span>' : ''}${p.destaque ? '<span class="badge ok" style="position:absolute;right:6px;top:6px">★ Destaque</span>' : ''}</div>
+     <div class="pbody"><b>${p.nome}</b><div class="chip-status" style="font-size:11px">ID: ${codigo(p.id)}</div>
+      <div class="pinfo"><b style="font-size:14px">${BRL(p.preco)}</b>${p.antigo ? ' · de ' + BRL(p.antigo) : ''}</div>
+      <div class="pinfo">${(p.cat || '').toUpperCase()} · ${badgeEst(p)} · <span data-origem class="chip-status">…</span></div>
+      <div class="pbtns"><button class="btn-mini" onclick="editarProduto('${p.id}')">Editar</button><button class="btn-mini" onclick="duplicarProduto('${p.id}')">Duplicar</button><button class="btn-mini perigo" onclick="excluirProduto('${p.id}')">Excluir</button></div>
+    </div>
+  </div>`).join('') || '<div class="vazio">Nenhum produto encontrado.</div>'}
+  </div></div>`;
+  $('#q').addEventListener('input', e => { buscaP = e.target.value.toLowerCase(); const v = e.target.selectionStart; rProdutos(); const nq = $('#q'); nq.focus(); nq.setSelectionRange(v, v); });
+  $('#fc').addEventListener('change', e => { filtroCatP = e.target.value; rProdutos(); });
+  $('#fs').addEventListener('change', e => { filtroStatus = e.target.value; rProdutos(); });
+  marcaOrigem();
+}
+// mostra em cada card se já está na nuvem ou só neste aparelho
+async function marcaOrigem() {
+  try {
+    if (typeof SB === 'undefined' || !SB.ok()) return;
+    const linhas = await Promise.race([SB.ler('produtos'), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 9000))]);
+    const naNuvem = new Set((linhas || []).map(r => String(r.id)));
+    document.querySelectorAll('#admMain .pcard[data-id]').forEach(card => {
+      const b = card.querySelector('[data-origem]');
+      if (!b) return;
+      if (naNuvem.has(String(card.getAttribute('data-id')))) { b.textContent = 'Nuvem'; b.className = 'badge ok'; }
+      else { b.textContent = 'Só aqui'; b.className = 'badge baixo'; b.title = 'Ainda não subiu para a nuvem'; }
+    });
+  } catch {}
+}
+
+// wizard do produto em 4 passos
+let WIZ = null;
+function fotosDoWiz() { if (WIZ && Array.isArray(WIZ.fotos) && WIZ.fotos.length) return WIZ.fotos; if (WIZ && WIZ.foto) return [WIZ.foto]; return []; }
+function fotosProntas() { try { return fotosDoWiz().filter(f => typeof f === 'string' && f); } catch { return []; } }
+function novoProduto() { WIZ = { id: null, nome: '', preco: '', parcelas: '6', cat: (DB.listCategories()[0] || {}).slug || '', foto: '', fotos: [], estoque: '10', semEstoque: false, destaque: false, tamsTxt: 'P, M, G', coresTxt: '', desc: '', antigo: '' }; desenharWizard('Adicionar produto'); }
+function editarProduto(id) {
+  const p = DB.getProduct(id);
+  if (!p) return;
+  let arr = [];
+  if (Array.isArray(p.fotos) && p.fotos.length) arr = p.fotos.slice();
+  else if (p && typeof p.foto === 'string' && p.foto.trim().startsWith('[')) { try { const a = JSON.parse(p.foto); if (Array.isArray(a)) arr = a.filter(Boolean); } catch {} }
+  else if (p.foto) arr = [p.foto];
+  arr = arr.map(f => (typeof f === 'string' && !f.startsWith('data:') && !f.startsWith('http') && !f.startsWith('../') && !f.startsWith('assets/')) ? '../' + f : f);
+  WIZ = { id, nome: p.nome, preco: p.preco, parcelas: p.parcelas ?? 6, cat: p.cat, foto: arr[0] || '', fotos: arr, estoque: p.estoque, semEstoque: (p.estoque || 0) >= 9999, destaque: p.destaque === true, tamsTxt: (p.tams || []).join(', '), coresTxt: (p.cores || []).join(', '), desc: p.desc || '', antigo: p.antigo ?? '' };
+  if (WIZ.foto && !WIZ.foto.startsWith('data:') && !WIZ.foto.startsWith('http') && !WIZ.foto.startsWith('../')) WIZ.foto = '../' + WIZ.foto;
+  desenharWizard('Editar produto');
+}
+function fotoNormalizada() {
+  const a = fotosProntas().map(f => {
+    if (f.startsWith('data:') || f.startsWith('http')) return f;
+    return f.replace(/^\.\.\//, '');
+  }).filter(Boolean);
+  WIZ.fotos = a;
+  WIZ.foto = a[0] || '';
+  return WIZ.foto;
+}
+// reduz foto para caber no aparelho (evita estourar o armazenamento local)
+function reduzFoto(dataUrl, maxDim, qual) {
+  maxDim = maxDim || 1000; qual = qual || 0.72;
+  return new Promise(res => {
+    try {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const k = Math.min(1, maxDim / Math.max(img.width || 1, img.height || 1));
+          if (k >= 1) { res(dataUrl); return; }
+          const c = document.createElement('canvas');
+          c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          res(c.toDataURL('image/jpeg', qual));
+        } catch { res(dataUrl); }
+      };
+      img.onerror = () => res(dataUrl);
+      img.src = dataUrl;
+    } catch { res(dataUrl); }
+  });
+}
+// Galeria do wizard: arrastar troca a capa (primeira), X remove
+function renderFotosWizard() {
+  const box = document.getElementById('wFotos');
+  if (!box || !WIZ) return;
+  const arr = fotosDoWiz();
+  box.innerHTML = arr.map((f, i) => {
+    if (!f || f.__loading) return `<div class="wfoto loading"><div class="spin"></div></div>`;
+    return `<div class="wfoto${i === 0 ? ' capa' : ''}" draggable="true" data-i="${i}" title="Arraste para trocar a capa">`
+    + `<img src="${f}" alt="">${i === 0 ? '<span class="tagc">Capa</span>' : ''}`
+    + `<button class="xc" type="button" onclick="removerFotoIdx(${i})" aria-label="Remover">×</button></div>`;
+  }).join('')
+    || '<p class="chip-status" style="margin:0">Nenhuma foto ainda. Envie pelo botão acima.</p>';
+  box.querySelectorAll('.wfoto[draggable="true"]').forEach(el => {
+    el.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', el.dataset.i); el.classList.add('arrast'); });
+    el.addEventListener('dragend', () => el.classList.remove('arrast'));
+    el.addEventListener('dragover', e => e.preventDefault());
+    el.addEventListener('drop', e => {
+      e.preventDefault();
+      const de = +e.dataTransfer.getData('text/plain');
+      const para = +el.dataset.i;
+      if (isNaN(de) || de === para) return;
+      const a = fotosDoWiz();
+      const [mv] = a.splice(de, 1);
+      a.splice(para, 0, mv);
+      WIZ.fotos = a; WIZ.foto = a[0] || '';
+      renderFotosWizard(); atualizaPrev();
+    });
+  });
+}
+function removerFotoIdx(i) {
+  const a = fotosDoWiz();
+  a.splice(i, 1);
+  WIZ.fotos = a; WIZ.foto = a[0] || '';
+  renderFotosWizard(); atualizaPrev();
+}
+function definirCapa(i) {
+  const a = fotosDoWiz();
+  if (!a[i]) return;
+  const [mv] = a.splice(i, 1);
+  a.unshift(mv);
+  WIZ.fotos = a; WIZ.foto = a[0];
+  renderFotosWizard(); atualizaPrev();
+}
+// Editor de produto em seções com prévia ao vivo
+function escWiz(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '').replace(/</g, '&lt;'); }
+function tamsAtuais() { try { return String(document.getElementById('wTams').value || WIZ.tamsTxt || '').split(',').map(s => s.trim()).filter(Boolean); } catch { return String(WIZ.tamsTxt || '').split(',').map(s => s.trim()).filter(Boolean); } }
+function alternarTam(v) {
+  const a = tamsAtuais();
+  const i = a.findIndex(x => x.toLowerCase() === String(v).toLowerCase());
+  if (i >= 0) a.splice(i, 1); else a.push(v);
+  WIZ.tamsTxt = a.join(', ');
+  const el = document.getElementById('wTams'); if (el) el.value = WIZ.tamsTxt;
+  desenharChipsTam(); atualizaPrev();
+}
+function desenharChipsTam() {
+  const box = document.getElementById('wTamsChips'); if (!box) return;
+  const atual = tamsAtuais().map(x => x.toLowerCase());
+  const opcoes = ['P', 'M', 'G', 'GG', 'XG', 'Único'];
+  box.innerHTML = opcoes.map(o => `<button type="button" class="chip-pick${atual.includes(o.toLowerCase()) ? ' on' : ''}" onclick="alternarTam('${o}')">${o}</button>`).join('');
+}
+function alternarCor(v) {
+  let a = []; try { a = String(document.getElementById('wCores').value || WIZ.coresTxt || '').split(',').map(s => s.trim()).filter(Boolean); } catch { a = String(WIZ.coresTxt || '').split(',').map(s => s.trim()).filter(Boolean); }
+  const i = a.findIndex(x => x.toLowerCase() === String(v).toLowerCase());
+  if (i >= 0) a.splice(i, 1); else a.push(v);
+  WIZ.coresTxt = a.join(', ');
+  const el = document.getElementById('wCores'); if (el) el.value = WIZ.coresTxt;
+  desenharChipsCor(); atualizaPrev();
+}
+function desenharChipsCor() {
+  const box = document.getElementById('wCoresChips'); if (!box) return;
+  const atual = String((document.getElementById('wCores') || {}).value || WIZ.coresTxt || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+  const opcoes = ['Preto', 'Branco', 'Bege', 'Marrom', 'Verde', 'Azul', 'Rosa', 'Vermelho'];
+  box.innerHTML = opcoes.map(o => `<button type="button" class="chip-pick${atual.includes(o.toLowerCase()) ? ' on' : ''}" onclick="alternarCor('${o}')">${o}</button>`).join('');
+}
+function mudaEst(d) {
+  const el = document.getElementById('wEst'); if (!el) return;
+  el.value = Math.max(0, Math.round((+el.value || 0) + d));
+  WIZ.estoque = el.value; atualizaPrev();
+}
+function desenharWizard(titulo) {
+  const cats = DB.listCategories().map(c => `<option value="${c.slug}" ${WIZ.cat === c.slug ? 'selected' : ''}>${c.nome}</option>`).join('') || '<option value="">Sem categorias</option>';
+  const editando = !!WIZ.id;
+  abrirModal(`<div class="modal-mini" style="max-width:100%">`
+  + `<div class="wiz-head"><div style="display:flex;align-items:center;gap:8px"><h2>${titulo}</h2>${editando ? '<span class="badge">Editando</span>' : '<span class="badge lanc">Novo</span>'}</div>`
+  + `<p class="chip-status">Preencha por blocos. A prévia ao lado mostra como fica na loja.</p></div>`
+  + `<div class="wiz-body"><div class="mini-layout"><div class="form compacto">`
+   + `<div class="wiz-sec"><h3><span class="n">1</span> Produto</h3>`
+   + `<label>Nome <span class="fld-req">*</span></label><input type="text" id="wNome" maxlength="80" value="${escWiz(WIZ.nome)}" placeholder="Ex: Vestido floral midi">`
+   + `<label style="margin-top:8px">ID do produto</label><input type="text" value="${WIZ.id ? escWiz(WIZ.id) : 'Será gerado ao salvar'}" readonly style="background:#f1f1f1;color:#777;cursor:not-allowed">`
+  + `<div class="mini-row" style="margin-top:8px"><div><label>Categoria</label><select id="wCat">${cats}</select></div>`
+  + `<div><label>Parcelas</label><select id="wParc">${Array.from({ length: 12 }, (_, i) => `<option value="${i + 1}" ${(+(WIZ.parcelas || 6)) === i + 1 ? 'selected' : ''}>${i + 1}x</option>`).join('')}</select></div></div>`
+   + `<label style="margin-top:8px">Descrição curta</label><textarea id="wDesc" rows="2" style="width:100%;padding:9px 10px;border:1px solid #DCCDBB;border-radius:8px;font-size:13.5px;font-family:inherit" placeholder="Tecido, caimento, ocasião...">${escWiz(WIZ.desc)}</textarea>`
+   + `<label class="switch-row" style="margin-top:10px"><input type="checkbox" id="wDestaque" ${WIZ.destaque ? 'checked' : ''} style="width:16px;height:16px"> ★ Produto em destaque</label></div>`
+  + `<div class="wiz-sec"><h3><span class="n">2</span> Preço</h3>`
+  + `<div class="mini-row"><div><label>Preço (R$) <span class="fld-req">*</span></label><input type="number" id="wPreco" min="0" step="0.01" value="${escWiz(WIZ.preco)}" placeholder="0,00"></div>`
+  + `<div><label>Preço antigo (oferta)</label><input type="number" id="wAntigo" min="0" step="0.01" value="${escWiz(WIZ.antigo)}" placeholder="Ex: 59,90"></div></div>`
+  + `<div class="hint">Se o preço antigo for maior, a loja mostra o selo de oferta com o desconto.</div></div>`
+  + `<div class="wiz-sec"><h3><span class="n">3</span> Estoque</h3>`
+  + `<div id="wEstWrap" style="${WIZ.semEstoque ? 'display:none' : ''}"><div class="est-row"><button type="button" class="step-btn" onclick="mudaEst(-1)">−</button><input type="number" id="wEst" min="0" step="1" value="${escWiz(WIZ.estoque)}" style="flex:1"><button type="button" class="step-btn" onclick="mudaEst(1)">+</button></div>`
+  + `<div class="hint">Quantidade de peças disponíveis.</div></div>`
+  + `<label class="switch-row"><input type="checkbox" id="wSemEst" ${WIZ.semEstoque ? 'checked' : ''} style="width:16px;height:16px"> Não controlar estoque (sempre disponível)</label></div>`
+  + `<div class="wiz-sec"><h3><span class="n">4</span> Fotos</h3>`
+  + `<div class="foto-drop"><label class="btn-mini" style="cursor:pointer;margin:0">+ Adicionar fotos<input type="file" id="wUp" accept="image/*" multiple style="display:none"></label>`
+  + `<button class="btn-mini" type="button" onclick="removerFoto()" style="margin:0">Limpar tudo</button>`
+  + `<span class="chip-status">Arraste para trocar a capa · a 1ª é a capa.</span></div><div class="wgal" id="wFotos"></div></div>`
+  + `<div class="wiz-sec"><h3><span class="n">5</span> Tamanhos e cores</h3>`
+  + `<label>Toque para escolher</label><div id="wTamsChips" style="margin-bottom:6px"></div>`
+  + `<input type="text" id="wTams" value="${escWiz(WIZ.tamsTxt)}" placeholder="P, M, G">`
+  + `<label style="margin-top:8px">Cores</label><div id="wCoresChips" style="margin-bottom:6px"></div>`
+  + `<input type="text" id="wCores" value="${escWiz(WIZ.coresTxt)}" placeholder="Preto, Branco"></div>`
+  + `</div>`
+  + `<div><p class="chip-status" style="margin:0 0 6px">Prévia na loja</p><div class="mini-prev-card" id="miniPrevCard"></div>`
+  + `<div class="wiz-sec" style="margin-top:10px"><h3><span class="n">✓</span> Antes de publicar</h3><div class="hint">• Nome curto vende mais<br>• Foto vertical 3:4<br>• Confira preço e estoque</div></div></div>`
+  + `</div></div>`
+  + `<div class="wiz-foot"><button class="btn btn-borda" onclick="fecharModal()" style="padding:12px">Cancelar</button>`
+  + `<button class="btn btn-borda" onclick="salvarWizard(true)" style="padding:12px">Rascunho</button>`
+  + `<button class="btn btn-preto" style="flex:1;padding:12px" onclick="salvarWizard(false)">${editando ? 'Salvar alterações' : 'Publicar produto'}</button></div></div>`);
+  document.querySelector('#modalBox').parentElement.classList.add('aberto');
+  document.getElementById('modalBox').classList.add('modal-mini');
+  atualizaPrev(); desenharChipsTam(); desenharChipsCor();
+  ['wNome', 'wPreco', 'wParc', 'wAntigo', 'wEst', 'wCat', 'wDesc', 'wTams', 'wCores'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.addEventListener('input', () => { atualizaPrev(); if (id === 'wTams') desenharChipsTam(); if (id === 'wCores') desenharChipsCor(); }); el.addEventListener('change', atualizaPrev); }
+  });
+  const destEl = document.getElementById('wDestaque');
+  if (destEl) destEl.addEventListener('change', () => { WIZ.destaque = destEl.checked; mostrarAvisoNaoSalvo(); atualizaPrev(); });
+  const semEl = document.getElementById('wSemEst');
+  if (semEl) semEl.addEventListener('change', () => {
+    WIZ.semEstoque = semEl.checked;
+    const w = document.getElementById('wEstWrap');
+    if (w) w.style.display = semEl.checked ? 'none' : '';
+    atualizaPrev();
+  });
+  renderFotosWizard();
+  const up = document.getElementById('wUp');
+  if (up) up.addEventListener('change', async () => {
+    const files = Array.from(up.files || []);
+    if (!files.length) return;
+    const imgs = files.filter(f => f.type.startsWith('image/'));
+    if (!imgs.length) { toast('Escolha arquivos de imagem.'); return; }
+    if (!Array.isArray(WIZ.fotos)) WIZ.fotos = fotosDoWiz();
+    const logado = (() => { try { return typeof SB !== 'undefined' && SB.ok(); } catch { return false; } })();
+    let sess = false;
+    try { sess = logado && await SB.session() ? true : false; } catch { sess = false; }
+    if (sess) toast('Enviando ' + imgs.length + ' foto(s)...');
+    // reserva um esqueleto animado por foto; cada envio preenche o seu lugar
+    const jobs = imgs.map(f => {
+      const uid = 'u' + Date.now().toString(36) + Math.floor(Math.random() * 1e6);
+      WIZ.fotos.push({ __loading: uid });
+      return { f, uid };
+    });
+    renderFotosWizard();
+    up.value = '';
+    for (const job of jobs) {
+      const at = () => (WIZ.fotos || []).findIndex(x => x && x.__loading === job.uid);
+      try {
+        let finalUrl = null;
+        if (sess) {
+          finalUrl = await SB.foto(job.f, 'p' + Date.now().toString(36) + Math.floor(Math.random() * 999));
+        } else {
+          const dataUrl = await new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(job.f); });
+          finalUrl = await reduzFoto(dataUrl);
+        }
+        const i = at();
+        if (i >= 0) WIZ.fotos[i] = finalUrl; // se removeu no meio, descarta
+      } catch {
+        const i = at();
+        if (i >= 0) WIZ.fotos.splice(i, 1);
+        toast('Falha em ' + job.f.name);
+      }
+      WIZ.foto = fotosProntas()[0] || '';
+      renderFotosWizard(); atualizaPrev();
+    }
+    if (fotosProntas().length) toast(imgs.length > 1 ? 'Fotos adicionadas! Arraste para trocar a capa.' : 'Foto adicionada!');
+  });
+}
+function atualizaPrev() {
+  try {
+    const box = document.getElementById('miniPrevCard');
+    if (!box || !WIZ) return;
+    if (typeof lerPasso === 'function') lerPasso();
+    const nome = WIZ.nome || 'Nome do produto';
+    const preco = +WIZ.preco || 0;
+    const antigo = WIZ.antigo === '' || WIZ.antigo == null ? null : +WIZ.antigo;
+    const arrF = fotosDoWiz();
+    const foto = (arrF[0] || WIZ.foto || (typeof DB !== 'undefined' ? DB.semFoto : ''));
+    const semEst = !!WIZ.semEstoque;
+    const est = Math.max(0, Math.round(+WIZ.estoque || 0));
+    let cat = '';
+    try { const c = (DB.listCategories() || []).find(x => x.slug === WIZ.cat); cat = c ? c.nome : (WIZ.cat || ''); } catch {}
+    const off = antigo && antigo > preco ? Math.round((1 - preco / antigo) * 100) : 0;
+    const tams = (WIZ.tamsTxt || '').split(',').map(s => s.trim()).filter(Boolean);
+    const tamsHtml = tams.length ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">${tams.map(t => `<span style="border:1px solid #E6DCCF;border-radius:6px;padding:2px 8px;font-size:11px;color:#5A422F">${t}</span>`).join('')}</div>` : '';
+    const parcN = Math.min(12, Math.max(1, Math.round(+WIZ.parcelas || 6)));
+    const parcTxt = parcN <= 1 ? 'À vista ' + BRL(preco) : parcN + 'x de ' + BRL(preco * 1.09 / parcN);
+    box.innerHTML = `<div class="mp-img"><img src="${foto}" alt=""></div><div class="mp-body">`
+      + `<div class="mp-cat">${cat}</div><b>${nome}</b>`
+      + (antigo ? `<div class="mp-ant">${BRL(antigo)}</div>` : '')
+      + `<div class="mp-preco">${BRL(preco)}${off ? ` <span style="font-size:11px;color:#16a34a">-${off}%</span>` : ''}</div>`
+      + `<div class="mp-est" style="color:#5A422F">${parcTxt}</div>`
+      + tamsHtml
+      + `<div class="mp-est">${semEst ? 'Disponível' : (!(est > 0) ? 'Esgotado' : est + ' un. em estoque')}</div></div>`;
+  } catch {}
+}
+function escolherFoto(g) { if (!Array.isArray(WIZ.fotos)) WIZ.fotos = fotosDoWiz(); if (!WIZ.fotos.includes(g)) WIZ.fotos.push(g); WIZ.foto = WIZ.fotos[0] || ''; try { renderFotosWizard(); atualizaPrev(); } catch {} }
+function removerFoto() {
+  WIZ.fotos = []; WIZ.foto = '';
+  renderFotosWizard(); atualizaPrev();
+}
+function lerPasso() {
+  const v = id => { const el = $(id); return el ? el.value : null; };
+  let x;
+  if ((x = v('#wNome')) !== null) WIZ.nome = x.trim();
+  if ((x = v('#wDesc')) !== null) WIZ.desc = x.trim();
+  if ((x = v('#wPreco')) !== null) WIZ.preco = x;
+  if ((x = v('#wParc')) !== null) WIZ.parcelas = x;
+  if ((x = v('#wAntigo')) !== null) WIZ.antigo = x;
+  if ((x = v('#wCat')) !== null) WIZ.cat = x;
+  if ((x = v('#wTams')) !== null) WIZ.tamsTxt = x.trim();
+  if ((x = v('#wCores')) !== null) WIZ.coresTxt = x.trim();
+  if ((x = v('#wEst')) !== null) WIZ.estoque = x;
+  const se = document.getElementById('wSemEst'); WIZ.semEstoque = se ? !!se.checked : !!WIZ.semEstoque;
+  const de = document.getElementById('wDestaque'); WIZ.destaque = de ? !!de.checked : !!WIZ.destaque;
+}
+function wizAvancar() { salvarWizard(false); }
+function wizVoltar() {}
+async function salvarWizard(rascunho) {
+  if (WIZ._saving) return; // anti-duplo-clique: 2º clique atualiza em vez de duplicar
+  if ((WIZ.fotos || []).some(f => f && f.__loading)) { toast('Aguarde as fotos terminarem de enviar.'); return; }
+  lerPasso();
+  if (!WIZ.nome || !(+WIZ.preco > 0)) { toast('Dê um nome e um preço válido.'); return; }
+  WIZ._saving = true;
+  // recomprime foto local gigante p/ o envio à nuvem não falhar
+  try {
+    const arr = fotosProntas();
+    let trocou = false;
+    for (let i = 0; i < arr.length; i++) {
+      if (typeof arr[i] === 'string' && arr[i].startsWith('data:') && arr[i].length > 400 * 1024) {
+        arr[i] = await reduzFoto(arr[i], 1000, 0.68);
+        trocou = true;
+      }
+    }
+    if (trocou) { WIZ.fotos = arr; WIZ.foto = arr[0] || ''; renderFotosWizard(); }
+  } catch {}
+  const tams = (WIZ.tamsTxt || '').split(',').map(s => s.trim()).filter(Boolean);
+  const cores = (WIZ.coresTxt || '').split(',').map(s => s.trim()).filter(Boolean);
+  const estoqueFinal = WIZ.semEstoque ? 9999 : (+WIZ.estoque || 0);
+  const parcFinal = Math.min(12, Math.max(1, Math.round(+WIZ.parcelas || 6)));
+  fotoNormalizada();
+  const id = DB.saveProduct({ id: WIZ.id, nome: WIZ.nome, desc: WIZ.desc, tecido: (WIZ.desc || '').slice(0, 60) || WIZ.nome, preco: +WIZ.preco, antigo: WIZ.antigo === '' ? null : +WIZ.antigo, cat: WIZ.cat, selo: (WIZ.antigo !== '' && +WIZ.antigo > +WIZ.preco) ? 'promo' : (WIZ.id ? (DB.getProduct(WIZ.id) || {}).selo : 'lanc'), cores: cores.length ? cores : ['Única'], tams: tams.length ? tams : ['Único'], estoque: estoqueFinal, parcelas: parcFinal, foto: WIZ.foto, fotos: WIZ.fotos, destaque: !!WIZ.destaque, rascunho });
+  WIZ.id = id; // se clicar de novo, edita o mesmo em vez de criar outro
+  fecharModal();
+  ocultarAvisoNaoSalvo();
+  toast(rascunho ? 'Salvo como rascunho.' : 'Produto na loja! 🎉'.replace(' 🎉', ''));
+  rProdutos();
+}
+async function duplicarProduto(id) {
+  const p = DB.getProduct(id);
+  if (!p) return;
+  const ok = await popupConfirm({ titulo: 'Duplicar produto?', texto: `Deseja realmente duplicar "<b>${String(p.nome || '').replace(/</g, '&lt;')}</b>"?<br>Vou abrir o cadastro já preenchido com as mesmas informações. Ao salvar, ela ganha um <b>ID novo e diferente</b> do original.`, ok: 'Duplicar' });
+  if (!ok) return;
+  let arr = [];
+  if (Array.isArray(p.fotos) && p.fotos.length) arr = p.fotos.slice();
+  else if (p && typeof p.foto === 'string' && p.foto.trim().startsWith('[')) { try { const a = JSON.parse(p.foto); if (Array.isArray(a)) arr = a.filter(Boolean); } catch {} }
+  else if (p.foto) arr = [p.foto];
+  arr = arr.map(f => (typeof f === 'string' && !f.startsWith('data:') && !f.startsWith('http') && !f.startsWith('../') && !f.startsWith('assets/')) ? '../' + f : f);
+  WIZ = { id: null, nome: (p.nome || '') + ' (cópia)', preco: p.preco, parcelas: p.parcelas ?? 6, cat: p.cat, foto: arr[0] || '', fotos: arr, estoque: (+p.estoque >= 9999 ? 10 : p.estoque), semEstoque: (+p.estoque || 0) >= 9999, destaque: p.destaque === true, tamsTxt: (p.tams || []).join(', '), coresTxt: (p.cores || []).join(', '), desc: p.desc || '', antigo: p.antigo ?? '' };
+  desenharWizard('Duplicar produto');
+}
+function alternarTodosDestaques(marcar) {
+  document.querySelectorAll('#listaDestaques input[data-produto]').forEach(el => { el.checked = marcar; });
+}
+function salvarDestaquesMassa() {
+  document.querySelectorAll('#listaDestaques input[data-produto]').forEach(el => {
+    const p = DB.getProduct(el.dataset.produto);
+    if (p && p.destaque !== el.checked) DB.saveProduct(Object.assign({}, p, { destaque: el.checked }));
+  });
+  fecharModal(); ocultarAvisoNaoSalvo(); rProdutos(); toast('Destaques atualizados!');
+}
+function abrirDestaquesMassa() {
+  const lista = DB.listProducts(true);
+  abrirModal(`<div class="modal-mini" style="max-width:620px"><h2 style="font-family:Georgia,serif;font-weight:400">Gerenciar destaques</h2>
+    <p class="chip-status">Marque os produtos que devem aparecer na seção Destaques da loja.</p>
+    <div style="display:flex;gap:8px;margin:14px 0"><button class="btn-mini" type="button" onclick="alternarTodosDestaques(true)">Marcar todos</button><button class="btn-mini" type="button" onclick="alternarTodosDestaques(false)">Desmarcar todos</button></div>
+    <div id="listaDestaques" style="max-height:420px;overflow:auto;border:1px solid var(--adm-line);border-radius:8px">${lista.map(p => `<label class="switch-row" style="padding:10px 12px;border-bottom:1px solid var(--adm-line);margin:0"><input type="checkbox" data-produto="${String(p.id).replace(/"/g, '')}" ${p.destaque ? 'checked' : ''} style="width:16px;height:16px"><img src="${fotoSrc(p)}" alt="" style="width:36px;height:46px;object-fit:cover;border-radius:5px"><span style="flex:1">${String(p.nome || '').replace(/</g, '&lt;')}</span></label>`).join('') || '<p class="vazio">Nenhum produto cadastrado.</p>'}</div>
+    <div style="display:flex;gap:10px;margin-top:16px"><button class="btn btn-borda" onclick="fecharModal()">Cancelar</button><button class="btn btn-preto" style="flex:1" onclick="salvarDestaquesMassa()">Salvar destaques</button></div></div>`);
+}
+async function excluirProduto(id) {
+  const p = DB.getProduct(id);
+  if (!p) return;
+  const ok = await popupConfirm({ titulo: 'Excluir produto?', texto: `Excluir "<b>${p.nome}</b>" da loja? Essa ação não tem volta.`, ok: 'Excluir', perigo: true });
+  if (!ok) return;
+  DB.deleteProduct(id);
+  toast('Produto excluído.');
+  rProdutos();
+}
+
+// ---------- CATEGORIAS ----------
+function rCategorias() {
+  const cats = DB.listCategories();
+  $('#admMain').innerHTML = `<div class="secao on"><h2>Categorias</h2><p class="adm-sub">As "prateleiras" da sua loja. A ordem aqui é a ordem que aparece no menu.</p>
+  <div class="card"><div class="form"><label>Nome da nova categoria</label>
+  <div style="display:flex;gap:10px"><input type="text" id="novaCat" placeholder="Ex: Festa" style="flex:1"><button class="btn btn-preto" onclick="criarCategoria()">+ Criar categoria</button></div></div></div>
+  <div class="card" style="padding:6px 20px">${cats.map((c, i) => `<div class="frase" style="display:flex;align-items:center;gap:8px">
+    <b style="flex:1">${c.nome}</b><span class="chip-status">${DB.countByCat(c.slug)} produto(s)</span>
+    <button class="btn-mini" onclick="DB.moveCategory('${c.slug}',-1);rCategorias()" ${i === 0 ? 'disabled' : ''}>↑</button>
+    <button class="btn-mini" onclick="DB.moveCategory('${c.slug}',1);rCategorias()" ${i === cats.length - 1 ? 'disabled' : ''}>↓</button>
+    <button class="btn-mini" onclick="renomearCategoria('${c.slug}')">Renomear</button>
+    <button class="btn-mini perigo" onclick="excluirCategoria('${c.slug}')">Excluir</button></div>`).join('')}</div></div>`;
+}
+function criarCategoria() {
+  const nome = $('#novaCat').value.trim();
+  if (!nome) { toast('Escreva o nome da categoria.'); return; }
+  DB.newCategory(nome);
+  ocultarAvisoNaoSalvo();
+  toast('Categoria criada!');
+  rCategorias();
+}
+async function renomearCategoria(slug) {
+  const atual = DB.listCategories().find(c => c.slug === slug);
+  if (!atual) return;
+  const nome = await popupPrompt({ titulo: 'Renomear categoria', texto: 'Escolha o novo nome:', valor: atual.nome, placeholder: 'Ex: Festa' });
+  if (nome && nome.trim()) { DB.saveCategory(slug, nome.trim()); ocultarAvisoNaoSalvo(); toast('Pronto!'); rCategorias(); }
+}
+async function excluirCategoria(slug) {
+  const n = DB.countByCat(slug);
+  if (n > 0) {
+    const outras = DB.listCategories().filter(c => c.slug !== slug);
+    abrirModal(`<h2 style="font-family:Georgia,serif;font-weight:400">Tem ${n} produto(s) aqui</h2>
+    <p style="font-size:14px">Para excluir, escolha para onde levar esses produtos:</p>
+    <div class="form"><select id="moverPara">${outras.map(c => `<option value="${c.slug}">${c.nome}</option>`).join('')}</select></div>
+    <div style="display:flex;gap:10px;margin-top:16px"><button class="btn btn-borda" onclick="fecharModal()">Cancelar</button>
+    <button class="btn btn-preto" style="flex:1" onclick="moverEExcluir('${slug}')">Mover e excluir</button></div>`);
+    return;
+  }
+  if (!await popupConfirm({ titulo: 'Excluir categoria?', texto: 'Essa categoria vai sumir do menu da loja.', ok: 'Excluir', perigo: true })) return;
+  DB.deleteCategory(slug);
+  ocultarAvisoNaoSalvo();
+  toast('Categoria excluída.');
+  rCategorias();
+}
+function moverEExcluir(slug) {
+  const para = $('#moverPara').value;
+  DB.listProducts(true).filter(p => p.cat === slug).forEach(p => DB.saveProduct(Object.assign({}, p, { cat: para })));
+  DB.deleteCategory(slug);
+  ocultarAvisoNaoSalvo();
+  fecharModal();
+  toast('Pronto! Produtos movidos.');
+  rCategorias();
+}
+
+// ---------- ESTOQUE ----------
+let soBaixo = false, buscaEst = '', filtroCatEst = '';
+function rEstoque() {
+  const codigo = id => { const s = String(id == null ? '' : id); if (/^p\d+$/i.test(s)) return 'P' + s.slice(1); let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return 'P' + (h % 60466176).toString(36).toUpperCase().padStart(5, '0'); };
+  const todos = DB.listProducts(false);
+  const totalPecas = todos.reduce((s, p) => s + (+p.estoque || 0), 0);
+  const nBaixo = todos.filter(p => (p.estoque || 0) > 0 && (p.estoque || 0) <= 5).length;
+  const nEsgot = todos.filter(p => !(p.estoque > 0)).length;
+  const catsEst = DB.listCategories();
+   let lista = todos.filter(p => !buscaEst || ((p.nome || '') + ' ' + codigo(p.id)).toLowerCase().includes(buscaEst));
+  if (filtroCatEst) lista = lista.filter(p => String(p.cat || '') === String(filtroCatEst));
+  if (soBaixo) lista = lista.filter(p => (p.estoque || 0) <= 5);
+  const badge = p => !(p.estoque > 0) ? '<span class="badge zero">Esgotado</span>' : ((p.estoque || 0) <= 5 ? '<span class="badge baixo">Está acabando</span>' : '<span class="badge ok">OK</span>');
+  $('#admMain').innerHTML = `<div class="secao on"><h2>Estoque</h2><p class="adm-sub">Controle de peças: chegou, vendeu ou contou tudo.</p>
+  <div class="est-resumo"><div class="est-box"><b>${totalPecas}</b><span>peças no total</span></div><div class="est-box"><b>${nBaixo}</b><span>acabando ≤ 5</span></div><div class="est-box"><b>${nEsgot}</b><span>esgotados</span></div></div>
+  <div class="toolbar"><input id="qEst" placeholder="🔍 Procurar produto..." value="${buscaEst.replace(/"/g, '')}"><select id="catEst"><option value="">Todas as categorias</option>${catsEst.map(c => `<option value="${c.slug}" ${filtroCatEst === c.slug ? 'selected' : ''}>${c.nome}</option>`).join('')}</select><select id="ckBaixoSel"><option value="">Tudo</option><option value="baixo" ${soBaixo ? 'selected' : ''}>Só quem está acabando</option></select></div>
+  <div class="est-grid">${lista.map(p => {
+    const est = +p.estoque || 0;
+    const barra = Math.min(100, Math.round(est / 20 * 100));
+    const corBarra = !(est > 0) ? '#E5AAAA' : (est <= 5 ? '#D99A4E' : '#7BAF8A');
+    return `<div class="est-card"><div class="est-foto-wrap"><img class="pfoto" src="${fotoSrc(p)}" alt="">${badge(p)}<button class="est-mais" onclick="estoqueRapido('${p.id}',1)" title="Somar 1 sem abrir janela">+</button></div>`
+     + `<div class="est-info"><b>${p.nome}</b><small style="display:block;color:var(--adm-mut);font-size:10px">ID: ${codigo(p.id)}</small><div class="est-num">Você tem <b>${est} un.</b></div><div class="est-bar"><i style="width:${barra}%;background:${corBarra}"></i></div></div>`
+    + `<div class="est-acoes"><button class="btn-mini btn-add" onclick="mexerEstoque('${p.id}',1)">+ Adicionar</button>`
+    + `<button class="btn-mini" onclick="mexerEstoque('${p.id}',-1)">− Retirar</button>`
+    + `<button class="btn-mini" onclick="corrigirEstoque('${p.id}')">Corrigir</button></div></div>`;
+  }).join('') || '<div class="vazio">Nada por aqui. Ajuste a busca.</div>'}</div></div>`;
+  const q = document.getElementById('qEst');
+  if (q) q.addEventListener('input', e => { buscaEst = e.target.value.toLowerCase(); const pos = e.target.selectionStart; rEstoque(); const q2 = document.getElementById('qEst'); if (q2) { q2.focus(); try { q2.setSelectionRange(pos, pos); } catch {} } });
+  const catSel = document.getElementById('catEst');
+  if (catSel) catSel.addEventListener('change', e => { filtroCatEst = e.target.value; rEstoque(); });
+  const sel = document.getElementById('ckBaixoSel');
+  if (sel) sel.addEventListener('change', e => { soBaixo = e.target.value === 'baixo'; rEstoque(); });
+  const ck = document.getElementById('ckBaixo');
+  if (ck) ck.addEventListener('change', e => { soBaixo = e.target.checked; rEstoque(); });
+}
+function estoqueRapido(id, dir) {
+  try { DB.adjustStock(id, dir); toast(dir > 0 ? '+1 peça!' : '−1 peça!'); rEstoque(); } catch { toast('Não consegui atualizar.'); }
+}
+function mudaQtdEst(d) {
+  const el = document.getElementById('estQtd'); if (!el) return;
+  el.value = Math.max(0, Math.round((+el.value || 0) + d));
+  atualizaPrevEst();
+}
+function setQtdEst(v) {
+  const el = document.getElementById('estQtd'); if (!el) return;
+  el.value = v; atualizaPrevEst();
+  document.querySelectorAll('.qchip').forEach(c => c.classList.toggle('on', +c.dataset.q === +v));
+}
+function atualizaPrevEst() {
+  const ctx = window.__estCtx; if (!ctx) return;
+  const el = document.getElementById('estQtd'), prev = document.getElementById('estPrev'), okB = document.getElementById('estOk');
+  if (!el || !prev) return;
+  const qtd = Math.max(0, Math.round(+el.value || 0));
+  let final = ctx.base, txt = '';
+  if (ctx.modo === 'entra') { final = ctx.base + qtd; txt = `Você tem <b>${ctx.base}</b> → vai ficar <b>${final}</b>`; if (okB) okB.textContent = qtd ? `Adicionar ${qtd}` : 'Adicionar'; }
+  else if (ctx.modo === 'sai') { final = Math.max(0, ctx.base - qtd); txt = `Você tem <b>${ctx.base}</b> → vai ficar <b>${final}</b>`; if (qtd > ctx.base) txt += `<br><span style="color:#8F2B2B">Vai zerar (você não tem tudo isso).</span>`; if (okB) okB.textContent = qtd ? `Retirar ${qtd}` : 'Retirar'; }
+  else { final = qtd; txt = `Contou tudo? Vai ficar com <b>${final}</b>`; if (okB) okB.textContent = 'Corrigir para ' + final; }
+  prev.innerHTML = txt;
+}
+function abrirMovEstoque(id, modo) {
+  const p = DB.getProduct(id); if (!p) return;
+  const base = +p.estoque || 0;
+  window.__estCtx = { id, modo, base };
+  const isEntra = modo === 'entra', isSai = modo === 'sai';
+  const titulo = isEntra ? '📦 Chegaram peças?' : (isSai ? '📤 Saíram peças?' : '🧮 Corrigir estoque');
+  const subt = isEntra ? 'Diga quantas chegaram do fornecedor.' : (isSai ? 'Venda fora do site, perda ou troca?' : `Contou tudo de "${p.nome}"? Diga quanto tem agora.`);
+  const inicial = modo === 'corrige' ? base : 1;
+  const atalhos = modo === 'corrige' ? '' : `<div class="qchips">${[1, 5, 10, 20, 50].map(v => `<button type="button" class="qchip${v === 1 ? ' on' : ''}" data-q="${v}" onclick="setQtdEst(${v})">+${v}</button>`).join('')}</div>`;
+  abrirModal(`<div class="est-modal"><h2 style="font-family:Georgia,serif;font-weight:400;color:#38271D;margin:0">${titulo}</h2>`
+  + `<p class="chip-status" style="margin:6px 0 0">${subt}</p>`
+  + `<div class="est-prod"><img src="${fotoSrc(p)}" alt=""><div style="flex:1"><b style="font-size:14px;color:#38271D">${p.nome}</b><br><span class="chip-status">Agora: <b>${base} un.</b></span></div><span class="badge ${!(base > 0) ? 'zero' : (base <= 5 ? 'baixo' : 'ok')}">${!(base > 0) ? 'Esgotado' : (base <= 5 ? 'Acabando' : 'OK')}</span></div>`
+  + `<div class="est-step"><button type="button" class="step-btn" onclick="mudaQtdEst(-1)">−</button><input id="estQtd" type="number" min="0" step="1" value="${inicial}"><button type="button" class="step-btn" onclick="mudaQtdEst(1)">+</button></div>`
+  + atalhos + `<div class="est-prev" id="estPrev"></div>`
+  + `<div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-borda" onclick="fecharModal()" style="flex:1;padding:12px">Cancelar</button>`
+  + `<button class="btn ${isSai ? '' : 'btn-preto'}" id="estOk" onclick="confirmaEst()" style="flex:2;padding:12px;${isSai ? 'background:#8F2B2B;color:#fff;border:0;border-radius:8px;font-weight:700;cursor:pointer' : ''}">Confirmar</button></div></div>`);
+  const el = document.getElementById('estQtd');
+  if (el) { el.addEventListener('input', atualizaPrevEst); setTimeout(() => { try { el.focus(); el.select(); } catch {} }, 60); el.addEventListener('keydown', e => { if (e.key === 'Enter') confirmaEst(); }); }
+  atualizaPrevEst();
+}
+function mexerEstoque(id, dir) { abrirMovEstoque(id, dir > 0 ? 'entra' : 'sai'); }
+function corrigirEstoque(id) { abrirMovEstoque(id, 'corrige'); }
+function confirmaEst() {
+  const ctx = window.__estCtx; if (!ctx) return;
+  const el = document.getElementById('estQtd');
+  const qtd = Math.max(0, Math.round(+((el || {}).value || 0)));
+  if (ctx.modo === 'corrige') { DB.setStock(ctx.id, qtd); toast('Estoque corrigido!'); }
+  else {
+    if (!(qtd > 0)) { toast('Digite uma quantidade maior que zero.'); return; }
+    DB.adjustStock(ctx.id, ctx.modo === 'entra' ? qtd : -qtd);
+    toast(ctx.modo === 'entra' ? `+${qtd} peça(s)!` : `−${qtd} peça(s)!`);
+  }
+  window.__estCtx = null; ocultarAvisoNaoSalvo(); fecharModal(); rEstoque();
+}
+
+// ---------- PEDIDOS ----------
+let filtroPed = '';
+const FLUXO = ['Novo', 'Em preparação', 'Enviado', 'Concluído'];
+function rPedidos() {
+  const todos = DB.listOrders();
+  const lista = filtroPed ? todos.filter(o => o.status === filtroPed) : todos;
+  $('#admMain').innerHTML = `<div class="secao on"><h2>Pedidos</h2><p class="adm-sub">Quem comprou pelo WhatsApp aparece aqui.</p>
+  <div class="toolbar"><select id="fped"><option value="">Todos os pedidos</option>${['Novo', 'Em preparação', 'Enviado', 'Concluído', 'Cancelado'].map(s => `<option ${filtroPed === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
+  ${lista.map(o => {
+    const prox = FLUXO[FLUXO.indexOf(o.status) + 1];
+    return `<div class="pedido" id="ped-${o.numero}"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+    <b style="font-size:16px">Pedido ${o.numero}</b><span class="badge ${statusPed(o.status)}">${o.status}</span>
+    <span class="chip-status">${dataFmt(o.data)} · ${o.nome} · ${BRL(o.total)}</span>
+    <span style="flex:1"></span><button class="btn-mini" onclick="document.getElementById('ped-${o.numero}').classList.toggle('aberto')">Ver detalhes</button></div>
+    <div class="det">
+       <b>Cliente:</b> ${o.nome} · ${o.fone}<br><b>Endereço:</b> ${o.endereco || '—'}<br><b>Pagamento:</b> ${o.pag || '—'}${o.cupom ? ' · Cupom ' + o.cupom : ''}
+      <br><br>${(o.itens || []).map(it => `• ${it.qtd}x ${it.nome} (${it.cor || ''}/${it.tam || ''}) — ${BRL(it.preco * it.qtd)}`).join('<br>')}
+      <br><br><b>Total: ${BRL(o.total)}</b>${o.desconto ? ` (desconto ${BRL(o.desconto)})` : ''}${o.baixado ? '<br><span class="chip-status">✓ Estoque já atualizado.</span>' : ''}
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+      ${prox ? `<button class="btn btn-preto btn-mini" style="padding:10px 16px;font-size:13px" onclick="avancarPedido('${o.numero}','${prox}')">Marcar como ${prox.toLowerCase()}</button>` : ''}
+      ${o.status !== 'Cancelado' && o.status !== 'Concluído' ? `<button class="btn-mini perigo" onclick="cancelarPedido('${o.numero}')">Cancelar pedido</button>` : ''}
+      </div></div></div>`;
+  }).join('') || '<div class="card"><div class="vazio">Nenhum pedido ainda.<br>Quando alguém finalizar a compra na loja, aparece aqui.</div></div>'}</div>`;
+  $('#fped').addEventListener('change', e => { filtroPed = e.target.value; rPedidos(); });
+}
+async function avancarPedido(numero, prox) {
+  if ((prox === 'Enviado' || prox === 'Concluído') && !await popupConfirm({ titulo: `Marcar como "${prox}"?`, texto: `Vamos dar baixa no estoque do pedido <b>${numero}</b>.`, ok: `Marcar como ${prox.toLowerCase()}` })) return;
+  DB.setOrderStatus(numero, prox);
+  toast(`Pedido ${prox.toLowerCase()}!`);
+  rPedidos();
+}
+async function cancelarPedido(numero) {
+  if (!await popupConfirm({ titulo: 'Cancelar pedido?', texto: `Cancelar o pedido <b>${numero}</b>?`, ok: 'Cancelar pedido', perigo: true })) return;
+  DB.setOrderStatus(numero, 'Cancelado');
+  toast('Pedido cancelado.');
+  rPedidos();
+}
+
+// ---------- CLIENTES ----------
+function rClientes() {
+  const lista = DB.clients();
+  $('#admMain').innerHTML = `<div class="secao on"><h2>Clientes</h2><p class="adm-sub">Quem já comprou na sua loja.</p>
+  <div class="card" style="padding:0;overflow-x:auto"><table class="tbl"><thead><tr><th>Nome</th><th>WhatsApp</th><th>Compras</th><th>Total</th><th>Última compra</th></tr></thead><tbody>
+  ${lista.map(c => `<tr><td><b>${c.nome}</b></td><td>${c.fone}</td><td>${c.compras}</td><td><b>${BRL(c.total)}</b></td><td>${dataFmt(c.ultima)}</td></tr>`).join('') || '<tr><td colspan="5"><div class="vazio">Nenhum cliente ainda.</div></td></tr>'}
+  </tbody></table></div></div>`;
+}
+
+// ---------- PERSONALIZAR ----------
+let PERS = null;
+const PRESETS = ['#78583E', '#A3512E', '#7A4A5E', '#3E5E78', '#4A7A4F', '#222222', '#C2415D', '#7C3AED', '#0F766E', '#2563EB', '#B7791F', '#BE185D', '#374151', '#F97316'];
+function mixCorAdmin(hex, alvo, peso) {
+  const h = String(hex || '').replace('#', '');
+  if (!/^[0-9a-f]{6}$/i.test(h)) return alvo;
+  const a = parseInt(h.slice(0, 2), 16), b = parseInt(h.slice(2, 4), 16), c = parseInt(h.slice(4, 6), 16);
+  const t = alvo.match(/[0-9a-f]{2}/gi).map(x => parseInt(x, 16));
+  return '#' + [a, b, c].map((v, i) => Math.round(v * (1 - peso) + t[i] * peso).toString(16).padStart(2, '0')).join('');
+}
+function aplicarCorAdmin(cor) {
+  cor = /^#[0-9a-f]{6}$/i.test(String(cor || '')) ? cor : '#78583E';
+  const root = document.documentElement.style;
+  root.setProperty('--adm', cor);
+  root.setProperty('--adm-dark', mixCorAdmin(cor, '#000000', .55));
+  root.setProperty('--adm-bg', mixCorAdmin(cor, '#ffffff', .95));
+  root.setProperty('--adm-line', mixCorAdmin(cor, '#000000', .14));
+  root.setProperty('--adm-mut', mixCorAdmin(cor, '#000000', .48));
+}
+function rPersonalizar() {
+  PERS = DB.getSettings();
+  PERS.informacoes = PERS.informacoes || {};
+  PERS.informacoes.visiveis = PERS.informacoes.visiveis || {};
+  aplicarCorAdmin(PERS.cor);
+  $('#admMain').innerHTML = `<div class="secao on"><h2>Personalizar site</h2><p class="adm-sub">Mude a cara da loja sem programar. Tudo que salvar aparece na loja na hora.</p>
+  <div class="card form"><h3 style="font-family:Georgia,serif;font-weight:400">Nome e cores</h3>
+    <label>Nome da loja</label><input type="text" id="cNome" value="${PERS.nomeLoja.replace(/"/g, '')}">
+    <label>Cor principal da loja</label>
+    <div style="display:flex;gap:10px;align-items:center"><input type="color" id="cCor" value="${PERS.cor}" oninput="aplicarCorAdmin(this.value)" style="width:60px;height:44px;border:1px solid #DCCDBB;border-radius:8px;padding:4px">
+    <div class="swatches">${PRESETS.map(c => `<button style="background:${c}" class="${PERS.cor.toLowerCase() === c.toLowerCase() ? 'sel' : ''}" onclick="trocarCor('${c}')"></button>`).join('')}</div></div>
+  </div>
+  <div class="card form"><h3 style="font-family:Georgia,serif;font-weight:400">Contatos</h3>
+    <label>WhatsApp da loja (só números, com DDD)</label><input type="text" id="cZap" value="${PERS.whatsapp.replace(/"/g, '')}" placeholder="5511999999999">
+    <label>E-mail</label><input type="text" id="cEmail" value="${(PERS.email || '').replace(/"/g, '')}">
+   <label>Endereço</label><input type="text" id="cEnd" value="${(PERS.endereco || '').replace(/"/g, '')}">
+     <label>Instagram (link completo)</label><input type="text" id="cInsta" value="${(PERS.instagram || '').replace(/"/g, '')}" placeholder="https://instagram.com/sualoja">
+  </div>
+   <div class="card form"><h3 style="font-family:Georgia,serif;font-weight:400">Informações da loja</h3>
+      <label>Título do atendimento</label><input class="info-texto" type="text" id="cAtend" value="${(PERS.informacoes.atendimento || 'Atendimento').replace(/"/g, '')}">
+      <label class="check-info"><input type="checkbox" id="vAtend" onchange="atualizarInfoAdmin(this)" ${PERS.informacoes.visiveis.atendimento !== false ? 'checked' : ''}> Mostrar título do atendimento</label>
+      <label>Horário de atendimento</label><input class="info-texto" type="text" id="cHorario" value="${(PERS.informacoes.horarioAtendimento || 'Seg a Sáb, 9h–18h').replace(/"/g, '')}" placeholder="Seg a Sáb, 9h–18h">
+      <label class="check-info"><input type="checkbox" id="vHorario" onchange="atualizarInfoAdmin(this)" ${PERS.informacoes.visiveis.horarioAtendimento !== false ? 'checked' : ''}> Mostrar horário de atendimento</label>
+      <label>Prazo de envio</label><input class="info-texto" type="text" id="cPrazoEnvio" value="${(PERS.informacoes.prazoEnvio || 'Envio em 2 dias úteis').replace(/"/g, '')}" placeholder="Envio em 2 dias úteis">
+      <label class="check-info"><input type="checkbox" id="vPrazoEnvio" onchange="atualizarInfoAdmin(this)" ${PERS.informacoes.visiveis.prazoEnvio !== false ? 'checked' : ''}> Mostrar prazo de envio</label>
+      <label>Detalhe do envio</label><input class="info-texto" type="text" id="cEnvioDetalhe" value="${(PERS.informacoes.envioDetalhe || 'Correios com rastreio').replace(/"/g, '')}" placeholder="Correios com rastreio">
+      <label class="check-info"><input type="checkbox" id="vEnvioDetalhe" onchange="atualizarInfoAdmin(this)" ${PERS.informacoes.visiveis.envioDetalhe !== false ? 'checked' : ''}> Mostrar detalhe do envio</label>
+  </div>
+  <div class="card"><h3 style="font-family:Georgia,serif;font-weight:400;margin-bottom:4px">Banners da página inicial</h3>
+    <p class="chip-status">Só imagem · passam sozinhos no topo da loja. Clique na seta para reordenar.</p>
+    <div id="listaBanners" class="banner-grid">${PERS.banners.map((b, i) => bannerCard(b, i)).join('')}</div>
+    <button class="btn btn-borda" onclick="addBanner()">+ Adicionar banner</button>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-preto btn-grande" style="flex:1" onclick="salvarPersonalizar()">Salvar tudo</button>
+  <a class="btn btn-borda btn-grande" href="../index.html" target="_blank">Visualizar meu site</a></div></div>`;
+  ['vAtend','vHorario','vPrazoEnvio','vEnvioDetalhe'].forEach(id => atualizarInfoAdmin(document.getElementById(id)));
+ }
+ function atualizarInfoAdmin(checkbox) {
+   if (!checkbox) return;
+   const mapa = { vAtend:'cAtend', vHorario:'cHorario', vPrazoEnvio:'cPrazoEnvio', vEnvioDetalhe:'cEnvioDetalhe' };
+   const campo = document.getElementById(mapa[checkbox.id]);
+   const linha = checkbox.closest('.check-info');
+   const desabilitado = !checkbox.checked;
+   if (campo) { campo.disabled = desabilitado; campo.classList.toggle('info-desabilitado', desabilitado); }
+   if (linha) linha.classList.toggle('info-desabilitado', desabilitado);
+ }
+function bannerCard(b, i) {
+  const foto = b.foto || '';
+  return `<button class="banner-card" type="button" onclick="abrirBannerEditor(${i})" aria-label="Editar banner ${i + 1}">
+    <div class="banner-card-thumb">${foto ? `<img src="${String(foto).replace(/"/g, '&quot;')}" alt="Banner ${i + 1}">` : '<div class="banner-vazio">Nenhuma imagem<br><small>Clique para editar</small></div>'}</div>
+    <div class="banner-card-info"><b>Banner ${i + 1}</b><small>${foto ? 'Editar ›' : 'Adicionar ›'}</small></div>
+  </button>`;
+}
+function abrirBannerEditor(i) {
+  lerBanners();
+  const b = PERS.banners[i];
+  if (!b) return;
+  const foto = b.foto || '';
+  abrirModal(`<div class="banner-editor-modal">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px"><div><h2>Editar banner ${i + 1}</h2><p class="adm-sub" style="margin:4px 0 0">A imagem aparecerá no giro da página inicial.</p></div><button class="btn-mini" type="button" onclick="fecharModal()" aria-label="Fechar">✕ Fechar</button></div>
+    <div class="banner-prev" id="bannerPrev${i}">${foto ? `<img src="${String(foto).replace(/"/g, '&quot;')}" alt="Banner ${i + 1}">` : '<div class="banner-vazio">Nenhuma imagem ainda.<br>Envie uma imagem larga para começar.</div>'}</div>
+    <div class="form" style="margin-top:18px"><label>Imagem do banner</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><label class="btn-mini" style="cursor:pointer;margin:0">+ Enviar imagem<input type="file" accept="image/*" style="display:none" onchange="bannerUpload(${i},this)"></label>
+      ${foto ? `<button class="btn-mini" type="button" onclick="bannerRemoveFoto(${i})" style="margin:0">Remover imagem</button>` : ''}
+      <span class="chip-status">Proporção larga (ex: 1600×700)</span></div>
+      <input type="hidden" data-b="${i}" data-k="foto" value="${String(foto).replace(/"/g, '&quot;')}">
+      <label>Para onde leva ao clicar</label><select data-b="${i}" data-k="link">
+        ${['categoria.html?cat=ver-tudo', 'categoria.html?cat=sale', 'categoria.html?cat=vestidos', 'categoria.html?cat=jeans', 'contato.html'].map(l => `<option ${b.link === l ? 'selected' : ''}>${l}</option>`).join('')}
+      </select>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:18px;flex-wrap:wrap;justify-content:space-between"><div style="display:flex;gap:8px;flex-wrap:wrap">
+      ${i > 0 ? `<button class="btn-mini" type="button" onclick="moverBanner(${i},-1)">↑ Para frente</button>` : ''}
+      ${i < PERS.banners.length - 1 ? `<button class="btn-mini" type="button" onclick="moverBanner(${i},1)">↓ Para trás</button>` : ''}
+      ${PERS.banners.length > 1 ? `<button class="btn-mini perigo" type="button" onclick="delBanner(${i})">Remover este banner</button>` : ''}
+    </div><button class="btn btn-preto" type="button" onclick="fecharModal()">Concluído</button></div>
+  </div>`);
+  $('#modalBox').classList.add('banner-modal-box');
+}
+function atualizarBannerVisual(i, url) {
+  const prev = document.getElementById('bannerPrev' + i);
+  if (prev) prev.innerHTML = url
+    ? `<img src="${String(url).replace(/"/g, '&quot;')}" alt="Banner ${i + 1}">`
+    : '<div class="banner-vazio">Nenhuma imagem ainda.<br>Envie uma imagem larga para começar.</div>';
+  const card = document.querySelectorAll('.banner-card')[i];
+  if (card) {
+    const thumb = card.querySelector('.banner-card-thumb');
+    if (thumb) thumb.innerHTML = url
+      ? `<img src="${String(url).replace(/"/g, '&quot;')}" alt="Banner ${i + 1}">`
+      : '<div class="banner-vazio">Nenhuma imagem<br><small>Clique para editar</small></div>';
+    const info = card.querySelector('.banner-card-info small');
+    if (info) info.textContent = url ? 'Editar ›' : 'Adicionar ›';
+  }
+}
+async function bannerUpload(i, input) {
+  const f = (input.files || [])[0];
+  if (!f) return;
+  if (!f.type.startsWith('image/')) { toast('Escolha um arquivo de imagem.'); return; }
+  const box = document.getElementById('bannerPrev' + i);
+  if (box) box.innerHTML = '<div class="banner-vazio"><div class="spin"></div>Enviando…</div>';
+  try {
+    let url = null;
+    let sess = false;
+    try { sess = (typeof SB !== 'undefined' && SB.ok() && await SB.session()) ? true : false; } catch { sess = false; }
+    if (sess) {
+      try { toast('Enviando banner…'); } catch {}
+      url = await SB.foto(f, 'banner' + Date.now().toString(36));
+    } else {
+      const dataUrl = await new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(f); });
+      url = await reduzFoto(dataUrl, 1600, 0.78);
+    }
+    if (!url) throw new Error('falha');
+    lerBanners();
+    PERS.banners[i] = Object.assign({}, PERS.banners[i], { foto: url });
+    try { if (typeof DB !== 'undefined') { const s = DB.getSettings(); s.banners = PERS.banners; DB.saveSettings(s); } } catch {}
+    const hidden = document.querySelector(`input[type="hidden"][data-b="${i}"][data-k="foto"]`);
+    if (hidden) hidden.value = url;
+    atualizarBannerVisual(i, url);
+    toast('Banner atualizado! Não esqueça de Salvar tudo.');
+  } catch {
+    toast('Falha ao enviar a imagem.');
+  }
+  try { input.value = ''; } catch {}
+}
+function bannerRemoveFoto(i) {
+  lerBanners();
+  if (PERS.banners[i]) PERS.banners[i].foto = '';
+  const estavaEditando = document.getElementById('modalFundo').classList.contains('aberto');
+  rPersonalizar();
+  if (estavaEditando) abrirBannerEditor(i);
+}
+function moverBanner(i, d) {
+  lerBanners();
+  const j = i + d;
+  if (j < 0 || j >= PERS.banners.length) return;
+  const [mv] = PERS.banners.splice(i, 1);
+  PERS.banners.splice(j, 0, mv);
+  const estavaEditando = document.getElementById('modalFundo').classList.contains('aberto');
+  rPersonalizar();
+  if (estavaEditando) abrirBannerEditor(j);
+}
+function trocarCor(c) { document.getElementById('cCor').value = c; aplicarCorAdmin(c); document.querySelectorAll('.swatches button').forEach(b => b.classList.toggle('sel', b.getAttribute('onclick').includes(c))); }
+function addBanner() {
+  lerBanners();
+  PERS.banners.push({ foto: '', link: 'categoria.html?cat=ver-tudo' });
+  rPersonalizar();
+  toast('Banner adicionado. Envie a imagem!');
+}
+async function delBanner(i) {
+  if (!await popupConfirm({ titulo: 'Remover banner?', texto: 'Este banner vai sumir da página inicial.', ok: 'Remover', perigo: true })) return;
+  lerBanners();
+  PERS.banners.splice(i, 1);
+  const estavaEditando = document.getElementById('modalFundo').classList.contains('aberto');
+  rPersonalizar();
+  if (estavaEditando) {
+    if (PERS.banners.length) abrirBannerEditor(Math.min(i, PERS.banners.length - 1));
+    else fecharModal();
+  }
+}
+function lerBanners() {
+  document.querySelectorAll('[data-b]').forEach(el => {
+    const i = +el.dataset.b;
+    if (PERS.banners[i]) PERS.banners[i][el.dataset.k] = el.value;
+  });
+  PERS.nomeLoja = $('#cNome').value.trim();
+  PERS.cor = $('#cCor').value;
+  PERS.whatsapp = $('#cZap').value.replace(/\D/g, '');
+  PERS.email = $('#cEmail').value.trim();
+  PERS.endereco = $('#cEnd').value.trim();
+  PERS.instagram = $('#cInsta').value.trim();
+  PERS.informacoes = {
+    atendimento: $('#cAtend').value.trim(),
+    horarioAtendimento: $('#cHorario').value.trim(),
+    prazoEnvio: $('#cPrazoEnvio').value.trim(),
+    envioDetalhe: $('#cEnvioDetalhe').value.trim()
+    ,visiveis: {
+      atendimento: $('#vAtend').checked,
+      horarioAtendimento: $('#vHorario').checked,
+      prazoEnvio: $('#vPrazoEnvio').checked,
+      envioDetalhe: $('#vEnvioDetalhe').checked
+    }
+  };
+}
+function salvarPersonalizar() {
+  lerBanners();
+  if (!PERS.whatsapp) { toast('Digite o WhatsApp da loja.'); return; }
+  aplicarCorAdmin(PERS.cor);
+  DB.saveSettings(PERS);
+  ocultarAvisoNaoSalvo();
+  toast('Tudo salvo! Já está na loja.');
+}
+
+// ---------- PROMOÇÕES ----------
+function cupVencido(c) {
+  try {
+    if (!c.validade) return false;
+    const iso = /^\d{2}\/\d{2}\/\d{4}$/.test(c.validade) ? brParaISO(c.validade) : c.validade;
+    return new Date(iso + 'T23:59:59') < new Date();
+  } catch { return false; }
+}
+function tipoCupSel() { try { return document.getElementById('cupTipo').value; } catch { return 'porcento'; } }
+function setTipoCup(t) { const el = document.getElementById('cupTipo'); if (el) el.value = t; desenharTipoCup(); atualizaPrevCup(); }
+function desenharTipoCup() {
+  const t = tipoCupSel();
+  document.querySelectorAll('.tipo-seg button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+  const lbl = document.getElementById('cupValLbl');
+  if (lbl) lbl.textContent = t === 'reais' ? 'Quanto de desconto? (R$)' : 'Quanto de desconto? (%)';
+}
+function modeloCupom(tipo, valor) {
+  const cod = document.getElementById('cupCod'); if (cod) cod.value = 'BEMVINDA10';
+  setTipoCup(tipo);
+  const v = document.getElementById('cupVal'); if (v) v.value = valor;
+  atualizaPrevCup();
+}
+function atualizaPrevCup() {
+  const box = document.getElementById('cupPrev'); if (!box) return;
+  const cod = (document.getElementById('cupCod') || {}).value || 'SEUCUPOM';
+  const tipo = tipoCupSel();
+  const val = +((document.getElementById('cupVal') || {}).value || 0);
+  const ven = (document.getElementById('cupVen') || {}).value || '';
+  const min = +((document.getElementById('cupMin') || {}).value || 0);
+  const desc = tipo === 'reais' ? ('R$ ' + val + ' off') : (val + '% off');
+  box.innerHTML = `<span class="badge ${tipo === 'reais' ? 'promo' : 'lanc'}">${desc}</span>`
+    + `<div class="promo-code">${String(cod).toUpperCase() || 'SEUCUPOM'}</div>`
+    + `<div class="promo-meta">${ven ? 'Vale até ' + ven : 'Sem validade'}${min ? ' · mín ' + BRL(min) : ''}<br>A cliente digita na sacola e ganha na hora.</div>`;
+}
+function copiarCupom(codigo) {
+  try {
+    if (navigator.clipboard) navigator.clipboard.writeText(codigo).then(() => toast('Código copiado!'));
+    else toast(codigo);
+  } catch { toast(codigo); }
+}
+function rPromocoes() {
+  const cups = DB.listCoupons();
+  const ativos = cups.filter(c => !cupVencido(c)).length;
+  const vencidos = cups.length - ativos;
+  $('#admMain').innerHTML = `<div class="secao on"><h2>Promoções</h2><p class="adm-sub">Cupons de desconto para a cliente usar na sacola.</p>
+  <div class="est-resumo"><div class="est-box"><b>${cups.length}</b><span>cupons</span></div><div class="est-box"><b>${ativos}</b><span>ativos</span></div><div class="est-box"><b>${vencidos}</b><span>vencidos</span></div></div>
+  <div class="promo-layout"><div class="card form"><h3 style="font-family:Georgia,serif;font-weight:400;margin:0 0 4px">Criar cupom</h3>
+    <p class="chip-status" style="margin:0 0 6px">Ex: BEMVINDA10 com 10% para a primeira compra.</p>
+    <label>Código <span class="fld-req">*</span></label><input type="text" id="cupCod" placeholder="BEMVINDA10" style="text-transform:uppercase" maxlength="20">
+    <label>Tipo</label><div class="tipo-seg"><button type="button" data-t="porcento" onclick="setTipoCup('porcento')">% Porcentagem</button><button type="button" data-t="reais" onclick="setTipoCup('reais')">R$ Reais</button></div>
+    <select id="cupTipo" style="display:none"><option value="porcento">Porcentagem (%)</option><option value="reais">Valor em reais (R$)</option></select>
+    <label id="cupValLbl">Quanto de desconto? (%)</label><input type="number" id="cupVal" min="0" step="0.01" placeholder="10">
+    <div class="mini-row"><div><label>Vale até — DD/MM/AAAA</label><input type="text" id="cupVen" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10"></div>
+    <div><label>Mínimo R$</label><input type="number" id="cupMin" min="0" step="1" placeholder="0"></div></div>
+    <div class="quick-cups"><button type="button" class="chip-pick" onclick="modeloCupom('porcento',10)">10% boas-vindas</button><button type="button" class="chip-pick" onclick="modeloCupom('porcento',20)">20% queima</button><button type="button" class="chip-pick" onclick="modeloCupom('reais',20)">R$20 off</button></div>
+    <button class="btn btn-preto" style="margin-top:12px;width:100%" onclick="criarCupom()">Criar cupom</button>
+    <div class="promo-ticket" id="cupPrev" style="margin-top:12px"></div></div>
+  <div style="display:grid;gap:10px;align-content:start">${cups.map(c => {
+    const venc = cupVencido(c);
+    return `<div class="promo-ticket${venc ? ' vencido' : ''}"><div style="display:flex;gap:8px;align-items:center"><span class="promo-desc">${c.tipo === 'porcento' ? c.valor + '% off' : 'R$ ' + c.valor + ' off'}</span><span class="badge ${venc ? 'zero' : 'ok'}" style="margin-left:auto">${venc ? 'Vencido' : 'Ativo'}</span></div>`
+    + `<div class="promo-code">${c.codigo}</div>`
+    + `<div class="promo-meta">${c.validade ? 'Vale até ' + fmtDataBR(c.validade) : 'Sem validade'}${c.minimo ? ' · mín ' + BRL(c.minimo) : ''}</div>`
+    + `<div class="promo-acoes"><button class="btn-mini" onclick="copiarCupom('${String(c.codigo).replace(/'/g, '')}')">Copiar código</button><button class="btn-mini perigo" onclick="apagarCupom('${String(c.codigo).replace(/'/g, '')}')">Apagar</button></div></div>`;
+  }).join('') || '<div class="card"><div class="vazio">Nenhum cupom ainda.<br>Crie o primeiro ao lado.</div></div>'}</div></div></div>`;
+  const ven = document.getElementById('cupVen');
+  if (ven) ven.addEventListener('input', () => { mascaraDataBR(ven); atualizaPrevCup(); });
+  ['cupCod', 'cupVal', 'cupMin'].forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('input', () => { if (id === 'cupCod') el.value = el.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); atualizaPrevCup(); }); });
+  const tipo = document.getElementById('cupTipo');
+  if (tipo) tipo.addEventListener('change', () => { desenharTipoCup(); atualizaPrevCup(); });
+  desenharTipoCup(); atualizaPrevCup();
+}
+async function apagarCupom(codigo) {
+  if (!await popupConfirm({ titulo: 'Apagar cupom?', texto: `Apagar o cupom <b>${codigo}</b>?`, ok: 'Apagar', perigo: true })) return;
+  DB.deleteCoupon(codigo); toast('Cupom apagado.'); rPromocoes();
+}
+function fmtDataBR(v) {
+  v = String(v || '').trim();
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(v)) return v;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v.split('-').reverse().join('/');
+  return v;
+}
+function brParaISO(v) {
+  v = String(v || '').trim();
+  if (!v) return '';
+  const m = v.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!m) return null;
+  const dd = +m[1], mm = +m[2], aa = +m[3];
+  if (mm < 1 || mm > 12 || dd < 1 || dd > 31 || aa < 2020 || aa > 2100) return null;
+  const d = new Date(aa, mm - 1, dd);
+  if (d.getFullYear() !== aa || d.getMonth() !== mm - 1 || d.getDate() !== dd) return null;
+  return `${aa}-${String(mm).padStart(2, '0')}-${String(dd).padStart(2, '0')}`;
+}
+function mascaraDataBR(el) {
+  const dig = String(el.value || '').replace(/\D/g, '').slice(0, 8);
+  let out = dig;
+  if (dig.length > 4) out = dig.slice(0, 2) + '/' + dig.slice(2, 4) + '/' + dig.slice(4);
+  else if (dig.length > 2) out = dig.slice(0, 2) + '/' + dig.slice(2);
+  el.value = out;
+}
+function criarCupom() {
+  const venBR = $('#cupVen').value;
+  const venISO = brParaISO(venBR);
+  if (venBR && venISO === null) { toast('Data inválida. Use DD/MM/AAAA.'); return; }
+  const erro = DB.saveCoupon({ codigo: $('#cupCod').value, tipo: $('#cupTipo').value, valor: $('#cupVal').value, validade: venISO || '', minimo: $('#cupMin').value });
+  if (erro) { toast(erro); return; }
+  ocultarAvisoNaoSalvo();
+  toast('Cupom criado!');
+  rPromocoes();
+}
+
+// ---------- CONFIG ----------
+function rConfig() {
+  const s = DB.getSettings();
+  const pg = Object.assign({ extras: [] }, s.pagamento);
+  window.__pgExtras = Array.isArray(pg.extras) ? pg.extras.slice(0, 10) : [];
+  $('#admMain').innerHTML = `<div class="secao on"><h2>Configurações</h2><p class="adm-sub">Ajustes gerais da loja.</p>
+  <div class="card form"><h3 style="font-family:Georgia,serif;font-weight:400">Formas de pagamento (aparecem na sacola)</h3>
+    <label style="display:flex;gap:10px;align-items:center;font-size:15px;text-transform:none;letter-spacing:0"><input type="checkbox" id="pgPix" ${pg.pix ? 'checked' : ''} style="width:20px;height:20px"> Pix</label>
+    <label style="display:flex;gap:10px;align-items:center;font-size:15px;text-transform:none;letter-spacing:0"><input type="checkbox" id="pgBol" ${pg.boleto ? 'checked' : ''} style="width:20px;height:20px"> Boleto bancário</label>
+    <label style="display:flex;gap:10px;align-items:center;font-size:15px;text-transform:none;letter-spacing:0"><input type="checkbox" id="pgCar" ${pg.cartao ? 'checked' : ''} style="width:20px;height:20px"> Cartão de crédito em até 6x</label>
+    <label style="display:flex;gap:10px;align-items:center;font-size:15px;text-transform:none;letter-spacing:0;margin-top:14px"><input type="checkbox" id="pgCarrinho" ${pg.mostrarCarrinho !== false ? 'checked' : ''} style="width:20px;height:20px"> Mostrar formas de pagamento na sacola</label>
+    <label style="margin-top:10px">Outras formas (ex: Dinheiro, Transferência, Link de pagamento)</label>
+    <div id="pgExtras"></div>
+    <div style="display:flex;gap:8px;margin-top:8px"><input type="text" id="pgNova" placeholder="Ex: Dinheiro" maxlength="30" style="flex:1"><button class="btn-mini" type="button" onclick="addPagExtra()">+ Adicionar</button></div>
+    <button class="btn btn-preto" style="margin-top:14px" onclick="salvarPag()">Salvar pagamento</button></div>
+  <div class="card form"><h3 style="font-family:Georgia,serif;font-weight:400">Trocar minha senha</h3>
+    <label>Nova senha</label><input type="password" id="ns1" autocomplete="new-password">
+    <label>Repita a nova senha</label><input type="password" id="ns2" autocomplete="new-password">
+    <button class="btn btn-preto" style="margin-top:14px" onclick="trocarSenha()">Trocar senha</button></div>
+  <div class="card"><h3 style="font-family:Georgia,serif;font-weight:400;color:#8F2B2B">Zona de perigo</h3>
+    <p class="chip-status">Apaga TUDO que você mudou no painel e volta a loja ao original.</p>
+    <button class="btn-mini perigo" onclick="resetTudo()">Voltar tudo ao original</button></div></div>`;
+  desenharPagExtras();
+  const nova = document.getElementById('pgNova');
+  if (nova) nova.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addPagExtra(); } });
+}
+function desenharPagExtras() {
+  const box = document.getElementById('pgExtras'); if (!box) return;
+  const arr = window.__pgExtras || [];
+  box.innerHTML = arr.map((n, i) => `<div class="frase" style="display:flex;align-items:center;gap:8px"><b style="flex:1">${String(n).replace(/</g, '&lt;')}</b><button class="btn-mini perigo" type="button" onclick="removePagExtra(${i})">Remover</button></div>`).join('')
+    || '<p class="chip-status" style="margin:4px 0">Nenhuma extra. Adicione acima se precisar.</p>';
+}
+function addPagExtra() {
+  const el = document.getElementById('pgNova'); if (!el) return;
+  const nome = String(el.value || '').trim().replace(/\s+/g, ' ').slice(0, 30);
+  if (!nome) { toast('Escreva o nome da forma de pagamento.'); return; }
+  window.__pgExtras = window.__pgExtras || [];
+  if (window.__pgExtras.some(x => String(x).toLowerCase() === nome.toLowerCase())) { toast('Essa forma já está na lista.'); return; }
+  if (window.__pgExtras.length >= 10) { toast('Máximo de 10 formas extras.'); return; }
+  window.__pgExtras.push(nome);
+  el.value = '';
+  desenharPagExtras();
+}
+function removePagExtra(i) {
+  window.__pgExtras = window.__pgExtras || [];
+  window.__pgExtras.splice(i, 1);
+  desenharPagExtras();
+}
+function salvarPag() {
+  const s = DB.getSettings();
+  const extras = (window.__pgExtras || []).map(x => String(x).trim()).filter(Boolean).slice(0, 10);
+  s.pagamento = { pix: $('#pgPix').checked, boleto: $('#pgBol').checked, cartao: $('#pgCar').checked, extras, mostrarCarrinho: $('#pgCarrinho').checked };
+  if (!s.pagamento.pix && !s.pagamento.boleto && !s.pagamento.cartao && !extras.length) { toast('Deixe ao menos uma forma ligada.'); return; }
+  DB.saveSettings(s);
+  ocultarAvisoNaoSalvo();
+  toast('Pagamento atualizado!');
+}
+// ---------- WHATSAPP ----------
+const WA_PLACEHOLDERS = [
+  ['[nome]', 'Nome da cliente'], ['[cliente]', 'Nome da cliente'], ['[telefone]', 'WhatsApp da cliente'], ['[endereco]', 'Endereço de entrega'],
+  ['[pedido]', 'Número do pedido'], ['[produto]', 'Produto com ID'], ['[id produto]', 'ID do produto'], ['[itens]', 'Lista completa com IDs'],
+  ['[valor]', 'Valor do primeiro produto'], ['[subtotal]', 'Subtotal'], ['[desconto]', 'Desconto'],
+  ['[valor total]', 'Total do pedido'], ['[cupom]', 'Cupom usado'], ['[pagamento]', 'Forma de pagamento'],
+  ['[loja]', 'Nome da loja']
+];
+const WA_PRESETS = [
+  { nome:'Completa', texto:'Olá! Sou [nome], quero finalizar meu pedido [pedido] na [loja].\n\n[itens]\n\nSubtotal: [subtotal]\nDesconto: [desconto]\nCupom: [cupom]\nTotal: [valor total]\nPagamento: [pagamento]\nEndereço: [endereco]' },
+  { nome:'Curta', texto:'Olá! Sou [nome] e quero finalizar o pedido [pedido].\n\n[itens]\nTotal: [valor total]\nPagamento: [pagamento]' },
+  { nome:'Formal', texto:'Olá, [loja]. Meu nome é [nome]. Gostaria de confirmar o pedido [pedido].\n\nItens:\n[itens]\n\nValor total: [valor total]\nForma de pagamento: [pagamento].\nTelefone para contato: [telefone].\nEndereço de entrega: [endereco].' }
+];
+function valorPreviewWA(chave) {
+  return ({'[nome]':'Maria Silva','[cliente]':'Maria Silva','[telefone]':'(11) 99999-9999','[endereco]':'Rua das Flores, 100 - São Paulo/SP','[pedido]':'EM-000123','[produto]':'Vestido Floral (ID: P18)','[id produto]':'P18','[itens]':'• 1x Vestido Floral (ID: P18) (Azul / M)','[valor]':'R$ 149,90','[subtotal]':'R$ 149,90','[desconto]':'R$ 0,00','[valor total]':'R$ 149,90','[cupom]':'Nenhum','[pagamento]':'Pix','[loja]':DB.getSettings().nomeLoja}[chave] || chave);
+}
+function atualizarPreviewWA() {
+  const campo = document.getElementById('waMensagem'), preview = document.getElementById('waPreview');
+  if (!campo || !preview) return;
+  let texto = campo.value;
+  WA_PLACEHOLDERS.forEach(([chave]) => { texto = texto.split(chave).join(valorPreviewWA(chave)); });
+  preview.textContent = texto;
+}
+function inserirPlaceholderWA(chave) {
+  const campo = document.getElementById('waMensagem'); if (!campo) return;
+  const inicio = campo.selectionStart, fim = campo.selectionEnd;
+  campo.value = campo.value.slice(0, inicio) + chave + campo.value.slice(fim);
+  campo.focus(); campo.selectionStart = campo.selectionEnd = inicio + chave.length;
+  atualizarPreviewWA(); mostrarAvisoNaoSalvo();
+}
+function aplicarPresetWA(i) {
+  const campo = document.getElementById('waMensagem'), modelo = WA_PRESETS[i];
+  if (!campo || !modelo) return;
+  campo.value = modelo.texto;
+  campo.focus();
+  atualizarPreviewWA();
+  mostrarAvisoNaoSalvo();
+}
+function rWhatsapp() {
+  const cfg = DB.getSettings().whatsappConfig || {};
+  $('#admMain').innerHTML = `<div class="secao on"><h2>WhatsApp</h2><p class="adm-sub">Personalize a mensagem enviada quando uma cliente finalizar um pedido.</p>
+    <div class="card form"><div class="whatsapp-editor"><div><label>Mensagem padrão do pedido</label>
+      <label style="margin-top:4px">Usar uma mensagem pronta</label><div class="wa-presets">${WA_PRESETS.map((p, i) => `<button type="button" class="wa-preset" onclick="aplicarPresetWA(${i})">${p.nome}</button>`).join('')}</div>
+      <textarea id="waMensagem" class="wa-msg" maxlength="2000" placeholder="Escreva a mensagem que será enviada...">${String(cfg.mensagemPedido || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+      <label style="margin-top:14px">Clique em uma placeholder para inserir</label><div class="wa-placeholders">${WA_PLACEHOLDERS.map(([chave, dica]) => `<button type="button" class="wa-placeholder" title="${dica}" onclick="inserirPlaceholderWA('${chave}')">${chave}</button>`).join('')}</div>
+      <button class="btn btn-preto" style="margin-top:18px" onclick="salvarWhatsapp()">Salvar mensagem</button></div>
+      <div><label>Prévia da mensagem</label><div class="wa-phone"><div class="wa-screen"><div class="wa-phone-head"><span style="font-size:13px">‹</span><span class="wa-phone-avatar"><img src="../assets/img/WhatsApp.png" alt=""></span><span>Encanto Miranda<small class="wa-phone-status">online</small></span></div><div id="waPreview" class="wa-chat"></div></div></div><p class="chip-status" style="margin-top:10px">Os dados da prévia são apenas exemplos. Na finalização, serão substituídos pelos dados reais.</p></div></div></div>
+    <div class="card"><h3 style="font-family:Georgia,serif;font-weight:400">Como usar</h3><p class="chip-status">Digite livremente, use quebras de linha e clique nas placeholders para inserir dados automáticos do pedido.</p></div></div>`;
+  $('#waMensagem').addEventListener('input', atualizarPreviewWA);
+  atualizarPreviewWA();
+}
+function salvarWhatsapp() {
+  const s = DB.getSettings();
+  s.whatsappConfig = { mensagemPedido: String($('#waMensagem').value || '').trim().slice(0, 2000) };
+  if (!s.whatsappConfig.mensagemPedido) return toast('Escreva uma mensagem antes de salvar.');
+  DB.saveSettings(s); ocultarAvisoNaoSalvo(); toast('Mensagem do WhatsApp salva!');
+}
+async function trocarSenha() {
+  const a = $('#ns1').value, b = $('#ns2').value;
+  if (a.length < 6) { toast('Senha muito curta. Use 6 letras ou mais.'); return; }
+  if (a !== b) { toast('As senhas não combinam.'); return; }
+  try {
+    if (typeof SB !== 'undefined' && SB.ok() && await SB.session()) {
+      const r = await SB.senha(a);
+      if (r.erro) { toast(r.erro); return; }
+      $('#ns1').value = $('#ns2').value = '';
+      toast('Senha trocada em todos os aparelhos!');
+      return;
+    }
+  } catch {}
+  localStorage.setItem('em_admin_pass', a);
+  $('#ns1').value = $('#ns2').value = '';
+  toast('Senha trocada neste aparelho!');
+}
+async function resetTudo() {
+  if (!await popupConfirm({ titulo: 'Voltar ao original?', texto: 'Apagar <b>TUDO</b> que você mudou no painel e voltar a loja ao original?', ok: 'Continuar', perigo: true })) return;
+  if (!await popupConfirm({ titulo: 'Tem certeza mesmo?', texto: 'Não dá para desfazer.', ok: 'Apagar tudo', perigo: true })) return;
+  DB.resetAll();
+  toast('Loja original restaurada.');
+  setTimeout(() => location.reload(), 800);
+}
+
+// ---------- AJUDA ----------
+const AJUDA = [
+  ['Cadastrar um produto', ['Abra <b>Produtos</b> e clique em <b>+ Adicionar produto</b>.', 'Preencha nome, preço e categoria. A foto pode ser da galeria ou do seu celular.', 'Informe tamanhos, cores e estoque.', 'Clique em <b>Publicar produto</b>. Pronto, já está na loja!']],
+  ['Alterar um preço', ['Abra <b>Produtos</b>, ache o produto e clique em <b>Editar</b>.', 'Mude o preço e clique em <b>Publicar produto</b>.']],
+  ['Fazer uma promoção', ['Edite o produto e preencha o <b>preço antigo</b> (maior que o atual).', 'A loja mostra o desconto sozinha. Ou crie um <b>cupom</b> em Promoções.']],
+  ['Adicionar estoque', ['Abra <b>Estoque</b>, clique em <b>+ Adicionar</b> e diga quantas peças chegaram.']],
+  ['Trocar a foto', ['Edite o produto, escolha outra foto na galeria ou envie uma nova, e publique.']],
+  ['Mudar o WhatsApp da loja', ['Abra <b>Personalizar site</b>, troque o número e clique em <b>Salvar tudo</b>.']],
+  ['Atualizar um pedido', ['Abra <b>Pedidos</b>, clique em <b>Ver detalhes</b> e avance a situação até concluir.']]
+];
+function rAjuda() {
+  $('#admMain').innerHTML = `<div class="secao on"><h2>Ajuda</h2><p class="adm-sub">Passo a passo das tarefas do dia a dia.</p>
+  ${AJUDA.map(a => `<div class="card ajuda-card"><h3>${a[0]}</h3><ol>${a[1].map(p => `<li>${p}</li>`).join('')}</ol></div>`).join('')}</div>`;
+}
+
+// ---------- TESTES ----------
+const comTempo = (p, ms, nome) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('Demorou demais em: ' + nome)), ms || 15000))]);
+function passoTeste(box, ok, titulo, detalhe) {
+  box.insertAdjacentHTML('beforeend', `<div class="frase"><b style="color:${ok ? '#397a49' : '#8F2B2B'}">${ok ? '✓' : '✗'}</b> <b>${titulo}</b><br><span class="chip-status">${detalhe}</span></div>`);
+}
+function rTestes() {
+  $('#admMain').innerHTML = `<div class="secao on"><h2>Testes</h2><p class="adm-sub">Aperte um botão e veja se cada ligação está funcionando.</p>
+  <div class="card"><h3 style="font-family:Georgia,serif;font-weight:400;margin-bottom:4px">Banco de dados (Supabase)</h3>
+    <p class="chip-status">Confere internet, tabelas, login, escrita e tempo real.</p>
+    <button class="btn btn-preto btn-grande" id="btnSB" style="margin-top:10px">Testar Supabase agora</button>
+    <div id="resSB" style="margin-top:8px"></div></div>
+  <div class="card"><h3 style="font-family:Georgia,serif;font-weight:400;margin-bottom:4px">Fotos externas (ImageKit)</h3>
+    <p class="chip-status">Confere se o endereço das fotos responde. A chave secreta nunca sai deste aparelho.</p>
+    <button class="btn btn-preto btn-grande" id="btnIK" style="margin-top:10px">Testar ImageKit agora</button>
+    <div id="resIK" style="margin-top:8px"></div></div></div>`;
+  $('#btnSB').addEventListener('click', testarSupabase);
+  $('#btnIK').addEventListener('click', testarImagekit);
+}
+async function testarSupabase() {
+  const box = $('#resSB');
+  box.innerHTML = '';
+  $('#btnSB').disabled = true;
+  try {
+    const temSB = (typeof SB !== 'undefined' && SB.ok());
+    passoTeste(box, temSB, 'Programa de ligação carregado', temSB ? 'Biblioteca pronta.' : 'Sem biblioteca ou sem internet para o CDN.');
+    if (!temSB) { passoTeste(box, false, 'Resultado', 'Conecte a internet e recarregue a página.'); return; }
+    // tabelas
+    let tabelasOk = true, faltando = [];
+    for (const t of ['categorias', 'produtos', 'pedidos', 'cupons', 'configuracoes']) {
+      try {
+        const linhas = await comTempo(SB.ler(t), 12000, t);
+        passoTeste(box, true, `Tabela "${t}" existe`, `${linhas.length} registro(s) lidos.`);
+      } catch (e) {
+        const msg = String((e && e.message) || e);
+        tabelasOk = false;
+        if (/fetch|network|failed|load/i.test(msg)) faltando.push(t + ' (internet?)');
+        else faltando.push(t);
+        passoTeste(box, false, `Tabela "${t}" com problema`, msg.slice(0, 140));
+      }
+    }
+    if (!tabelasOk) {
+      passoTeste(box, false, 'Falta rodar o SQL', 'Abra o arquivo supabase-schema.sql, cole no SQL Editor do Supabase e clique em RUN. Depois teste de novo.');
+      return;
+    }
+    // login
+    let email = '';
+    try { const s = await comTempo(SB.session(), 10000, 'sessão'); email = s && s.user ? s.user.email : ''; } catch {}
+    passoTeste(box, !!email, 'Login do administrador', email ? `Logado como ${email}.` : 'Sem sessão. Saia e entre de novo.');
+    // escrita: cria e apaga um produto de teste (rascunho, não aparece na loja)
+    try {
+      await comTempo(SB.gravar('produtos', { id: 'teste-conexao', nome: 'TESTE DE CONEXÃO', descricao: 'pode apagar', tecido: '', preco: 1, preco_antigo: null, categoria: null, selo: null, cores: [], tamanhos: [], estoque: 0, foto: null, rascunho: true }), 12000, 'escrita');
+      await comTempo(SB.apagar('produtos', 'id', 'teste-conexao'), 12000, 'apagar teste');
+      passoTeste(box, true, 'Escrever e apagar', 'Criou e apagou um item de teste com sucesso.');
+    } catch (e) {
+      passoTeste(box, false, 'Escrever e apagar', String((e && e.message) || e).slice(0, 160) + ' — confira o login e as regras (RLS).');
+    }
+    // tempo real
+    try {
+      const st = await SB.vivo(9000);
+      passoTeste(box, st === 'SUBSCRIBED', 'Tempo real (loja atualiza sozinha)', st === 'SUBSCRIBED' ? 'Canal aberto.' : 'Resposta: ' + st);
+    } catch (e) {
+      passoTeste(box, false, 'Tempo real (loja atualiza sozinha)', String((e && e.message) || e).slice(0, 140));
+    }
+    passoTeste(box, true, 'Teste concluído', 'Se tudo acima tem ✓, a nuvem está 100%.');
+  } finally { $('#btnSB').disabled = false; }
+}
+const IK_URL = 'https://ik.imagekit.io/isa2koeb2';
+const IK_PUBLIC = 'public_M4XXMyNcuHsTA/Iv32edvWiub8Q=';
+async function testarImagekit() {
+  const box = $('#resIK');
+  box.innerHTML = '';
+  $('#btnIK').disabled = true;
+  try {
+    passoTeste(box, IK_URL.startsWith('https://ik.imagekit.io/'), 'Endereço válido', IK_URL);
+    try {
+      await comTempo(fetch(IK_URL, { mode: 'no-cors' }), 12000, 'alcance');
+      passoTeste(box, true, 'Servidor responde', 'O endereço das fotos está no ar.');
+    } catch {
+      passoTeste(box, false, 'Servidor responde', 'Sem resposta. Confira a internet.');
+      return;
+    }
+    passoTeste(box, IK_PUBLIC.startsWith('public_'), 'Chave pública no formato certo', 'Só a chave pública fica no site. A secreta nunca sai daqui.');
+    box.insertAdjacentHTML('beforeend', `<div class="form" style="margin-top:10px"><label>Nome de uma foto que está no ImageKit (para ver ao vivo)</label>
+      <div style="display:flex;gap:8px"><input type="text" id="ikNome" value="IMG_7186_OYLe-mj5I.JPG" style="flex:1"><button class="btn btn-borda" id="ikVer" type="button">Mostrar</button></div>
+      <div id="ikPrev" style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap"></div></div>`);
+    $('#ikVer').addEventListener('click', () => {
+      const nome = $('#ikNome').value.trim();
+      const prev = $('#ikPrev');
+      if (!nome) { toast('Digite o nome do arquivo.'); return; }
+      prev.innerHTML = `<div><div class="chip-status">Original</div><img id="ikA" style="max-width:220px;border-radius:8px;border:1px solid #E6DCCF"></div>
+      <div><div class="chip-status">Pequena (largura 400)</div><img id="ikB" style="max-width:220px;border-radius:8px;border:1px solid #E6DCCF"></div>`;
+      const a = $('#ikA'), b = $('#ikB');
+      a.onload = () => passoTeste(box, true, 'Foto original abriu', IK_URL + '/' + nome);
+      a.onerror = () => passoTeste(box, false, 'Foto original abriu', 'Não achei esse arquivo na conta. Confira o nome.');
+      b.onload = () => passoTeste(box, true, 'Miniatura automática', 'O redimensionamento funciona.');
+      b.onerror = () => passoTeste(box, false, 'Miniatura automática', 'Não gerou a miniatura.');
+      a.src = IK_URL + '/' + nome;
+      b.src = IK_URL + '/tr:w-400/' + nome;
+    });
+  } finally { $('#btnIK').disabled = false; }
+}
+
+const RENDER = { inicio: rInicio, produtos: rProdutos, categorias: rCategorias, estoque: rEstoque, pedidos: rPedidos, clientes: rClientes, personalizar: rPersonalizar, whatsapp: rWhatsapp, promocoes: rPromocoes, config: rConfig, testes: rTestes, ajuda: rAjuda };
+(async () => {
+  try {
+    if (typeof SB !== 'undefined' && SB.ok() && await SB.session()) { sessionStorage.setItem('em_admin', '1'); entrar(); return; }
+  } catch {}
+  if (sessionStorage.getItem('em_admin') === '1') entrar();
+})();
+</script>
+</body>
+</html>
