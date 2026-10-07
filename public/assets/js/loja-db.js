@@ -38,8 +38,15 @@ const DB = (() => {
     if (typeof foto === 'string' && foto.trim().startsWith('[')) { try { const a = JSON.parse(foto); if (Array.isArray(a)) return a.filter(Boolean); } catch {} }
     return [foto];
   };
-  const pToRow = p => ({ id: String(p.id), nome: p.nome, descricao: p.desc || '', tecido: p.tecido || '', preco: +p.preco || 0, preco_antigo: p.antigo == null ? null : +p.antigo, categoria: p.cat || null, selo: p.selo || null, cores: p.cores || [], tamanhos: p.tams || [], estoque: p.estoque || 0, parcelas: Math.min(12, Math.max(1, Math.round(+p.parcelas || 6))), foto: fotoParaNuvem(p), rascunho: !!p.rascunho, destaque: !!p.destaque });
-  const pFromRow = r => { const fa = fotosDaNuvem(r.foto); return { id: r.id, nome: r.nome, desc: r.descricao || '', tecido: r.tecido || '', preco: +r.preco, antigo: r.preco_antigo == null ? null : +r.preco_antigo, cat: r.categoria, selo: r.selo, cores: r.cores || [], tams: r.tamanhos || [], estoque: r.estoque || 0, parcelas: Math.min(12, Math.max(1, Math.round(+r.parcelas || 6))), foto: fa[0] || null, fotos: fa, rascunho: !!r.rascunho, destaque: !!r.destaque }; };
+  const estoqueCoresNormalizado = valor => {
+    const entrada = valor && typeof valor === 'object' && !Array.isArray(valor) ? valor : {};
+    const saida = {};
+    Object.keys(entrada).forEach(cor => { const nome = String(cor).trim(); if (nome) saida[nome] = Math.max(0, Math.round(+entrada[cor] || 0)); });
+    return saida;
+  };
+  const totalEstoqueCores = mapa => Object.values(mapa).reduce((s, n) => s + (+n || 0), 0);
+  const pToRow = p => ({ id: String(p.id), nome: p.nome, descricao: p.desc || '', tecido: p.tecido || '', preco: +p.preco || 0, preco_antigo: p.antigo == null ? null : +p.antigo, categoria: p.cat || null, selo: p.selo || null, cores: p.cores || [], tamanhos: p.tams || [], estoque: p.estoque || 0, estoque_por_cor: estoqueCoresNormalizado(p.estoquePorCor), parcelas: Math.min(12, Math.max(1, Math.round(+p.parcelas || 6))), foto: fotoParaNuvem(p), rascunho: !!p.rascunho, destaque: !!p.destaque });
+  const pFromRow = r => { const fa = fotosDaNuvem(r.foto); const porCor = estoqueCoresNormalizado(r.estoque_por_cor); return { id: r.id, nome: r.nome, desc: r.descricao || '', tecido: r.tecido || '', preco: +r.preco, antigo: r.preco_antigo == null ? null : +r.preco_antigo, cat: r.categoria, selo: r.selo, cores: r.cores || [], tams: r.tamanhos || [], estoque: r.estoque || 0, estoquePorCor: porCor, controlaEstoquePorCor: Object.keys(porCor).length > 0, parcelas: Math.min(12, Math.max(1, Math.round(+r.parcelas || 6))), foto: fa[0] || null, fotos: fa, rascunho: !!r.rascunho, destaque: !!r.destaque }; };
   const oToRow = o => ({ numero: o.numero, data: o.data, cliente_nome: o.nome || '', cliente_fone: o.fone || '', cliente_endereco: o.endereco || '', itens: o.itens || [], subtotal: +o.subtotal || 0, desconto: +o.desconto || 0, total: +o.total || 0, pagamento: o.pag || '', cupom: o.cupom || '', status: o.status || 'Novo', estoque_baixado: !!o.baixado });
   const oFromRow = r => ({ numero: r.numero, data: r.data, nome: r.cliente_nome, fone: r.cliente_fone, endereco: r.cliente_endereco || '', itens: r.itens || [], subtotal: +r.subtotal, desconto: +r.desconto, total: +r.total, pag: r.pagamento, cupom: r.cupom, status: r.status, baixado: !!r.estoque_baixado });
   const sToRow = () => { const s = getSettings(); return { id: 1, nome_loja: s.nomeLoja, whatsapp: s.whatsapp, whatsapp_config: s.whatsappConfig, email: s.email, endereco: s.endereco, instagram: s.instagram, frete_gratis: s.freteGratis, cor: s.cor, banners: s.banners, pagamento: s.pagamento, informacoes: s.informacoes }; };
@@ -285,9 +292,9 @@ const DB = (() => {
     const capa = fa[0] || p.foto || null;
     const isBase = baseProdutos().some(b => String(b.id) === id);
     if (isBase) {
-      S.products[id] = Object.assign({}, S.products[id], { nome: p.nome, desc: p.desc, tecido: p.tecido, preco: +p.preco, antigo: p.antigo === '' || p.antigo == null ? null : +p.antigo, cat: p.cat, selo: p.selo || null, cores: p.cores || [], tams: p.tams || [], estoque: Math.max(0, Math.round(+p.estoque || 0)), parcelas: Math.min(12, Math.max(1, Math.round(+p.parcelas || (S.products[id] || {}).parcelas || 6))), foto: capa, fotos: fa, rascunho: !!p.rascunho, destaque: !!p.destaque });
+       S.products[id] = Object.assign({}, S.products[id], { nome: p.nome, desc: p.desc, tecido: p.tecido, preco: +p.preco, antigo: p.antigo === '' || p.antigo == null ? null : +p.antigo, cat: p.cat, selo: p.selo || null, cores: p.cores || [], tams: p.tams || [], estoque: Math.max(0, Math.round(+p.estoque || 0)), estoquePorCor: estoqueCoresNormalizado(p.estoquePorCor), controlaEstoquePorCor: !!p.controlaEstoquePorCor, parcelas: Math.min(12, Math.max(1, Math.round(+p.parcelas || (S.products[id] || {}).parcelas || 6))), foto: capa, fotos: fa, rascunho: !!p.rascunho, destaque: !!p.destaque });
     } else {
-      S.products[id] = Object.assign({}, p, { preco: +p.preco, antigo: p.antigo === '' || p.antigo == null ? null : +p.antigo, estoque: Math.max(0, Math.round(+p.estoque || 0)), parcelas: Math.min(12, Math.max(1, Math.round(+p.parcelas || 6))), foto: capa, fotos: fa });
+       S.products[id] = Object.assign({}, p, { preco: +p.preco, antigo: p.antigo === '' || p.antigo == null ? null : +p.antigo, estoque: Math.max(0, Math.round(+p.estoque || 0)), estoquePorCor: estoqueCoresNormalizado(p.estoquePorCor), controlaEstoquePorCor: !!p.controlaEstoquePorCor, parcelas: Math.min(12, Math.max(1, Math.round(+p.parcelas || 6))), foto: capa, fotos: fa });
     }
     persist();
     paraNuvem({ k: 'pUp', p: getProduct(id) });
@@ -307,20 +314,33 @@ const DB = (() => {
     persist();
     paraNuvem({ k: 'pDel', id });
   }
-  function adjustStock(id, delta) {
+  function adjustStock(id, delta, cor) {
     const p = getProduct(id);
     if (!p) return 0;
-    const novo = Math.max(0, (p.estoque || 0) + delta);
+    const mapa = estoqueCoresNormalizado(p.estoquePorCor);
+    const usaCor = cor && Object.prototype.hasOwnProperty.call(mapa, cor);
+    const novoCor = usaCor ? Math.max(0, (mapa[cor] || 0) + delta) : null;
+    if (usaCor) mapa[cor] = novoCor;
+    const novo = usaCor ? totalEstoqueCores(mapa) : Math.max(0, (p.estoque || 0) + delta);
     const sid = String(id);
-    if (baseProdutos().some(b => String(b.id) === sid)) S.products[sid] = Object.assign({}, S.products[sid], { estoque: novo });
-    else if (S.products[sid]) S.products[sid].estoque = novo;
+    const alteracao = usaCor ? { estoque: novo, estoquePorCor: mapa } : { estoque: novo };
+    if (baseProdutos().some(b => String(b.id) === sid)) S.products[sid] = Object.assign({}, S.products[sid], alteracao);
+    else if (S.products[sid]) Object.assign(S.products[sid], alteracao);
     persist();
     paraNuvem({ k: 'pUp', p: getProduct(sid) });
     return novo;
   }
-  const setStock = (id, qty) => {
+  const setStock = (id, qty, cor) => {
     const p = getProduct(id);
     if (!p) return 0;
+    const mapa = estoqueCoresNormalizado(p.estoquePorCor);
+    if (cor && Object.prototype.hasOwnProperty.call(mapa, cor)) {
+      mapa[cor] = Math.max(0, Math.round(+qty || 0));
+      const total = totalEstoqueCores(mapa), sid = String(id), alteracao = { estoque: total, estoquePorCor: mapa };
+      if (baseProdutos().some(b => String(b.id) === sid)) S.products[sid] = Object.assign({}, S.products[sid], alteracao);
+      else if (S.products[sid]) Object.assign(S.products[sid], alteracao);
+      persist(); paraNuvem({ k: 'pUp', p: getProduct(sid) }); return mapa[cor];
+    }
     return adjustStock(id, Math.max(0, Math.round(+qty || 0)) - (p.estoque || 0));
   };
 

@@ -621,7 +621,7 @@ async function marcaOrigem() {
 let WIZ = null;
 function fotosDoWiz() { if (WIZ && Array.isArray(WIZ.fotos) && WIZ.fotos.length) return WIZ.fotos; if (WIZ && WIZ.foto) return [WIZ.foto]; return []; }
 function fotosProntas() { try { return fotosDoWiz().filter(f => typeof f === 'string' && f); } catch { return []; } }
-function novoProduto() { WIZ = { id: null, nome: '', preco: '', parcelas: '6', cat: (DB.listCategories()[0] || {}).slug || '', foto: '', fotos: [], estoque: '10', semEstoque: false, destaque: false, tamsTxt: 'P, M, G', coresTxt: '', desc: '', antigo: '' }; desenharWizard('Adicionar produto'); }
+function novoProduto() { WIZ = { id: null, nome: '', preco: '', parcelas: '6', cat: (DB.listCategories()[0] || {}).slug || '', foto: '', fotos: [], estoque: '10', semEstoque: false, variasCores: false, controlaEstoquePorCor: false, estoquePorCor: {}, destaque: false, tamsTxt: 'P, M, G', coresTxt: '', desc: '', antigo: '' }; desenharWizard('Adicionar produto'); }
 function editarProduto(id) {
   const p = DB.getProduct(id);
   if (!p) return;
@@ -630,7 +630,7 @@ function editarProduto(id) {
   else if (p && typeof p.foto === 'string' && p.foto.trim().startsWith('[')) { try { const a = JSON.parse(p.foto); if (Array.isArray(a)) arr = a.filter(Boolean); } catch {} }
   else if (p.foto) arr = [p.foto];
   arr = arr.map(f => (typeof f === 'string' && !f.startsWith('data:') && !f.startsWith('http') && !f.startsWith('../') && !f.startsWith('assets/')) ? '../' + f : f);
-  WIZ = { id, nome: p.nome, preco: p.preco, parcelas: p.parcelas ?? 6, cat: p.cat, foto: arr[0] || '', fotos: arr, estoque: p.estoque, semEstoque: (p.estoque || 0) >= 9999, destaque: p.destaque === true, tamsTxt: (p.tams || []).join(', '), coresTxt: (p.cores || []).join(', '), desc: p.desc || '', antigo: p.antigo ?? '' };
+  WIZ = { id, nome: p.nome, preco: p.preco, parcelas: p.parcelas ?? 6, cat: p.cat, foto: arr[0] || '', fotos: arr, estoque: p.estoque, semEstoque: (p.estoque || 0) >= 9999, variasCores: p.cores && p.cores.length > 1, controlaEstoquePorCor: !!p.controlaEstoquePorCor, estoquePorCor: Object.assign({}, p.estoquePorCor || {}), destaque: p.destaque === true, tamsTxt: (p.tams || []).join(', '), coresTxt: (p.cores || []).join(', '), desc: p.desc || '', antigo: p.antigo ?? '' };
   if (WIZ.foto && !WIZ.foto.startsWith('data:') && !WIZ.foto.startsWith('http') && !WIZ.foto.startsWith('../')) WIZ.foto = '../' + WIZ.foto;
   desenharWizard('Editar produto');
 }
@@ -778,6 +778,25 @@ function desenharChipsCor() {
   const opcoes = ['Preto', 'Branco', 'Bege', 'Marrom', 'Verde', 'Azul', 'Rosa', 'Vermelho'];
   box.innerHTML = opcoes.map(o => `<button type="button" class="chip-pick${atual.includes(o.toLowerCase()) ? ' on' : ''}" onclick="alternarCor('${o}')">${o}</button>`).join('');
 }
+function coresDoWiz() { return String((document.getElementById('wCores') || {}).value || WIZ.coresTxt || '').split(',').map(s => s.trim()).filter(Boolean); }
+function renderEstoqueCores() {
+  const box = document.getElementById('wEstCores'); if (!box || !WIZ) return;
+  const cores = coresDoWiz();
+  const mapa = WIZ.estoquePorCor || {};
+  box.innerHTML = cores.length ? cores.map(c => `<div style="display:flex;align-items:center;gap:7px;margin-top:6px"><span style="flex:1;font-weight:600">${escWiz(c)}</span><input class="w-cor-qtd" data-cor="${escWiz(c)}" type="number" min="0" step="1" value="${Math.max(0, Math.round(+mapa[c] || 0))}" style="width:92px" placeholder="Quantidade"></div>`).join('') : '<span class="hint">Adicione as cores acima para informar o estoque de cada uma.</span>';
+  box.querySelectorAll('.w-cor-qtd').forEach(el => el.addEventListener('input', () => { WIZ.estoquePorCor[el.dataset.cor] = Math.max(0, Math.round(+el.value || 0)); atualizaPrev(); }));
+}
+function alternarVariasCores(v) {
+  WIZ.variasCores = !!v;
+  const wrap = document.getElementById('wCorEstWrap'); if (wrap) wrap.style.display = WIZ.variasCores ? '' : 'none';
+  if (!WIZ.variasCores) { WIZ.controlaEstoquePorCor = false; WIZ.estoquePorCor = {}; }
+  renderEstoqueCores(); atualizaPrev();
+}
+function alternarEstoquePorCor(v) {
+  WIZ.controlaEstoquePorCor = !!v;
+  const wrap = document.getElementById('wEstCorQtdWrap'); if (wrap) wrap.style.display = WIZ.controlaEstoquePorCor ? '' : 'none';
+  renderEstoqueCores(); atualizaPrev();
+}
 function mudaEst(d) {
   const el = document.getElementById('wEst'); if (!el) return;
   el.value = Math.max(0, Math.round((+el.value || 0) + d));
@@ -801,10 +820,12 @@ function desenharWizard(titulo) {
   + `<div class="mini-row"><div><label>Preço (R$) <span class="fld-req">*</span></label><input type="number" id="wPreco" min="0" step="0.01" value="${escWiz(WIZ.preco)}" placeholder="0,00"></div>`
   + `<div><label>Preço antigo (oferta)</label><input type="number" id="wAntigo" min="0" step="0.01" value="${escWiz(WIZ.antigo)}" placeholder="Ex: 59,90"></div></div>`
   + `<div class="hint">Se o preço antigo for maior, a loja mostra o selo de oferta com o desconto.</div></div>`
-  + `<div class="wiz-sec"><h3><span class="n">3</span> Estoque</h3>`
+   + `<div class="wiz-sec"><h3><span class="n">3</span> Estoque</h3>`
   + `<div id="wEstWrap" style="${WIZ.semEstoque ? 'display:none' : ''}"><div class="est-row"><button type="button" class="step-btn" onclick="mudaEst(-1)">−</button><input type="number" id="wEst" min="0" step="1" value="${escWiz(WIZ.estoque)}" style="flex:1"><button type="button" class="step-btn" onclick="mudaEst(1)">+</button></div>`
   + `<div class="hint">Quantidade de peças disponíveis.</div></div>`
-  + `<label class="switch-row"><input type="checkbox" id="wSemEst" ${WIZ.semEstoque ? 'checked' : ''} style="width:16px;height:16px"> Não controlar estoque (sempre disponível)</label></div>`
+   + `<label class="switch-row"><input type="checkbox" id="wSemEst" ${WIZ.semEstoque ? 'checked' : ''} style="width:16px;height:16px"> Não controlar estoque (sempre disponível)</label>`
+   + `<label class="switch-row" style="margin-top:8px"><input type="checkbox" id="wVariasCores" ${WIZ.variasCores ? 'checked' : ''} style="width:16px;height:16px"> Este produto tem várias cores</label>`
+   + `<div id="wCorEstWrap" style="display:${WIZ.variasCores ? '' : 'none'};margin-top:8px;padding:9px;border:1px solid #E6DCCF;border-radius:8px;background:#FCFAF7"><label class="switch-row"><input type="checkbox" id="wControlaCor" ${WIZ.controlaEstoquePorCor ? 'checked' : ''} style="width:16px;height:16px"> Controlar estoque de cada cor</label><div id="wEstCorQtdWrap" style="display:${WIZ.controlaEstoquePorCor ? '' : 'none'};margin-top:6px"><div class="hint">Defina a quantidade disponível em cada cor na seção “Tamanhos e cores”.</div><div id="wEstCores"></div></div></div></div>`
   + `<div class="wiz-sec"><h3><span class="n">4</span> Fotos</h3>`
   + `<div class="foto-drop"><label class="btn-mini" style="cursor:pointer;margin:0">+ Adicionar fotos<input type="file" id="wUp" accept="image/*" multiple style="display:none"></label>`
   + `<button class="btn-mini" type="button" onclick="removerFoto()" style="margin:0">Limpar tudo</button>`
@@ -826,9 +847,11 @@ function desenharWizard(titulo) {
    atualizaPrev(); desenharChipsTam(); desenharChipsCor();
    document.getElementById('wDesc')?.addEventListener('keyup', guardarSelecaoDescricao);
    document.getElementById('wDesc')?.addEventListener('mouseup', guardarSelecaoDescricao);
+   document.getElementById('wVariasCores')?.addEventListener('change', e => alternarVariasCores(e.target.checked));
+   document.getElementById('wControlaCor')?.addEventListener('change', e => alternarEstoquePorCor(e.target.checked));
   ['wNome', 'wPreco', 'wParc', 'wAntigo', 'wEst', 'wCat', 'wDesc', 'wTams', 'wCores'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) { el.addEventListener('input', () => { atualizaPrev(); if (id === 'wTams') desenharChipsTam(); if (id === 'wCores') desenharChipsCor(); }); el.addEventListener('change', atualizaPrev); }
+   if (el) { el.addEventListener('input', () => { atualizaPrev(); if (id === 'wTams') desenharChipsTam(); if (id === 'wCores') { desenharChipsCor(); renderEstoqueCores(); } }); el.addEventListener('change', atualizaPrev); }
   });
   const destEl = document.getElementById('wDestaque');
   if (destEl) destEl.addEventListener('change', () => { WIZ.destaque = destEl.checked; mostrarAvisoNaoSalvo(); atualizaPrev(); });
@@ -839,7 +862,7 @@ function desenharWizard(titulo) {
     if (w) w.style.display = semEl.checked ? 'none' : '';
     atualizaPrev();
   });
-  renderFotosWizard();
+   renderFotosWizard(); renderEstoqueCores();
   const up = document.getElementById('wUp');
   if (up) up.addEventListener('change', async () => {
     const files = Array.from(up.files || []);
@@ -931,7 +954,10 @@ function lerPasso() {
   if ((x = v('#wCores')) !== null) WIZ.coresTxt = x.trim();
   if ((x = v('#wEst')) !== null) WIZ.estoque = x;
   const se = document.getElementById('wSemEst'); WIZ.semEstoque = se ? !!se.checked : !!WIZ.semEstoque;
-  const de = document.getElementById('wDestaque'); WIZ.destaque = de ? !!de.checked : !!WIZ.destaque;
+   const de = document.getElementById('wDestaque'); WIZ.destaque = de ? !!de.checked : !!WIZ.destaque;
+   const vc = document.getElementById('wVariasCores'); WIZ.variasCores = vc ? !!vc.checked : !!WIZ.variasCores;
+   const ec = document.getElementById('wControlaCor'); WIZ.controlaEstoquePorCor = ec ? !!ec.checked : !!WIZ.controlaEstoquePorCor;
+   if (WIZ.controlaEstoquePorCor) document.querySelectorAll('.w-cor-qtd').forEach(el => { WIZ.estoquePorCor[el.dataset.cor] = Math.max(0, Math.round(+el.value || 0)); });
 }
 function wizAvancar() { salvarWizard(false); }
 function wizVoltar() {}
@@ -955,10 +981,11 @@ async function salvarWizard(rascunho) {
   } catch {}
   const tams = (WIZ.tamsTxt || '').split(',').map(s => s.trim()).filter(Boolean);
   const cores = (WIZ.coresTxt || '').split(',').map(s => s.trim()).filter(Boolean);
-  const estoqueFinal = WIZ.semEstoque ? 9999 : (+WIZ.estoque || 0);
+   const estoquePorCor = WIZ.controlaEstoquePorCor ? Object.fromEntries(cores.map(c => [c, Math.max(0, Math.round(+((WIZ.estoquePorCor || {})[c]) || 0))])) : {};
+   const estoqueFinal = WIZ.semEstoque ? 9999 : (WIZ.controlaEstoquePorCor ? Object.values(estoquePorCor).reduce((s, n) => s + n, 0) : (+WIZ.estoque || 0));
   const parcFinal = Math.min(12, Math.max(1, Math.round(+WIZ.parcelas || 6)));
   fotoNormalizada();
-  const id = DB.saveProduct({ id: WIZ.id, nome: WIZ.nome, desc: WIZ.desc, tecido: (WIZ.desc || '').slice(0, 60) || WIZ.nome, preco: +WIZ.preco, antigo: WIZ.antigo === '' ? null : +WIZ.antigo, cat: WIZ.cat, selo: (WIZ.antigo !== '' && +WIZ.antigo > +WIZ.preco) ? 'promo' : (WIZ.id ? (DB.getProduct(WIZ.id) || {}).selo : 'lanc'), cores: cores.length ? cores : ['Única'], tams: tams.length ? tams : ['Único'], estoque: estoqueFinal, parcelas: parcFinal, foto: WIZ.foto, fotos: WIZ.fotos, destaque: !!WIZ.destaque, rascunho });
+  const id = DB.saveProduct({ id: WIZ.id, nome: WIZ.nome, desc: WIZ.desc, tecido: (WIZ.desc || '').slice(0, 60) || WIZ.nome, preco: +WIZ.preco, antigo: WIZ.antigo === '' ? null : +WIZ.antigo, cat: WIZ.cat, selo: (WIZ.antigo !== '' && +WIZ.antigo > +WIZ.preco) ? 'promo' : (WIZ.id ? (DB.getProduct(WIZ.id) || {}).selo : 'lanc'), cores: cores.length ? cores : ['Única'], tams: tams.length ? tams : ['Único'], estoque: estoqueFinal, estoquePorCor, controlaEstoquePorCor: !!WIZ.controlaEstoquePorCor, parcelas: parcFinal, foto: WIZ.foto, fotos: WIZ.fotos, destaque: !!WIZ.destaque, rascunho });
   WIZ.id = id; // se clicar de novo, edita o mesmo em vez de criar outro
   fecharModal();
   ocultarAvisoNaoSalvo();
@@ -975,7 +1002,7 @@ async function duplicarProduto(id) {
   else if (p && typeof p.foto === 'string' && p.foto.trim().startsWith('[')) { try { const a = JSON.parse(p.foto); if (Array.isArray(a)) arr = a.filter(Boolean); } catch {} }
   else if (p.foto) arr = [p.foto];
   arr = arr.map(f => (typeof f === 'string' && !f.startsWith('data:') && !f.startsWith('http') && !f.startsWith('../') && !f.startsWith('assets/')) ? '../' + f : f);
-  WIZ = { id: null, nome: (p.nome || '') + ' (cópia)', preco: p.preco, parcelas: p.parcelas ?? 6, cat: p.cat, foto: arr[0] || '', fotos: arr, estoque: (+p.estoque >= 9999 ? 10 : p.estoque), semEstoque: (+p.estoque || 0) >= 9999, destaque: p.destaque === true, tamsTxt: (p.tams || []).join(', '), coresTxt: (p.cores || []).join(', '), desc: p.desc || '', antigo: p.antigo ?? '' };
+  WIZ = { id: null, nome: (p.nome || '') + ' (cópia)', preco: p.preco, parcelas: p.parcelas ?? 6, cat: p.cat, foto: arr[0] || '', fotos: arr, estoque: (+p.estoque >= 9999 ? 10 : p.estoque), semEstoque: (+p.estoque || 0) >= 9999, variasCores: p.cores && p.cores.length > 1, controlaEstoquePorCor: !!p.controlaEstoquePorCor, estoquePorCor: Object.assign({}, p.estoquePorCor || {}), destaque: p.destaque === true, tamsTxt: (p.tams || []).join(', '), coresTxt: (p.cores || []).join(', '), desc: p.desc || '', antigo: p.antigo ?? '' };
   desenharWizard('Duplicar produto');
 }
 function alternarTodosDestaques(marcar) {
@@ -1080,8 +1107,10 @@ function rEstoque() {
     const est = +p.estoque || 0;
     const barra = Math.min(100, Math.round(est / 20 * 100));
     const corBarra = !(est > 0) ? '#E5AAAA' : (est <= 5 ? '#D99A4E' : '#7BAF8A');
-    return `<div class="est-card"><div class="est-foto-wrap"><img class="pfoto" src="${fotoSrc(p)}" alt="">${badge(p)}<button class="est-mais" onclick="estoqueRapido('${p.id}',1)" title="Somar 1 sem abrir janela">+</button></div>`
-     + `<div class="est-info"><b>${p.nome}</b><small style="display:block;color:var(--adm-mut);font-size:10px">ID: ${codigo(p.id)}</small><div class="est-num">Você tem <b>${est} un.</b></div><div class="est-bar"><i style="width:${barra}%;background:${corBarra}"></i></div></div>`
+     const mapa = p.controlaEstoquePorCor && p.estoquePorCor && typeof p.estoquePorCor === 'object' ? p.estoquePorCor : null;
+     const coresHtml = mapa && Object.keys(mapa).length ? `<div style="display:grid;gap:5px;margin-top:8px">${Object.entries(mapa).map(([cor, qtd]) => `<div style="display:flex;align-items:center;gap:6px;padding:5px 7px;border:1px solid #E6DCCF;border-radius:6px;background:#FCFAF7"><span style="flex:1"><b>${escWiz(cor)}</b><small style="display:block;color:var(--adm-mut)">estoque da cor</small></span><strong>${qtd} un.</strong><button class="btn-mini" onclick="mexerEstoqueCor('${p.id}',${JSON.stringify(cor)},1)">+</button><button class="btn-mini" onclick="mexerEstoqueCor('${p.id}',${JSON.stringify(cor)},-1)">−</button><button class="btn-mini" onclick="corrigirEstoqueCor('${p.id}',${JSON.stringify(cor)})">Corrigir</button></div>`).join('')}</div>` : '';
+     return `<div class="est-card"><div class="est-foto-wrap"><img class="pfoto" src="${fotoSrc(p)}" alt="">${badge(p)}<button class="est-mais" onclick="estoqueRapido('${p.id}',1)" title="Somar 1 sem abrir janela">+</button></div>`
+      + `<div class="est-info"><b>${p.nome}</b><small style="display:block;color:var(--adm-mut);font-size:10px">ID: ${codigo(p.id)}</small><div class="est-num">Você tem <b>${est} un.</b></div><div class="est-bar"><i style="width:${barra}%;background:${corBarra}"></i></div>${coresHtml}</div>`
     + `<div class="est-acoes"><button class="btn-mini btn-add" onclick="mexerEstoque('${p.id}',1)">+ Adicionar</button>`
     + `<button class="btn-mini" onclick="mexerEstoque('${p.id}',-1)">− Retirar</button>`
     + `<button class="btn-mini" onclick="corrigirEstoque('${p.id}')">Corrigir</button></div></div>`;
@@ -1119,18 +1148,19 @@ function atualizaPrevEst() {
   else { final = qtd; txt = `Contou tudo? Vai ficar com <b>${final}</b>`; if (okB) okB.textContent = 'Corrigir para ' + final; }
   prev.innerHTML = txt;
 }
-function abrirMovEstoque(id, modo) {
+function abrirMovEstoque(id, modo, cor) {
   const p = DB.getProduct(id); if (!p) return;
-  const base = +p.estoque || 0;
-  window.__estCtx = { id, modo, base };
+  const mapa = p.estoquePorCor || {};
+  const base = cor && Object.prototype.hasOwnProperty.call(mapa, cor) ? (+mapa[cor] || 0) : (+p.estoque || 0);
+  window.__estCtx = { id, modo, base, cor };
   const isEntra = modo === 'entra', isSai = modo === 'sai';
   const titulo = isEntra ? '📦 Chegaram peças?' : (isSai ? '📤 Saíram peças?' : '🧮 Corrigir estoque');
-  const subt = isEntra ? 'Diga quantas chegaram do fornecedor.' : (isSai ? 'Venda fora do site, perda ou troca?' : `Contou tudo de "${p.nome}"? Diga quanto tem agora.`);
+   const subt = isEntra ? 'Diga quantas chegaram do fornecedor.' : (isSai ? 'Venda fora do site, perda ou troca?' : `Contou tudo de "${p.nome}"? Diga quanto tem agora.`);
   const inicial = modo === 'corrige' ? base : 1;
   const atalhos = modo === 'corrige' ? '' : `<div class="qchips">${[1, 5, 10, 20, 50].map(v => `<button type="button" class="qchip${v === 1 ? ' on' : ''}" data-q="${v}" onclick="setQtdEst(${v})">+${v}</button>`).join('')}</div>`;
   abrirModal(`<div class="est-modal"><h2 style="font-family:Georgia,serif;font-weight:400;color:#38271D;margin:0">${titulo}</h2>`
   + `<p class="chip-status" style="margin:6px 0 0">${subt}</p>`
-  + `<div class="est-prod"><img src="${fotoSrc(p)}" alt=""><div style="flex:1"><b style="font-size:14px;color:#38271D">${p.nome}</b><br><span class="chip-status">Agora: <b>${base} un.</b></span></div><span class="badge ${!(base > 0) ? 'zero' : (base <= 5 ? 'baixo' : 'ok')}">${!(base > 0) ? 'Esgotado' : (base <= 5 ? 'Acabando' : 'OK')}</span></div>`
+  + `<div class="est-prod"><img src="${fotoSrc(p)}" alt=""><div style="flex:1"><b style="font-size:14px;color:#38271D">${p.nome}${cor ? ' · ' + escWiz(cor) : ''}</b><br><span class="chip-status">Agora: <b>${base} un.</b></span></div><span class="badge ${!(base > 0) ? 'zero' : (base <= 5 ? 'baixo' : 'ok')}">${!(base > 0) ? 'Esgotado' : (base <= 5 ? 'Acabando' : 'OK')}</span></div>`
   + `<div class="est-step"><button type="button" class="step-btn" onclick="mudaQtdEst(-1)">−</button><input id="estQtd" type="number" min="0" step="1" value="${inicial}"><button type="button" class="step-btn" onclick="mudaQtdEst(1)">+</button></div>`
   + atalhos + `<div class="est-prev" id="estPrev"></div>`
   + `<div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-borda" onclick="fecharModal()" style="flex:1;padding:12px">Cancelar</button>`
@@ -1141,14 +1171,16 @@ function abrirMovEstoque(id, modo) {
 }
 function mexerEstoque(id, dir) { abrirMovEstoque(id, dir > 0 ? 'entra' : 'sai'); }
 function corrigirEstoque(id) { abrirMovEstoque(id, 'corrige'); }
+function mexerEstoqueCor(id, cor, dir) { abrirMovEstoque(id, dir > 0 ? 'entra' : 'sai', cor); }
+function corrigirEstoqueCor(id, cor) { abrirMovEstoque(id, 'corrige', cor); }
 function confirmaEst() {
   const ctx = window.__estCtx; if (!ctx) return;
   const el = document.getElementById('estQtd');
   const qtd = Math.max(0, Math.round(+((el || {}).value || 0)));
-  if (ctx.modo === 'corrige') { DB.setStock(ctx.id, qtd); toast('Estoque corrigido!'); }
+  if (ctx.modo === 'corrige') { DB.setStock(ctx.id, qtd, ctx.cor); toast('Estoque corrigido!'); }
   else {
     if (!(qtd > 0)) { toast('Digite uma quantidade maior que zero.'); return; }
-    DB.adjustStock(ctx.id, ctx.modo === 'entra' ? qtd : -qtd);
+    DB.adjustStock(ctx.id, ctx.modo === 'entra' ? qtd : -qtd, ctx.cor);
     toast(ctx.modo === 'entra' ? `+${qtd} peça(s)!` : `−${qtd} peça(s)!`);
   }
   window.__estCtx = null; ocultarAvisoNaoSalvo(); fecharModal(); rEstoque();
