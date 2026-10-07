@@ -61,6 +61,7 @@ if(!p){document.getElementById('prodWrap').innerHTML='<p>Produto não encontrado
 document.title=p.nome+' — Encanto Miranda';
 let corSel=(p.cores||['Única'])[0], tamSel=(p.tams||['Único'])[0], qtd=1;
 const off=p.antigo?Math.round((1-p.preco/p.antigo)*100):0;
+const zapLoja=(typeof DB!=='undefined'&&DB.getSettings)?DB.getSettings().whatsapp:'5511968422230';
 const gal=(typeof fotosDoProduto==='function'?fotosDoProduto(p):[imgProduto(p,1)]);
 const galHtml=gal.map((f,i)=>`<img class="${i===0?'ativo':''}" src="${f}" onclick="trocaFoto(this,'${f}')">`).join('');
 const esgotado = !(+p.estoque > 0);
@@ -88,7 +89,7 @@ ${p.antigo?`<div class="preco-ant" style="font-size:15px;margin-top:8px">De ${BR
 <div class="tams">${(p.tams||[]).map((t,i)=>`<button class="tam ${i===0?'ativo':''}" ${esgotado ? 'disabled style="opacity:.5;cursor:not-allowed"' : `onclick="selTam(this,'${t}')"`}>${t}</button>`).join('')}</div>
 
 ${comprarHtml}
-<div class="produto-duvidas"><a href="https://wa.me/5511968422230?text=Quero saber sobre ${encodeURIComponent(p.nome)}" target="_blank" style="color:#6B4A32;font-weight:700">Ficou com dúvidas? Fale conosco pelo WhatsApp →</a></div>
+<div class="produto-duvidas"><a href="https://wa.me/${zapLoja}?text=Quero saber sobre ${encodeURIComponent(p.nome)}" target="_blank" style="color:#6B4A32;font-weight:700">Ficou com dúvidas? Fale conosco pelo WhatsApp →</a></div>
 <div class="tabs">
 <details open><summary>Descrição</summary><p class="texto" style="margin-top:8px"><b>${p.nome}.</b> ${typeof descricaoSegura==='function'?descricaoSegura(p.desc):p.desc}<br><br><b>Tecido:</b> ${p.tecido}.</p></details>
 <details><summary>Trocas</summary><p class="texto" style="margin-top:8px">Trocas e devoluções em até 30 dias após o recebimento. Ver <a href="trocas.html" style="color:#6B4A32">política completa</a>.</p></details>

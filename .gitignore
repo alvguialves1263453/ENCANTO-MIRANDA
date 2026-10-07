@@ -9,6 +9,8 @@ API.txt
 .env
 .env.*
 !.env.example
+TOKEN SP.txt
+TOKEN GT.txt
 *.pem
 
 # Logs e sistema

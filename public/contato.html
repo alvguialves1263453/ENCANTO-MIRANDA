@@ -23,7 +23,7 @@
 <div class="breadcrumb"><a href="index.html">INÍCIO</a> / <b>CONTATO</b></div>
 <h1>Contato</h1><p style="color:#6b7280">Dúvidas sobre produtos, status de pedido ou trocas? <span data-info="atendimento">Atendimento</span> de <span data-info="horarioAtendimento">Seg a Sáb, 9h–18h</span>.</p>
 <div class="info-contato">
-<div class="benefit"><div><b>(11) 96074-2598</b>(11) 96842-2230 WhatsApp</div></div>
+<div class="benefit"><div><b data-loja-info="telefone">Telefone da loja</b> WhatsApp</div></div>
 <div class="benefit"><div><b>contato@encantomiranda.com.br</b>respondemos em 1 dia útil</div></div>
 <div class="benefit"><div><b data-loja-info="endereco">Rua Ponche Verde, 49 - SP</b>CEP 03588-000 • <span data-info="horarioAtendimento">Seg a Sáb, 9h–18h</span></div></div>
 </div>
@@ -42,9 +42,9 @@
 <details><summary>Tem loja física?</summary><p class="texto">Retirada em SP na <span data-loja-info="endereco">Rua Ponche Verde, 49</span>. Fale no WhatsApp antes.</p></details>
 </div><br><a class="btn btn-preto" style="width:100%" href="como-comprar.html">VER COMO COMPRAR</a></div>
 </div></main>
-<footer><div class="container foot-grid"><div><a class="logo" href="index.html"><img src="assets/img/logo.png" alt="Encanto Miranda"></a></div><div><h4>AJUDA</h4><a href="como-comprar.html">Como Comprar</a><a href="trocas.html">Trocas</a></div><div><h4>ENTREGA</h4><p style="font-size:13px">Envio em até 2 dias úteis</p></div><div><h4>CONTATO</h4><p style="font-size:13px">(11) 96074-2598<br>contato@encantomiranda.com.br</p></div></div><div class="copy">© 2026 Encanto Miranda — Todos os direitos reservados</div></footer>
+<footer><div class="container foot-grid"><div><a class="logo" href="index.html"><img src="assets/img/logo.png" alt="Encanto Miranda"></a></div><div><h4>AJUDA</h4><a href="como-comprar.html">Como Comprar</a><a href="trocas.html">Trocas</a></div><div><h4>ENTREGA</h4><p style="font-size:13px">Envio em até 2 dias úteis</p></div><div><h4>CONTATO</h4><p style="font-size:13px"><span data-loja-info="telefone">Telefone da loja</span><br>contato@encantomiranda.com.br</p></div></div><div class="copy">© 2026 Encanto Miranda — Todos os direitos reservados</div></footer>
 <a class="whats" href="https://wa.me/5511968422230" target="_blank" aria-label="Falar no WhatsApp"><img src="assets/img/WhatsApp.png" alt="WhatsApp"></a>
 <script src="assets/js/data.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2"><\/script>')</script><script src="assets/js/supabase.js?v=2"></script><script src="assets/js/loja-db.js?v=9"></script><script src="assets/js/main.js?v=7"></script>
 <script>
-function enviar(){const t=`Olá! Sou ${document.getElementById('n').value} - ${document.getElementById('a').value}: ${document.getElementById('m').value} (Meu zap: ${document.getElementById('w').value})`;window.open('https://wa.me/5511968422230?text='+encodeURIComponent(t),'_blank');toast('Abrindo WhatsApp...');}
+function enviar(){const t=`Olá! Sou ${document.getElementById('n').value} - ${document.getElementById('a').value}: ${document.getElementById('m').value} (Meu zap: ${document.getElementById('w').value})`;const zap=(typeof DB!=='undefined'?DB.getSettings().whatsapp:'');window.open('https://wa.me/'+zap+'?text='+encodeURIComponent(t),'_blank');toast('Abrindo WhatsApp...');}
 </script></body></html>

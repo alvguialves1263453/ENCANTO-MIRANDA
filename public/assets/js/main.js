@@ -1,5 +1,13 @@
 // JS global Encanto Miranda
 const BRL = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+function telefoneExibicao(valor){
+  const d=String(valor||'').replace(/\D/g,'');
+  if(d.length===13 && d.startsWith('55')) return `(${d.slice(2,4)}) ${d.slice(4,9)}-${d.slice(9)}`;
+  if(d.length===12 && d.startsWith('55')) return `(${d.slice(2,4)}) ${d.slice(4,8)}-${d.slice(8)}`;
+  if(d.length===11) return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+  if(d.length===10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+  return String(valor||'');
+}
 const getCart = () => { try{return JSON.parse(localStorage.getItem('em_cart')||'[]')}catch{return[]} };
 const saveCart = c => { localStorage.setItem('em_cart', JSON.stringify(c)); updateCartBadge(); };
 function descricaoSegura(valor){
@@ -158,11 +166,13 @@ document.addEventListener('DOMContentLoaded', ()=>{
            document.documentElement.style.setProperty('--brown-dark','color-mix(in srgb, '+st.cor+' 62%, black)');
            document.documentElement.style.setProperty('--brown-light','color-mix(in srgb, '+st.cor+' 10%, white)');
         }
-        if(st.whatsapp){
-          document.querySelectorAll('a[href*="wa.me/"]').forEach(a=>{
-            a.href=a.href.replace(/wa\.me\/\d+/, 'wa.me/'+st.whatsapp);
-          });
-        }
+         if(st.whatsapp){
+           const zap=String(st.whatsapp).replace(/\D/g,'');
+           document.querySelectorAll('[data-loja-info="telefone"]').forEach(el=>{ el.textContent=telefoneExibicao(zap); });
+           document.querySelectorAll('a[href*="wa.me/"]').forEach(a=>{
+             a.href=a.href.replace(/wa\.me\/\d+/, 'wa.me/'+zap);
+           });
+         }
          if(st.nomeLoja){
            document.querySelectorAll('.copy').forEach(el=>{ el.innerHTML=el.innerHTML.replace(/Encanto Miranda/g, st.nomeLoja); });
          }
