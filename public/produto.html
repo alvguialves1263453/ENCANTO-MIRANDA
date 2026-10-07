@@ -100,9 +100,9 @@ window.selTam=function(el,t){if(!( +p.estoque > 0)) return;tamSel=t;document.get
 window.mQtd=function(d){if(!( +p.estoque > 0)) return;qtd=Math.max(1,Math.min(p.estoque||1,qtd+d));document.getElementById('qtdLbl').textContent=qtd;};
 window.abrirEncomenda=function(){
   if(!( +p.estoque > 0)) { toast('Produto esgotado'); return; }
-  const total=BRL(p.preco*qtd);
+   const stCfg=(typeof DB!=='undefined')?DB.getSettings():{}; const infCfg=stCfg.informacoes||{}; const limiteCfg=+stCfg.freteGratis||0; const freteGratisCfg=infCfg.freteGratisAtivo===true && limiteCfg>0 && p.preco*qtd>=limiteCfg; const freteCfg=freteGratisCfg?0:Math.max(0,+infCfg.fretePadrao||0); const total=BRL(p.preco*qtd+freteCfg);
   const gal2=(typeof fotosDoProduto==='function'?fotosDoProduto(p):[imgProduto(p,1)]);
-   document.getElementById('encResumo').innerHTML=`<div class="enc-prod"><img src="${gal2[0]}" alt=""><div style="flex:1"><b style="font-size:13.5px">${p.nome}</b><div style="font-size:12.5px;color:#6b7280">ID ${codigoProdutoCurto(p.id)} · ${corSel} • Tam ${tamSel} • ${qtd}x ${BRL(p.preco)}</div></div></div><div class="enc-total"><span>Total</span><span>${total}</span></div>`;
+    document.getElementById('encResumo').innerHTML=`<div class="enc-prod"><img src="${gal2[0]}" alt=""><div style="flex:1"><b style="font-size:13.5px">${p.nome}</b><div style="font-size:12.5px;color:#6b7280">ID ${codigoProdutoCurto(p.id)} · ${corSel} • Tam ${tamSel} • ${qtd}x ${BRL(p.preco)}</div></div></div><div style="font-size:13px;margin-top:10px;color:${freteGratisCfg?'#397a49':'#6b7280'}">${freteGratisCfg?'Frete grátis! Valor acima de '+BRL(limiteCfg):'Frete: '+BRL(freteCfg)}</div><div class="enc-total"><span>Total</span><span>${total}</span></div>`;
    const pg=(typeof DB!=='undefined'&&DB.getSettings().pagamento)||{}; const ops=[];
    if(pg.pix!==false) ops.push('<option>Pix</option>'); if(pg.boleto!==false) ops.push('<option>Boleto bancário</option>'); if(pg.cartao!==false) ops.push('<option>Cartão de crédito em até 6x</option>');
    (pg.extras||[]).forEach(n=>ops.push('<option>'+String(n).replace(/</g,'&lt;')+'</option>'));
@@ -121,13 +121,13 @@ window.confirmaEncomenda=function(){
   if(/[A-Za-zÀ-ÖØ-öø-ÿ]/.test(fone)) { toast('Telefone não pode ter letra, só números.'); return; }
    if(fone.replace(/\D/g,'').length<10) { toast('Digite seu WhatsApp com DDD.'); return; }
    if(!endereco) { toast('Digite seu endereço para entrega.'); return; }
-   const total=BRL(p.preco*qtd);
+   const stCfg=(typeof DB!=='undefined')?DB.getSettings():{}; const infCfg=stCfg.informacoes||{}; const limiteCfg=+stCfg.freteGratis||0; const freteGratisCfg=infCfg.freteGratisAtivo===true && limiteCfg>0 && p.preco*qtd>=limiteCfg; const freteCfg=freteGratisCfg?0:Math.max(0,+infCfg.fretePadrao||0); const total=BRL(p.preco*qtd+freteCfg);
    const pag=document.getElementById('encPag').value||'Não informado'; let numero='—';
    const item={id:p.id,nome:p.nome,cor:corSel,tam:tamSel,qtd,preco:p.preco};
-   try{ if(typeof DB!=='undefined'){ const ped=DB.logOrder({nome,fone,endereco,itens:[item],subtotal:p.preco*qtd,desconto:0,total:p.preco*qtd,pag, cupom:''}); numero=ped.numero; } }catch{}
+    try{ if(typeof DB!=='undefined'){ const ped=DB.logOrder({nome,fone,endereco,itens:[item],subtotal:p.preco*qtd,desconto:0,frete:freteCfg,total:p.preco*qtd+freteCfg,pag, cupom:''}); numero=ped.numero; } }catch{}
    const cfg=(typeof DB!=='undefined'&&DB.getSettings().whatsappConfig)||{};
    let texto=String(cfg.mensagemPedido||'Olá! Sou [nome], quero finalizar meu pedido [pedido] na [loja].\n\n[itens]\n\nTotal: [valor total]\nPagamento: [pagamento]');
-   const vals={'[nome]':nome,'[cliente]':nome,'[telefone]':fone,'[endereco]':endereco,'[pedido]':numero,'[produto]':`${p.nome} (ID: ${codigoProdutoCurto(p.id)})`,'[id produto]':codigoProdutoCurto(p.id),'[itens]':`• ${qtd}x ${p.nome} (ID: ${codigoProdutoCurto(p.id)}) (${corSel}/${tamSel})`,'[valor]':BRL(p.preco),'[subtotal]':BRL(p.preco*qtd),'[desconto]':'R$ 0,00','[valor total]':total,'[cupom]':'Nenhum','[pagamento]':pag,'[loja]':DB.getSettings().nomeLoja};
+    const vals={'[nome]':nome,'[cliente]':nome,'[telefone]':fone,'[endereco]':endereco,'[pedido]':numero,'[produto]':`${p.nome} (ID: ${codigoProdutoCurto(p.id)})`,'[id produto]':codigoProdutoCurto(p.id),'[itens]':`• ${qtd}x ${p.nome} (ID: ${codigoProdutoCurto(p.id)}) (${corSel}/${tamSel})`,'[valor]':BRL(p.preco),'[subtotal]':BRL(p.preco*qtd),'[desconto]':'R$ 0,00','[frete]':freteGratisCfg?'Frete grátis':BRL(freteCfg),'[valor total]':total,'[cupom]':'Nenhum','[pagamento]':pag,'[loja]':DB.getSettings().nomeLoja};
    Object.keys(vals).forEach(k=>{texto=texto.split(k).join(vals[k]);});
   let zap='5566981151694';
   try{ if(typeof DB!=='undefined') zap=DB.getSettings().whatsapp||zap; }catch{}

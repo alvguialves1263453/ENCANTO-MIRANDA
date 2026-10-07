@@ -76,6 +76,8 @@ const DB = (() => {
       horarioAtendimento: texto(info.horarioAtendimento, 'Seg a Sáb, 9h–18h'),
       prazoEnvio: texto(info.prazoEnvio, 'Envio em 2 dias úteis'),
       envioDetalhe: texto(info.envioDetalhe, 'Correios com rastreio'),
+      freteGratisAtivo: info.freteGratisAtivo === true,
+      fretePadrao: Math.max(0, +info.fretePadrao || 0),
       visiveis: {
         atendimento: visiveis.atendimento == null ? antigoVisivel : visiveis.atendimento !== false,
         horarioAtendimento: visiveis.horarioAtendimento == null ? antigoVisivel : visiveis.horarioAtendimento !== false,
@@ -453,7 +455,7 @@ const DB = (() => {
     { tag: 'ENCONTRE SEU LOOK', titulo: 'Elegância em', destaque: 'cada detalhe.', texto: 'Descubra peças que valorizam seu estilo e deixam cada ocasião ainda mais especial.', botao: 'Explorar coleção', link: 'categoria.html?cat=ver-tudo', botao2: '', link2: '', foto: '' },
     { tag: 'ESCOLHAS ESPECIAIS', titulo: 'Seu próximo look', destaque: 'está aqui.', texto: 'Renove seu guarda-roupa com novidades e peças para combinar do seu jeito.', botao: 'Ver novidades', link: 'categoria.html?cat=ver-tudo', botao2: '', link2: '', foto: '' }
   ];
-  const DEFAULT_SETTINGS = { whatsapp: '5511968422230', whatsappConfig: { mensagemPedido: 'Olá! Sou [nome], quero finalizar meu pedido [pedido] na [loja].\n\n[itens]\n\nSubtotal: [subtotal]\nDesconto: [desconto]\nCupom: [cupom]\nTotal: [valor total]\nPagamento: [pagamento]' }, email: 'contato@encantomiranda.com.br', endereco: 'Rua Ponche Verde, 49 — SP', instagram: '', freteGratis: 399, cor: '#78583E', nomeLoja: 'Encanto Miranda', banners: DEFAULT_BANNERS, pagamento: { pix: true, boleto: true, cartao: true, extras: [], mostrarCarrinho: true }, informacoes: { atendimento: 'Atendimento', horarioAtendimento: 'Seg a Sáb, 9h–18h', prazoEnvio: 'Envio em 2 dias úteis', envioDetalhe: 'Correios com rastreio', visiveis: { atendimento: true, horarioAtendimento: true, prazoEnvio: true, envioDetalhe: true } } };
+   const DEFAULT_SETTINGS = { whatsapp: '5511968422230', whatsappConfig: { mensagemPedido: 'Olá! Sou [nome], quero finalizar meu pedido [pedido] na [loja].\n\n[itens]\n\nSubtotal: [subtotal]\nDesconto: [desconto]\nCupom: [cupom]\nFrete: [frete]\nTotal: [valor total]\nPagamento: [pagamento]' }, email: 'contato@encantomiranda.com.br', endereco: 'Rua Ponche Verde, 49 — SP', instagram: '', freteGratis: 399, cor: '#78583E', nomeLoja: 'Encanto Miranda', banners: DEFAULT_BANNERS, pagamento: { pix: true, boleto: true, cartao: true, extras: [], mostrarCarrinho: true }, informacoes: { atendimento: 'Atendimento', horarioAtendimento: 'Seg a Sáb, 9h–18h', prazoEnvio: 'Envio em 2 dias úteis', envioDetalhe: 'Correios com rastreio', freteGratisAtivo: false, fretePadrao: 0, visiveis: { atendimento: true, horarioAtendimento: true, prazoEnvio: true, envioDetalhe: true } } };
   const getSettings = () => Object.assign({}, DEFAULT_SETTINGS, S.settings || {}, { whatsappConfig: normalizaWhatsappConfig(Object.assign({}, DEFAULT_SETTINGS.whatsappConfig, (S.settings || {}).whatsappConfig || {})), pagamento: normalizaPagamento(Object.assign({}, DEFAULT_SETTINGS.pagamento, (S.settings || {}).pagamento || {})), informacoes: normalizaInformacoes(Object.assign({}, DEFAULT_SETTINGS.informacoes, (S.settings || {}).informacoes || {})) });
   function saveSettings(novas) { S.settings = Object.assign({}, getSettings(), novas); persist(); paraNuvem({ k: 'sUp' }); }
 
