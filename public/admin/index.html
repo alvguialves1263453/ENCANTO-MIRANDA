@@ -243,6 +243,8 @@ details.mini-opt summary{cursor:pointer;font-size:13px;font-weight:700;color:#5A
  .desc-toolbar select,.desc-toolbar input{height:28px;border:1px solid #DCCDBB;border-radius:5px;background:#fff;color:#463426}
  .desc-editable{min-height:150px;padding:12px;outline:0;font-size:14px;line-height:1.6;white-space:pre-wrap}
  .desc-editable:empty:before{content:attr(data-placeholder);color:#9A8978}
+ .mp-desc{margin-top:9px;padding-top:8px;border-top:1px solid #E6DCCF;color:#6f6258;font-size:11px;line-height:1.45;max-height:105px;overflow:auto;word-break:break-word}
+ .mp-desc p{margin:0 0 5px}.mp-desc ul,.mp-desc ol{padding-left:18px;margin:4px 0}
  .whatsapp-editor{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,.8fr);gap:18px;align-items:start}
  .wa-msg{min-height:420px;height:420px;resize:vertical;font-size:14px;line-height:1.5}
  .wa-placeholders{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
@@ -866,6 +868,8 @@ function atualizaPrev() {
   try {
     const box = document.getElementById('miniPrevCard');
     if (!box || !WIZ) return;
+    const editor = document.getElementById('wDesc');
+    if (editor) WIZ.desc = sanitizarDescricao(editor.innerHTML);
     if (typeof lerPasso === 'function') lerPasso();
     const nome = WIZ.nome || 'Nome do produto';
     const preco = +WIZ.preco || 0;
@@ -886,8 +890,9 @@ function atualizaPrev() {
       + (antigo ? `<div class="mp-ant">${BRL(antigo)}</div>` : '')
       + `<div class="mp-preco">${BRL(preco)}${off ? ` <span style="font-size:11px;color:#16a34a">-${off}%</span>` : ''}</div>`
       + `<div class="mp-est" style="color:#5A422F">${parcTxt}</div>`
-      + tamsHtml
-      + `<div class="mp-est">${semEst ? 'Disponível' : (!(est > 0) ? 'Esgotado' : est + ' un. em estoque')}</div></div>`;
+       + tamsHtml
+       + (WIZ.desc ? `<div class="mp-desc">${sanitizarDescricao(WIZ.desc)}</div>` : '')
+       + `<div class="mp-est">${semEst ? 'Disponível' : (!(est > 0) ? 'Esgotado' : est + ' un. em estoque')}</div></div>`;
   } catch {}
 }
 function escolherFoto(g) { if (!Array.isArray(WIZ.fotos)) WIZ.fotos = fotosDoWiz(); if (!WIZ.fotos.includes(g)) WIZ.fotos.push(g); WIZ.foto = WIZ.fotos[0] || ''; try { renderFotosWizard(); atualizaPrev(); } catch {} }
