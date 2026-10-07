@@ -244,6 +244,8 @@ details.mini-opt summary{cursor:pointer;font-size:13px;font-weight:700;color:#5A
  .desc-toolbar select option{background:#fff;color:#463426}
  .desc-toolbar input{height:28px;border:1px solid #DCCDBB;border-radius:5px;background:#fff;color:#463426}
  .desc-size{height:30px!important;min-width:0!important;width:auto!important;padding:0 8px!important;font-size:11px!important;font-weight:700!important;line-height:normal!important;white-space:nowrap}
+ .desc-font-number{width:55px!important;height:30px!important;padding:3px 5px!important;font-size:12px!important;color:#463426!important;background:#fff!important}
+ .desc-family{width:108px!important;height:30px!important;padding:2px 5px!important;font-size:11px!important;color:#463426!important;background:#fff!important;line-height:normal!important}
  .desc-editable{min-height:150px;padding:12px;outline:0;font-size:14px;line-height:1.6;white-space:pre-wrap}
  .desc-editable:empty:before{content:attr(data-placeholder);color:#9A8978}
  .mp-desc{margin-top:9px;padding-top:8px;border-top:1px solid #E6DCCF;color:#6f6258;font-size:11px;line-height:1.45;max-height:105px;overflow:auto;word-break:break-word}
@@ -713,11 +715,11 @@ function sanitizarDescricao(html) {
   box.querySelectorAll('*').forEach(el => {
     if (!permitidas.has(el.tagName)) { el.replaceWith(document.createTextNode(el.textContent || '')); return; }
     [...el.attributes].forEach(a => {
-      const aceitaFont = el.tagName === 'FONT' && (a.name === 'size' || (a.name === 'color' && /^#[0-9a-f]{3,8}$/i.test(a.value)));
+      const aceitaFont = el.tagName === 'FONT' && (a.name === 'size' || (a.name === 'face' && /^(Arial|Georgia|Verdana|Tahoma|Courier New|Times New Roman)$/i.test(a.value)) || (a.name === 'color' && /^#[0-9a-f]{3,8}$/i.test(a.value)));
       if (a.name !== 'style' && !aceitaFont) el.removeAttribute(a.name);
     });
     if (el.hasAttribute('style')) {
-      const ok = String(el.getAttribute('style')).split(';').filter(part => /^(\s*)(color|font-size|font-weight|text-align)\s*:/i.test(part)).join(';');
+      const ok = String(el.getAttribute('style')).split(';').filter(part => /^(\s*)(color|font-size|font-weight|font-family|text-align)\s*:/i.test(part)).join(';');
       ok ? el.setAttribute('style', ok) : el.removeAttribute('style');
     }
   });
@@ -727,15 +729,26 @@ function descricaoInicial(html) {
   const s = String(html || '');
   return s.includes('<') ? sanitizarDescricao(s) : escWiz(s).replace(/\n/g, '<br>');
 }
+let selecaoDescricao = null;
+function guardarSelecaoDescricao() {
+  const ed = document.getElementById('wDesc'), sel = window.getSelection();
+  if (!ed || !sel || !sel.rangeCount) return;
+  const r = sel.getRangeAt(0); if (ed.contains(r.commonAncestorContainer)) selecaoDescricao = r.cloneRange();
+}
+function restaurarSelecaoDescricao() {
+  if (!selecaoDescricao) return;
+  const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(selecaoDescricao);
+}
 function formatarDescricao(cmd, valor) {
   const ed = document.getElementById('wDesc'); if (!ed) return;
-  ed.focus();
+  restaurarSelecaoDescricao(); ed.focus();
   if (cmd === 'formatBlock') document.execCommand(cmd, false, valor);
-  else document.execCommand(cmd, false, null);
+  else document.execCommand(cmd, false, valor || null);
   lerPasso(); mostrarAvisoNaoSalvo();
 }
 function colorirDescricao(cor) { formatarDescricao('foreColor', cor); }
-function tamanhoDescricao(tamanho) { formatarDescricao('fontSize', tamanho); }
+function tamanhoDescricao(tamanho) { const px=Math.max(8,Math.min(72,+tamanho||14)); formatarDescricao('fontSize','7'); const ed=document.getElementById('wDesc'); if(ed) ed.querySelectorAll('font[size="7"]').forEach(el=>{el.removeAttribute('size');el.style.fontSize=px+'px';}); lerPasso(); }
+function fonteDescricao(fonte) { formatarDescricao('fontName', fonte); }
 function tamsAtuais() { try { return String(document.getElementById('wTams').value || WIZ.tamsTxt || '').split(',').map(s => s.trim()).filter(Boolean); } catch { return String(WIZ.tamsTxt || '').split(',').map(s => s.trim()).filter(Boolean); } }
 function alternarTam(v) {
   const a = tamsAtuais();
@@ -782,7 +795,7 @@ function desenharWizard(titulo) {
    + `<label style="margin-top:8px">ID do produto</label><input type="text" value="${WIZ.id ? escWiz(WIZ.id) : 'Será gerado ao salvar'}" readonly style="background:#f1f1f1;color:#777;cursor:not-allowed">`
   + `<div class="mini-row" style="margin-top:8px"><div><label>Categoria</label><select id="wCat">${cats}</select></div>`
   + `<div><label>Parcelas</label><select id="wParc">${Array.from({ length: 12 }, (_, i) => `<option value="${i + 1}" ${(+(WIZ.parcelas || 6)) === i + 1 ? 'selected' : ''}>${i + 1}x</option>`).join('')}</select></div></div>`
-    + `<label style="margin-top:8px">Descrição do produto</label><div class="desc-editor"><div class="desc-toolbar"><button type="button" title="Negrito" onclick="formatarDescricao('bold')"><b>B</b></button><button type="button" title="Itálico" onclick="formatarDescricao('italic')"><i>I</i></button><button type="button" title="Sublinhado" onclick="formatarDescricao('underline')"><u>U</u></button><button type="button" title="Lista" onclick="formatarDescricao('insertUnorderedList')">☷</button><button type="button" title="Alinhamento" onclick="formatarDescricao('formatBlock','h3')">T</button><button type="button" class="desc-size" onclick="tamanhoDescricao('3')">Normal</button><button type="button" class="desc-size" onclick="tamanhoDescricao('4')">Grande</button><button type="button" class="desc-size" onclick="tamanhoDescricao('5')">Maior</button><input type="color" title="Cor do texto" value="#38271D" onchange="colorirDescricao(this.value)"></div><div id="wDesc" class="desc-editable" contenteditable="true" data-placeholder="Escreva a descrição, cole um texto formatado ou use a barra acima...">${descricaoInicial(WIZ.desc)}</div></div>`
+    + `<label style="margin-top:8px">Descrição do produto</label><div class="desc-editor"><div class="desc-toolbar"><button type="button" title="Negrito" onmousedown="event.preventDefault()" onclick="formatarDescricao('bold')"><b>B</b></button><button type="button" title="Itálico" onmousedown="event.preventDefault()" onclick="formatarDescricao('italic')"><i>I</i></button><button type="button" title="Sublinhado" onmousedown="event.preventDefault()" onclick="formatarDescricao('underline')"><u>U</u></button><button type="button" title="Lista" onmousedown="event.preventDefault()" onclick="formatarDescricao('insertUnorderedList')">☷</button><select class="desc-family" title="Fonte" onchange="fonteDescricao(this.value)"><option value="Arial">Arial</option><option value="Georgia">Georgia</option><option value="Verdana">Verdana</option><option value="Tahoma">Tahoma</option><option value="Courier New">Courier New</option><option value="Times New Roman">Times New Roman</option></select><input class="desc-font-number" type="number" min="8" max="72" value="14" title="Tamanho em pixels" onchange="tamanhoDescricao(this.value)"><input type="color" title="Cor do texto" value="#38271D" onchange="colorirDescricao(this.value)"></div><div id="wDesc" class="desc-editable" contenteditable="true" data-placeholder="Escreva a descrição, cole um texto formatado ou use a barra acima...">${descricaoInicial(WIZ.desc)}</div></div>`
    + `<label class="switch-row" style="margin-top:10px"><input type="checkbox" id="wDestaque" ${WIZ.destaque ? 'checked' : ''} style="width:16px;height:16px"> ★ Produto em destaque</label></div>`
   + `<div class="wiz-sec"><h3><span class="n">2</span> Preço</h3>`
   + `<div class="mini-row"><div><label>Preço (R$) <span class="fld-req">*</span></label><input type="number" id="wPreco" min="0" step="0.01" value="${escWiz(WIZ.preco)}" placeholder="0,00"></div>`
@@ -810,7 +823,9 @@ function desenharWizard(titulo) {
   + `<button class="btn btn-preto" style="flex:1;padding:12px" onclick="salvarWizard(false)">${editando ? 'Salvar alterações' : 'Publicar produto'}</button></div></div>`);
   document.querySelector('#modalBox').parentElement.classList.add('aberto');
   document.getElementById('modalBox').classList.add('modal-mini');
-  atualizaPrev(); desenharChipsTam(); desenharChipsCor();
+   atualizaPrev(); desenharChipsTam(); desenharChipsCor();
+   document.getElementById('wDesc')?.addEventListener('keyup', guardarSelecaoDescricao);
+   document.getElementById('wDesc')?.addEventListener('mouseup', guardarSelecaoDescricao);
   ['wNome', 'wPreco', 'wParc', 'wAntigo', 'wEst', 'wCat', 'wDesc', 'wTams', 'wCores'].forEach(id => {
     const el = document.getElementById(id);
     if (el) { el.addEventListener('input', () => { atualizaPrev(); if (id === 'wTams') desenharChipsTam(); if (id === 'wCores') desenharChipsCor(); }); el.addEventListener('change', atualizaPrev); }
