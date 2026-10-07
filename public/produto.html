@@ -62,11 +62,14 @@ const id=new URLSearchParams(location.search).get('id')||1;
 const p=prodById(id)||PRODUTOS[0];
 if(!p){document.getElementById('prodWrap').innerHTML='<p>Produto não encontrado na nuvem.</p>';return;}
 document.title=p.nome+' — Encanto Miranda';
-let corSel=(p.cores||['Única'])[0], tamSel=(p.tams||['Único'])[0], qtd=1;
+  let corSel=(p.cores||['Única'])[0], tamSel=(p.tams||['Único'])[0], qtd=1;
 const off=p.antigo?Math.round((1-p.preco/p.antigo)*100):0;
-const zapLoja=(typeof DB!=='undefined'&&DB.getSettings)?DB.getSettings().whatsapp:'5511968422230';
-const gal=(typeof fotosDoProduto==='function'?fotosDoProduto(p):[imgProduto(p,1)]);
-const galHtml=gal.map((f,i)=>`<img class="${i===0?'ativo':''}" src="${f}" onclick="trocaFoto(this,'${f}')">`).join('');
+  const zapLoja=(typeof DB!=='undefined'&&DB.getSettings)?DB.getSettings().whatsapp:'5511968422230';
+  const gal=(typeof fotosDoProduto==='function'?fotosDoProduto(p):[imgProduto(p,1)]);
+  const fotosPorCor=p.fotosPorCor&&typeof p.fotosPorCor==='object'?p.fotosPorCor:{};
+  const galeriaDaCor=cor=>{const chave=Object.keys(fotosPorCor).find(k=>k.trim().toLowerCase()===String(cor||'').trim().toLowerCase());const fotos=chave&&Array.isArray(fotosPorCor[chave])?fotosPorCor[chave].filter(Boolean):[];return fotos.length?fotos:gal;};
+  const galInicial=galeriaDaCor(corSel);
+  const galHtml=galInicial.map((f,i)=>`<img class="${i===0?'ativo':''}" src="${f}" onclick="trocaFoto(this,'${f}')">`).join('');
 const esgotado = !(+p.estoque > 0);
 const comprarHtml = esgotado
 ? `<div class="prod-esgotado-aviso">Esgotado — avise-me quando voltar</div><div class="comprar-row"><span class="btn btn-whats-off" aria-disabled="true" style="flex:1">Esgotado</span></div>`
@@ -79,7 +82,7 @@ document.getElementById('prodWrap').innerHTML=`
 <div class="prod-grid">
 <div class="prod-fotos${esgotado ? ' esgotado' : ''}"><div class="thumbs-carousel"><button type="button" onclick="rolarThumbs(-1)" aria-label="Imagens anteriores">▲</button><div class="thumbs" id="thumbsLista">
 ${galHtml}
-</div><button type="button" onclick="rolarThumbs(1)" aria-label="Próximas imagens">▼</button></div><div class="foto-principal" style="position:relative"><img id="fotoG" src="${gal[0]}" alt="${p.nome}">${esgotado ? '<span class="selo selo-esgotado" style="position:absolute;margin:12px">Esgotado</span>' : (p.selo==='lanc'?'<span class="selo lanc" style="position:absolute;margin:12px">Lançamento</span>':'')}</div></div>
+ </div><button type="button" onclick="rolarThumbs(1)" aria-label="Próximas imagens">▼</button></div><div class="foto-principal" style="position:relative"><img id="fotoG" src="${galInicial[0]||imgProduto(p,1)}" alt="${p.nome}">${esgotado ? '<span class="selo selo-esgotado" style="position:absolute;margin:12px">Esgotado</span>' : (p.selo==='lanc'?'<span class="selo lanc" style="position:absolute;margin:12px">Lançamento</span>':'')}</div></div>
 <div class="prod-info">
 <h1>${p.nome}</h1>
 <p style="font-size:13px;color:#6b7280">Ref. EM${String(p.id).slice(-4).padStart(4,'0')} • <a href="categoria.html?cat=${p.cat}" style="color:#6B4A32;font-weight:800">${catNome(p.cat)}</a></p>
@@ -97,9 +100,10 @@ ${comprarHtml}
 <details open><summary>Descrição</summary><p class="texto" style="margin-top:8px"><b>${p.nome}.</b> ${typeof descricaoSegura==='function'?descricaoSegura(p.desc):p.desc}<br><br><b>Tecido:</b> ${p.tecido}.</p></details>
 <details><summary>Trocas</summary><p class="texto" style="margin-top:8px">Trocas e devoluções em até 30 dias após o recebimento. Ver <a href="trocas.html" style="color:#6B4A32">política completa</a>.</p></details>
 </div></div></div>`;
-window.trocaFoto=function(el,src){document.querySelectorAll('.thumbs img').forEach(i=>i.classList.remove('ativo'));el.classList.add('ativo');document.getElementById('fotoG').src=src;};
+ window.renderGaleria=function(fotos){const lista=Array.isArray(fotos)&&fotos.length?fotos:gal;const thumbs=document.getElementById('thumbsLista'),principal=document.getElementById('fotoG');if(!thumbs||!principal)return;thumbs.innerHTML=lista.map((f,i)=>`<img class="${i===0?'ativo':''}" src="${f}" alt="${p.nome}" onclick="trocaFoto(this,'${f}')">`).join('');principal.src=lista[0]||imgProduto(p,1);};
+ window.trocaFoto=function(el,src){document.querySelectorAll('.thumbs img').forEach(i=>i.classList.remove('ativo'));el.classList.add('ativo');document.getElementById('fotoG').src=src;};
 window.rolarThumbs=function(d){const box=document.getElementById('thumbsLista');if(box)box.scrollBy({top:d*190,behavior:'smooth'});};
-window.selCor=function(el,c){if(!( +p.estoque > 0)) return;corSel=c;document.getElementById('corLbl').textContent=c;document.querySelectorAll('.cor').forEach(b=>b.classList.remove('ativo'));el.classList.add('ativo');};
+ window.selCor=function(el,c){if(!( +p.estoque > 0)) return;corSel=c;document.getElementById('corLbl').textContent=c;document.querySelectorAll('.cor').forEach(b=>b.classList.remove('ativo'));el.classList.add('ativo');window.renderGaleria(galeriaDaCor(c));};
 window.selTam=function(el,t){if(!( +p.estoque > 0)) return;tamSel=t;document.getElementById('tamLbl').textContent=t;document.querySelectorAll('.tam').forEach(b=>b.classList.remove('ativo'));el.classList.add('ativo');};
 window.mQtd=function(d){if(!( +p.estoque > 0)) return;qtd=Math.max(1,Math.min(p.estoque||1,qtd+d));document.getElementById('qtdLbl').textContent=qtd;};
 window.abrirEncomenda=function(){

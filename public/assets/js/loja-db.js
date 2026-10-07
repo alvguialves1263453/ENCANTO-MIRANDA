@@ -32,11 +32,31 @@ const DB = (() => {
   const nuvemLigada = () => (typeof SB !== 'undefined' && SB.ok());
   // Multi-foto sem migração: se tem >1 foto, salva JSON no campo `foto`; se 1, salva URL direta.
   const fotosArr = p => (Array.isArray(p.fotos) && p.fotos.length ? p.fotos : (p.foto ? [p.foto] : []));
-  const fotoParaNuvem = p => { const a = fotosArr(p); return a.length > 1 ? JSON.stringify(a) : (a[0] || null); };
+  const fotosPorCorNormalizadas = mapa => {
+    const out = {};
+    if (!mapa || typeof mapa !== 'object' || Array.isArray(mapa)) return out;
+    Object.keys(mapa).forEach(cor => {
+      const nome = String(cor || '').trim();
+      const fotos = Array.isArray(mapa[cor]) ? mapa[cor].filter(f => typeof f === 'string' && f) : [];
+      if (nome && fotos.length) out[nome] = fotos;
+    });
+    return out;
+  };
+  const fotoParaNuvem = p => {
+    const a = fotosArr(p), porCor = fotosPorCorNormalizadas(p.fotosPorCor);
+    if (Object.keys(porCor).length) return JSON.stringify({ geral: a, porCor });
+    return a.length > 1 ? JSON.stringify(a) : (a[0] || null);
+  };
   const fotosDaNuvem = foto => {
-    if (!foto) return [];
-    if (typeof foto === 'string' && foto.trim().startsWith('[')) { try { const a = JSON.parse(foto); if (Array.isArray(a)) return a.filter(Boolean); } catch {} }
-    return [foto];
+    if (!foto) return { geral: [], porCor: {} };
+    if (typeof foto === 'string' && (foto.trim().startsWith('[') || foto.trim().startsWith('{'))) {
+      try {
+        const valor = JSON.parse(foto);
+        if (Array.isArray(valor)) return { geral: valor.filter(Boolean), porCor: {} };
+        if (valor && typeof valor === 'object') return { geral: Array.isArray(valor.geral) ? valor.geral.filter(Boolean) : [], porCor: fotosPorCorNormalizadas(valor.porCor) };
+      } catch {}
+    }
+    return { geral: [foto], porCor: {} };
   };
   const estoqueCoresNormalizado = valor => {
     const entrada = valor && typeof valor === 'object' && !Array.isArray(valor) ? valor : {};
@@ -46,7 +66,7 @@ const DB = (() => {
   };
   const totalEstoqueCores = mapa => Object.values(mapa).reduce((s, n) => s + (+n || 0), 0);
   const pToRow = p => ({ id: String(p.id), nome: p.nome, descricao: p.desc || '', tecido: p.tecido || '', preco: +p.preco || 0, preco_antigo: p.antigo == null ? null : +p.antigo, categoria: p.cat || null, selo: p.selo || null, cores: p.cores || [], tamanhos: p.tams || [], estoque: p.estoque || 0, estoque_por_cor: estoqueCoresNormalizado(p.estoquePorCor), parcelas: Math.min(12, Math.max(1, Math.round(+p.parcelas || 6))), foto: fotoParaNuvem(p), rascunho: !!p.rascunho, destaque: !!p.destaque });
-  const pFromRow = r => { const fa = fotosDaNuvem(r.foto); const porCor = estoqueCoresNormalizado(r.estoque_por_cor); return { id: r.id, nome: r.nome, desc: r.descricao || '', tecido: r.tecido || '', preco: +r.preco, antigo: r.preco_antigo == null ? null : +r.preco_antigo, cat: r.categoria, selo: r.selo, cores: r.cores || [], tams: r.tamanhos || [], estoque: r.estoque || 0, estoquePorCor: porCor, controlaEstoquePorCor: Object.keys(porCor).length > 0, parcelas: Math.min(12, Math.max(1, Math.round(+r.parcelas || 6))), foto: fa[0] || null, fotos: fa, rascunho: !!r.rascunho, destaque: !!r.destaque }; };
+  const pFromRow = r => { const pacoteFotos = fotosDaNuvem(r.foto), fa = pacoteFotos.geral, estoquePorCor = estoqueCoresNormalizado(r.estoque_por_cor); return { id: r.id, nome: r.nome, desc: r.descricao || '', tecido: r.tecido || '', preco: +r.preco, antigo: r.preco_antigo == null ? null : +r.preco_antigo, cat: r.categoria, selo: r.selo, cores: r.cores || [], tams: r.tamanhos || [], estoque: r.estoque || 0, estoquePorCor, controlaEstoquePorCor: Object.keys(estoquePorCor).length > 0, parcelas: Math.min(12, Math.max(1, Math.round(+r.parcelas || 6))), foto: fa[0] || null, fotos: fa, fotosPorCor: pacoteFotos.porCor, rascunho: !!r.rascunho, destaque: !!r.destaque }; };
   const oToRow = o => ({ numero: o.numero, data: o.data, cliente_nome: o.nome || '', cliente_fone: o.fone || '', cliente_endereco: o.endereco || '', itens: o.itens || [], subtotal: +o.subtotal || 0, desconto: +o.desconto || 0, total: +o.total || 0, pagamento: o.pag || '', cupom: o.cupom || '', status: o.status || 'Novo', estoque_baixado: !!o.baixado });
   const oFromRow = r => ({ numero: r.numero, data: r.data, nome: r.cliente_nome, fone: r.cliente_fone, endereco: r.cliente_endereco || '', itens: r.itens || [], subtotal: +r.subtotal, desconto: +r.desconto, total: +r.total, pag: r.pagamento, cupom: r.cupom, status: r.status, baixado: !!r.estoque_baixado });
   const sToRow = () => { const s = getSettings(); return { id: 1, nome_loja: s.nomeLoja, whatsapp: s.whatsapp, whatsapp_config: s.whatsappConfig, email: s.email, endereco: s.endereco, instagram: s.instagram, frete_gratis: s.freteGratis, cor: s.cor, banners: s.banners, pagamento: s.pagamento, informacoes: Object.assign({}, s.informacoes, { termos: s.termos }) }; };

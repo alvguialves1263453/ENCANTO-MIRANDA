@@ -104,8 +104,11 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px}
 .modal-mini .wiz-head p{margin:4px 0 0}
 .modal-mini .wiz-body{padding:14px 16px;background:#F8F5F0;max-height:72vh;overflow-y:auto}
 .modal-mini .wiz-foot{padding:12px 16px;border-top:1px solid var(--adm-line);background:#fff;display:flex;gap:8px;position:sticky;bottom:0}
-.mini-layout{display:grid;grid-template-columns:1fr 230px;gap:14px;align-items:start}
-.wiz-sec{background:#fff;border:1px solid var(--adm-line);border-radius:12px;padding:12px;margin-bottom:10px}
+ .mini-layout{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:14px;align-items:start}
+ .mini-layout>.form{display:contents}
+ .mini-layout>.form>.wiz-sec:nth-child(n+2){grid-column:1/-1}
+ .mini-layout>div:last-child{grid-column:2;grid-row:1}
+  .wiz-sec{background:#fff;border:1px solid var(--adm-line);border-radius:12px;padding:12px;margin-bottom:10px}
 .wiz-sec h3{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--adm-dark);margin:0 0 10px;display:flex;align-items:center;gap:8px}
 .wiz-sec h3 .n{width:20px;height:20px;border-radius:50%;background:var(--adm);color:#fff;font-size:11px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
 .wiz-sec .hint{font-size:12px;color:var(--adm-mut);margin-top:6px;line-height:1.5}
@@ -143,7 +146,20 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px}
 .wfoto.capa{border-color:var(--adm)}
 .wfoto img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
 .wfoto .xc{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(0,0,0,.65);color:#fff;font-size:13px;line-height:1;cursor:pointer}
-.wfoto .tagc{position:absolute;left:4px;bottom:4px;font-size:9px;font-weight:800;letter-spacing:.06em;background:var(--adm);color:#fff;border-radius:999px;padding:3px 8px;text-transform:uppercase}
+  .wfoto .tagc{position:absolute;left:4px;bottom:4px;font-size:9px;font-weight:800;letter-spacing:.06em;background:var(--adm);color:#fff;border-radius:999px;padding:3px 8px;text-transform:uppercase}
+  .foto-cor-wrap{margin-top:12px;padding:12px;border:1px solid var(--adm-line);border-radius:10px;background:#FCFAF7;display:grid;gap:12px}
+  .foto-cor-tabs{display:flex;gap:6px;flex-wrap:wrap;padding-bottom:2px}
+  .foto-cor-tab{border:1px solid var(--adm-line);background:#fff;color:var(--adm-dark);border-radius:999px;padding:7px 11px;cursor:pointer;font-size:11px;font-weight:800}
+  .foto-cor-tab small{display:block;font-size:9px;font-weight:500;color:var(--adm-mut);margin-top:2px}
+  .foto-cor-tab.ativo{background:var(--adm-dark);border-color:var(--adm-dark);color:#fff}
+  .foto-cor-tab.ativo small{color:#E9D9C8}
+  .foto-cor-editor{border-top:1px solid var(--adm-line);padding-top:11px;display:grid;gap:9px}
+  .foto-cor-editor>div:first-child{display:grid;gap:2px}
+  .foto-cor-selecao{display:flex;gap:8px;flex-wrap:wrap}
+  .foto-cor-item{position:relative;padding:0;border:2px solid transparent;border-radius:7px;background:#fff;cursor:pointer;overflow:hidden}
+  .foto-cor-item img{width:72px;height:92px;object-fit:cover;display:block}
+  .foto-cor-item.ativo{border-color:#2E9B5B;box-shadow:0 0 0 2px rgba(46,155,91,.16)}
+  .foto-cor-item span{position:absolute;right:3px;top:3px;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:#2E9B5B;color:#fff;font-size:12px;font-weight:900}
 .wfoto.arrast{opacity:.4}
 .wfoto.loading{display:flex;align-items:center;justify-content:center;background:linear-gradient(100deg,#EFE7DB 40%,#F8F3EC 50%,#EFE7DB 60%);background-size:200% 100%;animation:wload 1.2s infinite;cursor:wait}
 .wfoto.loading .spin{width:22px;height:22px;border-radius:50%;border:3px solid #DCCDBB;border-top-color:var(--adm);animation:girar .8s linear infinite}
@@ -634,7 +650,16 @@ async function marcaOrigem() {
 let WIZ = null;
 function fotosDoWiz() { if (WIZ && Array.isArray(WIZ.fotos) && WIZ.fotos.length) return WIZ.fotos; if (WIZ && WIZ.foto) return [WIZ.foto]; return []; }
 function fotosProntas() { try { return fotosDoWiz().filter(f => typeof f === 'string' && f); } catch { return []; } }
-function novoProduto() { WIZ = { id: null, nome: '', preco: '', parcelas: '6', cat: (DB.listCategories()[0] || {}).slug || '', foto: '', fotos: [], estoque: '10', semEstoque: false, variasCores: false, controlaEstoquePorCor: false, estoquePorCor: {}, destaque: false, tamsTxt: 'P, M, G', coresTxt: '', desc: '', antigo: '' }; desenharWizard('Adicionar produto'); }
+function normalizarMapaFotos(mapa) {
+  const out = {};
+  if (!mapa || typeof mapa !== 'object' || Array.isArray(mapa)) return out;
+  Object.keys(mapa).forEach(cor => {
+    const fotos = Array.isArray(mapa[cor]) ? mapa[cor].filter(Boolean).map(f => (typeof f === 'string' && !f.startsWith('data:') && !f.startsWith('http') && !f.startsWith('../') && !f.startsWith('assets/')) ? '../' + f : f) : [];
+    if (fotos.length) out[String(cor).trim()] = fotos;
+  });
+  return out;
+}
+function novoProduto() { WIZ = { id: null, nome: '', preco: '', parcelas: '6', cat: (DB.listCategories()[0] || {}).slug || '', foto: '', fotos: [], fotosPorCor: {}, estoque: '10', semEstoque: false, variasCores: false, controlaEstoquePorCor: false, estoquePorCor: {}, destaque: false, tamsTxt: 'P, M, G', coresTxt: '', desc: '', antigo: '' }; desenharWizard('Adicionar produto'); }
 function editarProduto(id) {
   const p = DB.getProduct(id);
   if (!p) return;
@@ -643,7 +668,7 @@ function editarProduto(id) {
   else if (p && typeof p.foto === 'string' && p.foto.trim().startsWith('[')) { try { const a = JSON.parse(p.foto); if (Array.isArray(a)) arr = a.filter(Boolean); } catch {} }
   else if (p.foto) arr = [p.foto];
   arr = arr.map(f => (typeof f === 'string' && !f.startsWith('data:') && !f.startsWith('http') && !f.startsWith('../') && !f.startsWith('assets/')) ? '../' + f : f);
-  WIZ = { id, nome: p.nome, preco: p.preco, parcelas: p.parcelas ?? 6, cat: p.cat, foto: arr[0] || '', fotos: arr, estoque: p.estoque, semEstoque: (p.estoque || 0) >= 9999, variasCores: p.cores && p.cores.length > 1, controlaEstoquePorCor: !!p.controlaEstoquePorCor, estoquePorCor: Object.assign({}, p.estoquePorCor || {}), destaque: p.destaque === true, tamsTxt: (p.tams || []).join(', '), coresTxt: (p.cores || []).join(', '), desc: p.desc || '', antigo: p.antigo ?? '' };
+  WIZ = { id, nome: p.nome, preco: p.preco, parcelas: p.parcelas ?? 6, cat: p.cat, foto: arr[0] || '', fotos: arr, fotosPorCor: normalizarMapaFotos(p.fotosPorCor), estoque: p.estoque, semEstoque: (p.estoque || 0) >= 9999, variasCores: p.cores && p.cores.length > 1, controlaEstoquePorCor: !!p.controlaEstoquePorCor, estoquePorCor: Object.assign({}, p.estoquePorCor || {}), destaque: p.destaque === true, tamsTxt: (p.tams || []).join(', '), coresTxt: (p.cores || []).join(', '), desc: p.desc || '', antigo: p.antigo ?? '' };
   if (WIZ.foto && !WIZ.foto.startsWith('data:') && !WIZ.foto.startsWith('http') && !WIZ.foto.startsWith('../')) WIZ.foto = '../' + WIZ.foto;
   desenharWizard('Editar produto');
 }
@@ -708,9 +733,11 @@ function renderFotosWizard() {
 }
 function removerFotoIdx(i) {
   const a = fotosDoWiz();
+  const removida = a[i];
   a.splice(i, 1);
+  Object.keys(WIZ.fotosPorCor || {}).forEach(cor => { WIZ.fotosPorCor[cor] = WIZ.fotosPorCor[cor].filter(f => f !== removida); if (!WIZ.fotosPorCor[cor].length) delete WIZ.fotosPorCor[cor]; });
   WIZ.fotos = a; WIZ.foto = a[0] || '';
-  renderFotosWizard(); atualizaPrev();
+  renderFotosWizard(); renderFotosPorCorWizard(); atualizaPrev();
 }
 function definirCapa(i) {
   const a = fotosDoWiz();
@@ -792,6 +819,26 @@ function desenharChipsCor() {
   box.innerHTML = opcoes.map(o => `<button type="button" class="chip-pick${atual.includes(o.toLowerCase()) ? ' on' : ''}" onclick="alternarCor('${o}')">${o}</button>`).join('');
 }
 function coresDoWiz() { return String((document.getElementById('wCores') || {}).value || WIZ.coresTxt || '').split(',').map(s => s.trim()).filter(Boolean); }
+function fotosPorCorDoWiz() { if (!WIZ.fotosPorCor || typeof WIZ.fotosPorCor !== 'object') WIZ.fotosPorCor = {}; return WIZ.fotosPorCor; }
+function renderFotosPorCorWizard() {
+  const box = document.getElementById('wFotosCores'); if (!box || !WIZ) return;
+  const fotos = fotosProntas(), mapa = fotosPorCorDoWiz(), cores = coresDoWiz();
+  if (!cores.length) { box.innerHTML = '<span class="hint">Cadastre as cores acima para relacionar fotos.</span>'; return; }
+  if (!fotos.length) { box.innerHTML = '<span class="hint">Adicione fotos na galeria acima para depois vinculá-las às cores.</span>'; return; }
+  const corAtual = cores.includes(WIZ.fotoCorSelecionada) ? WIZ.fotoCorSelecionada : cores[0];
+  WIZ.fotoCorSelecionada = corAtual;
+  const selecionadas = Array.isArray(mapa[corAtual]) ? mapa[corAtual] : [];
+  box.innerHTML = `<div class="foto-cor-tabs">${cores.map(cor => `<button type="button" class="foto-cor-tab${cor === corAtual ? ' ativo' : ''}" data-cor="${escWiz(cor)}">${escWiz(cor)}<small>${(mapa[cor] || []).length} foto(s)</small></button>`).join('')}</div>`
+    + `<div class="foto-cor-editor"><div><b>Fotos da cor ${escWiz(corAtual)}</b><span class="hint">Clique nas fotos para adicionar ou remover desta cor.</span></div><div class="foto-cor-selecao">${fotos.map((foto, i) => `<button type="button" class="foto-cor-item${selecionadas.includes(foto) ? ' ativo' : ''}" data-foto-index="${i}" aria-pressed="${selecionadas.includes(foto) ? 'true' : 'false'}"><img src="${foto}" alt="Foto ${i + 1}">${selecionadas.includes(foto) ? '<span>✓</span>' : ''}</button>`).join('')}</div></div>`;
+  box.querySelectorAll('.foto-cor-tab').forEach(el => el.addEventListener('click', () => { WIZ.fotoCorSelecionada = el.dataset.cor; renderFotosPorCorWizard(); }));
+  box.querySelectorAll('.foto-cor-item').forEach(el => el.addEventListener('click', () => {
+    const foto = fotos[+el.dataset.fotoIndex];
+    mapa[corAtual] = Array.isArray(mapa[corAtual]) ? mapa[corAtual].filter(Boolean) : [];
+    if (mapa[corAtual].includes(foto)) mapa[corAtual] = mapa[corAtual].filter(f => f !== foto); else mapa[corAtual].push(foto);
+    if (!mapa[corAtual].length) delete mapa[corAtual];
+    mostrarAvisoNaoSalvo(); renderFotosPorCorWizard();
+  }));
+}
 function renderEstoqueCores() {
   const box = document.getElementById('wEstCores'); if (!box || !WIZ) return;
   const cores = coresDoWiz();
@@ -840,17 +887,16 @@ function desenharWizard(titulo) {
    + `<label class="switch-row" style="margin-top:8px"><input type="checkbox" id="wVariasCores" ${WIZ.variasCores ? 'checked' : ''} style="width:16px;height:16px"> Este produto tem várias cores</label>`
    + `<div id="wCorEstWrap" style="display:${WIZ.variasCores ? '' : 'none'};margin-top:8px;padding:9px;border:1px solid #E6DCCF;border-radius:8px;background:#FCFAF7"><label class="switch-row"><input type="checkbox" id="wControlaCor" ${WIZ.controlaEstoquePorCor ? 'checked' : ''} style="width:16px;height:16px"> Controlar estoque de cada cor</label><div id="wEstCorQtdWrap" style="display:${WIZ.controlaEstoquePorCor ? '' : 'none'};margin-top:6px"><div class="hint">Defina a quantidade disponível em cada cor na seção “Tamanhos e cores”.</div><div id="wEstCores"></div></div></div></div>`
   + `<div class="wiz-sec"><h3><span class="n">4</span> Fotos</h3>`
-  + `<div class="foto-drop"><label class="btn-mini" style="cursor:pointer;margin:0">+ Adicionar fotos<input type="file" id="wUp" accept="image/*" multiple style="display:none"></label>`
-  + `<button class="btn-mini" type="button" onclick="removerFoto()" style="margin:0">Limpar tudo</button>`
-  + `<span class="chip-status">Arraste para trocar a capa · a 1ª é a capa.</span></div><div class="wgal" id="wFotos"></div></div>`
+   + `<div class="foto-drop"><label class="btn-mini" style="cursor:pointer;margin:0">+ Adicionar fotos<input type="file" id="wUp" accept="image/*" multiple style="display:none"></label>`
+   + `<button class="btn-mini" type="button" onclick="removerFoto()" style="margin:0">Limpar tudo</button>`
+   + `<span class="chip-status">Arraste para trocar a capa · a 1ª é a capa.</span></div><div class="wgal" id="wFotos"></div><div class="foto-cor-wrap"><b>Fotos por cor</b><span class="hint">Marque as fotos que pertencem a cada cor.</span><div id="wFotosCores"></div></div></div>`
   + `<div class="wiz-sec"><h3><span class="n">5</span> Tamanhos e cores</h3>`
   + `<label>Toque para escolher</label><div id="wTamsChips" style="margin-bottom:6px"></div>`
    + `<input type="text" id="wTams" value="${escWiz(WIZ.tamsTxt)}" placeholder="P, M, G ou 36, 38, 40">`
   + `<label style="margin-top:8px">Cores</label><div id="wCoresChips" style="margin-bottom:6px"></div>`
   + `<input type="text" id="wCores" value="${escWiz(WIZ.coresTxt)}" placeholder="Preto, Branco"></div>`
   + `</div>`
-  + `<div><p class="chip-status" style="margin:0 0 6px">Prévia na loja</p><div class="mini-prev-card" id="miniPrevCard"></div>`
-  + `<div class="wiz-sec" style="margin-top:10px"><h3><span class="n">✓</span> Antes de publicar</h3><div class="hint">• Nome curto vende mais<br>• Foto vertical 3:4<br>• Confira preço e estoque</div></div></div>`
+    + `<div><p class="chip-status" style="margin:0 0 6px">Prévia na loja</p><div class="mini-prev-card" id="miniPrevCard"></div></div>`
   + `</div></div>`
   + `<div class="wiz-foot"><button class="btn btn-borda" onclick="fecharModal()" style="padding:12px">Cancelar</button>`
   + `<button class="btn btn-borda" onclick="salvarWizard(true)" style="padding:12px">Rascunho</button>`
@@ -864,7 +910,7 @@ function desenharWizard(titulo) {
    document.getElementById('wControlaCor')?.addEventListener('change', e => alternarEstoquePorCor(e.target.checked));
   ['wNome', 'wPreco', 'wParc', 'wAntigo', 'wEst', 'wCat', 'wDesc', 'wTams', 'wCores'].forEach(id => {
     const el = document.getElementById(id);
-   if (el) { el.addEventListener('input', () => { atualizaPrev(); if (id === 'wTams') desenharChipsTam(); if (id === 'wCores') { desenharChipsCor(); renderEstoqueCores(); } }); el.addEventListener('change', atualizaPrev); }
+    if (el) { el.addEventListener('input', () => { atualizaPrev(); if (id === 'wTams') desenharChipsTam(); if (id === 'wCores') { desenharChipsCor(); renderEstoqueCores(); renderFotosPorCorWizard(); } }); el.addEventListener('change', atualizaPrev); }
   });
   const destEl = document.getElementById('wDestaque');
   if (destEl) destEl.addEventListener('change', () => { WIZ.destaque = destEl.checked; mostrarAvisoNaoSalvo(); atualizaPrev(); });
@@ -875,7 +921,7 @@ function desenharWizard(titulo) {
     if (w) w.style.display = semEl.checked ? 'none' : '';
     atualizaPrev();
   });
-   renderFotosWizard(); renderEstoqueCores();
+   renderFotosWizard(); renderEstoqueCores(); renderFotosPorCorWizard();
   const up = document.getElementById('wUp');
   if (up) up.addEventListener('change', async () => {
     const files = Array.from(up.files || []);
@@ -912,8 +958,8 @@ function desenharWizard(titulo) {
         if (i >= 0) WIZ.fotos.splice(i, 1);
         toast('Falha em ' + job.f.name);
       }
-      WIZ.foto = fotosProntas()[0] || '';
-      renderFotosWizard(); atualizaPrev();
+       WIZ.foto = fotosProntas()[0] || '';
+       renderFotosWizard(); renderFotosPorCorWizard(); atualizaPrev();
     }
     if (fotosProntas().length) toast(imgs.length > 1 ? 'Fotos adicionadas! Arraste para trocar a capa.' : 'Foto adicionada!');
   });
@@ -951,8 +997,8 @@ function atualizaPrev() {
 }
 function escolherFoto(g) { if (!Array.isArray(WIZ.fotos)) WIZ.fotos = fotosDoWiz(); if (!WIZ.fotos.includes(g)) WIZ.fotos.push(g); WIZ.foto = WIZ.fotos[0] || ''; try { renderFotosWizard(); atualizaPrev(); } catch {} }
 function removerFoto() {
-  WIZ.fotos = []; WIZ.foto = '';
-  renderFotosWizard(); atualizaPrev();
+  WIZ.fotos = []; WIZ.foto = ''; WIZ.fotosPorCor = {};
+  renderFotosWizard(); renderFotosPorCorWizard(); atualizaPrev();
 }
 function lerPasso() {
   const v = id => { const el = $(id); return el ? el.value : null; };
@@ -998,7 +1044,8 @@ async function salvarWizard(rascunho) {
    const estoqueFinal = WIZ.semEstoque ? 9999 : (WIZ.controlaEstoquePorCor ? Object.values(estoquePorCor).reduce((s, n) => s + n, 0) : (+WIZ.estoque || 0));
   const parcFinal = Math.min(12, Math.max(1, Math.round(+WIZ.parcelas || 6)));
   fotoNormalizada();
-  const id = DB.saveProduct({ id: WIZ.id, nome: WIZ.nome, desc: WIZ.desc, tecido: (WIZ.desc || '').slice(0, 60) || WIZ.nome, preco: +WIZ.preco, antigo: WIZ.antigo === '' ? null : +WIZ.antigo, cat: WIZ.cat, selo: (WIZ.antigo !== '' && +WIZ.antigo > +WIZ.preco) ? 'promo' : (WIZ.id ? (DB.getProduct(WIZ.id) || {}).selo : 'lanc'), cores: cores.length ? cores : ['Única'], tams: tams.length ? tams : ['Único'], estoque: estoqueFinal, estoquePorCor, controlaEstoquePorCor: !!WIZ.controlaEstoquePorCor, parcelas: parcFinal, foto: WIZ.foto, fotos: WIZ.fotos, destaque: !!WIZ.destaque, rascunho });
+   const fotosPorCor = Object.fromEntries(Object.entries(normalizarMapaFotos(WIZ.fotosPorCor)).filter(([cor, fotos]) => cores.includes(cor) && fotos.some(f => WIZ.fotos.includes(f))));
+   const id = DB.saveProduct({ id: WIZ.id, nome: WIZ.nome, desc: WIZ.desc, tecido: (WIZ.desc || '').slice(0, 60) || WIZ.nome, preco: +WIZ.preco, antigo: WIZ.antigo === '' ? null : +WIZ.antigo, cat: WIZ.cat, selo: (WIZ.antigo !== '' && +WIZ.antigo > +WIZ.preco) ? 'promo' : (WIZ.id ? (DB.getProduct(WIZ.id) || {}).selo : 'lanc'), cores: cores.length ? cores : ['Única'], tams: tams.length ? tams : ['Único'], estoque: estoqueFinal, estoquePorCor, controlaEstoquePorCor: !!WIZ.controlaEstoquePorCor, parcelas: parcFinal, foto: WIZ.foto, fotos: WIZ.fotos, fotosPorCor, destaque: !!WIZ.destaque, rascunho });
   WIZ.id = id; // se clicar de novo, edita o mesmo em vez de criar outro
   fecharModal();
   ocultarAvisoNaoSalvo();
@@ -1015,7 +1062,7 @@ async function duplicarProduto(id) {
   else if (p && typeof p.foto === 'string' && p.foto.trim().startsWith('[')) { try { const a = JSON.parse(p.foto); if (Array.isArray(a)) arr = a.filter(Boolean); } catch {} }
   else if (p.foto) arr = [p.foto];
   arr = arr.map(f => (typeof f === 'string' && !f.startsWith('data:') && !f.startsWith('http') && !f.startsWith('../') && !f.startsWith('assets/')) ? '../' + f : f);
-  WIZ = { id: null, nome: (p.nome || '') + ' (cópia)', preco: p.preco, parcelas: p.parcelas ?? 6, cat: p.cat, foto: arr[0] || '', fotos: arr, estoque: (+p.estoque >= 9999 ? 10 : p.estoque), semEstoque: (+p.estoque || 0) >= 9999, variasCores: p.cores && p.cores.length > 1, controlaEstoquePorCor: !!p.controlaEstoquePorCor, estoquePorCor: Object.assign({}, p.estoquePorCor || {}), destaque: p.destaque === true, tamsTxt: (p.tams || []).join(', '), coresTxt: (p.cores || []).join(', '), desc: p.desc || '', antigo: p.antigo ?? '' };
+  WIZ = { id: null, nome: (p.nome || '') + ' (cópia)', preco: p.preco, parcelas: p.parcelas ?? 6, cat: p.cat, foto: arr[0] || '', fotos: arr, fotosPorCor: normalizarMapaFotos(p.fotosPorCor), estoque: (+p.estoque >= 9999 ? 10 : p.estoque), semEstoque: (+p.estoque || 0) >= 9999, variasCores: p.cores && p.cores.length > 1, controlaEstoquePorCor: !!p.controlaEstoquePorCor, estoquePorCor: Object.assign({}, p.estoquePorCor || {}), destaque: p.destaque === true, tamsTxt: (p.tams || []).join(', '), coresTxt: (p.cores || []).join(', '), desc: p.desc || '', antigo: p.antigo ?? '' };
   desenharWizard('Duplicar produto');
 }
 function alternarTodosDestaques(marcar) {
