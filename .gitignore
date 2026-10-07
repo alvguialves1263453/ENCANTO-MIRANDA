@@ -6,6 +6,9 @@ node_modules/
 
 # SEGREDO — nunca publicar (chaves do Supabase e ImageKit)
 API.txt
+.env
+.env.*
+!.env.example
 *.pem
 
 # Logs e sistema
