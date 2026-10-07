@@ -29,7 +29,9 @@
 <h3>Resumo</h3>
 <div class="campo" style="margin-top:10px"><label>Seu nome</label><input id="cliNome" placeholder="Como podemos te chamar?" required aria-required="true"></div>
 <div class="campo"><label>Seu WhatsApp</label><input id="cliFone" inputmode="tel" placeholder="(11) 99999-9999" required aria-required="true"></div>
-<div class="campo"><label>Seu endereço</label><input id="cliEndereco" placeholder="Rua, número, bairro, cidade - UF" required aria-required="true"></div>
+<div class="campo"><label>CEP</label><input id="cliCep" inputmode="numeric" maxlength="9" placeholder="00000-000" required aria-required="true" onblur="buscarCepCarrinho()"><small id="cliCepStatus" style="color:#6b7280">Digite o CEP para buscar o endereço.</small></div>
+<div class="campo"><label>Número</label><input id="cliNumero" inputmode="numeric" placeholder="Número da residência" required aria-required="true"></div>
+<div class="campo"><label>Endereço encontrado</label><input id="cliEndereco" placeholder="Preencha o CEP" readonly required aria-required="true"></div>
 <div class="campo" id="cartPagWrap"><label>Pagamento</label><select id="pag" required aria-required="true"></select></div>
 <div class="campo"><label>Cupom de desconto (se tiver)</label><div style="display:flex;gap:8px"><input id="cupom" placeholder="CÓDIGO" style="flex:1;text-transform:uppercase"><button class="btn btn-borda" type="button" onclick="aplicarCupom()">OK</button></div></div>
  <div class="linha"><span>Subtotal (<span id="qtdT">0</span> peças)</span><b id="subT">R$0</b></div>
@@ -121,6 +123,19 @@ function aplicarCupom(){
   try{ sessionStorage.setItem('em_cupom', cupomAplicado?cupomAplicado.codigo:''); }catch{}
   calcTotal();
 }
+async function buscarCepCarrinho(){
+  const cepEl=document.getElementById('cliCep'), status=document.getElementById('cliCepStatus'), endereco=document.getElementById('cliEndereco');
+  const cep=cepEl.value.replace(/\D/g,'');
+  cepEl.value=cep.length>5?cep.slice(0,5)+'-'+cep.slice(5):cep;
+  if(cep.length!==8){ endereco.value=''; status.textContent='Digite um CEP válido com 8 números.'; return; }
+  status.textContent='Buscando endereço...';
+  try{
+    const r=await fetch('https://viacep.com.br/ws/'+cep+'/json/'); const d=await r.json();
+    if(d.erro) throw new Error('CEP não encontrado');
+    endereco.value=[d.logradouro,d.bairro,d.localidade&&d.uf?d.localidade+' - '+d.uf:''].filter(Boolean).join(', ');
+    status.textContent='Endereço encontrado. Informe apenas o número.';
+  }catch{ endereco.value=''; status.textContent='Não encontrei esse CEP. Confira os números.'; toast('Não foi possível localizar o CEP.'); }
+}
 function calcTotal(){
   const sub=subtotal();
   let desc=0;
@@ -167,9 +182,12 @@ function finalizar(){
   const removidos=carrinhoValido().length-cart.length;
   if(removidos>0){ saveCart(cart); renderCart(); toast('Itens esgotados foram removidos.'); }
   if(!cart.length) return toast('Sua sacola está vazia ou só tem esgotados');
-  const nome=document.getElementById('cliNome').value.trim();
-  const fone=document.getElementById('cliFone').value.trim();
-  const endereco=document.getElementById('cliEndereco').value.trim();
+   const nome=document.getElementById('cliNome').value.trim();
+   const fone=document.getElementById('cliFone').value.trim();
+   const cep=document.getElementById('cliCep').value.replace(/\D/g,'');
+   const numeroResidencia=document.getElementById('cliNumero').value.trim();
+   const baseEndereco=document.getElementById('cliEndereco').value.trim();
+   const endereco=baseEndereco && numeroResidencia ? `${baseEndereco}, nº ${numeroResidencia} - CEP ${cep}` : '';
   if(!nome) return toast('Diga seu nome para finalizar.');
   if(fone.replace(/\D/g,'').length<10) return toast('Digite seu WhatsApp com DDD.');
    if(!endereco) return toast('Digite seu endereço para entrega.');
