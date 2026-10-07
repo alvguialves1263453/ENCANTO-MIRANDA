@@ -30,7 +30,7 @@
 <div class="campo" style="margin-top:10px"><label>Seu nome</label><input id="cliNome" placeholder="Como podemos te chamar?" required aria-required="true"></div>
 <div class="campo"><label>Seu WhatsApp</label><input id="cliFone" inputmode="tel" placeholder="(11) 99999-9999" required aria-required="true"></div>
 <div class="campo"><label>CEP</label><input id="cliCep" inputmode="numeric" maxlength="9" placeholder="00000-000" required aria-required="true" oninput="formatarCepCarrinho(this)" onblur="buscarCepCarrinho()"><small id="cliCepStatus" style="color:#6b7280">Digite o CEP para buscar o endereço.</small></div>
-<div class="campo"><label>Número</label><input id="cliNumero" inputmode="numeric" placeholder="Número da residência" required aria-required="true"></div>
+<div class="campo"><label>Número</label><input id="cliNumero" inputmode="numeric" pattern="[0-9]+" placeholder="Número da residência" required aria-required="true" oninput="this.value=this.value.replace(/\D/g,'')"></div>
 <div class="campo"><label>Endereço encontrado</label><input id="cliEndereco" placeholder="Preencha o CEP" readonly required aria-required="true"></div>
 <div class="campo" id="cartPagWrap"><label>Pagamento</label><select id="pag" required aria-required="true"></select></div>
 <div class="campo"><label>Cupom de desconto (se tiver)</label><div style="display:flex;gap:8px"><input id="cupom" placeholder="CÓDIGO" style="flex:1;text-transform:uppercase"><button class="btn btn-borda" type="button" onclick="aplicarCupom()">OK</button></div></div>
@@ -203,6 +203,7 @@ function finalizar(){
   if(!nome) return toast('Diga seu nome para finalizar.');
   if(fone.replace(/\D/g,'').length<10) return toast('Digite seu WhatsApp com DDD.');
    if(!endereco) return toast('Digite seu endereço para entrega.');
+   if(!/^\d+$/.test(numeroResidencia)) return toast('Digite apenas números no campo Número.');
    const pag=document.getElementById('pag');
    if(document.getElementById('cartPagWrap').style.display!=='none' && !pag.value) return toast('Selecione a forma de pagamento.');
    const {sub, desc, frete, freteGratis, total}=calcTotal();
