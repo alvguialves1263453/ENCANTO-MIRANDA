@@ -1296,7 +1296,9 @@ function rPersonalizar() {
       <label class="check-info"><input type="checkbox" id="vAtend" onchange="atualizarInfoAdmin(this)" ${PERS.informacoes.visiveis.atendimento !== false ? 'checked' : ''}> Mostrar título do atendimento</label>
       <label>Horário de atendimento</label><input class="info-texto" type="text" id="cHorario" value="${(PERS.informacoes.horarioAtendimento || 'Seg a Sáb, 9h–18h').replace(/"/g, '')}" placeholder="Seg a Sáb, 9h–18h">
       <label class="check-info"><input type="checkbox" id="vHorario" onchange="atualizarInfoAdmin(this)" ${PERS.informacoes.visiveis.horarioAtendimento !== false ? 'checked' : ''}> Mostrar horário de atendimento</label>
-      <label>Prazo de envio</label><input class="info-texto" type="text" id="cPrazoEnvio" value="${(PERS.informacoes.prazoEnvio || 'Envio em 2 dias úteis').replace(/"/g, '')}" placeholder="Envio em 2 dias úteis">
+       <label>Prazo para trocas</label><input class="info-texto" type="text" id="cTrocasPrazo" value="${(PERS.informacoes.trocasPrazo || 'Trocas em até 30 dias').replace(/"/g, '')}" placeholder="Trocas em até 30 dias">
+       <label class="check-info"><input type="checkbox" id="vTrocasPrazo" onchange="atualizarInfoAdmin(this)" ${PERS.informacoes.visiveis.trocasPrazo !== false ? 'checked' : ''}> Mostrar prazo para trocas</label>
+       <label>Prazo de envio</label><input class="info-texto" type="text" id="cPrazoEnvio" value="${(PERS.informacoes.prazoEnvio || 'Envio em até 2 dias úteis').replace(/"/g, '')}" placeholder="Envio em até 2 dias úteis">
       <label class="check-info"><input type="checkbox" id="vPrazoEnvio" onchange="atualizarInfoAdmin(this)" ${PERS.informacoes.visiveis.prazoEnvio !== false ? 'checked' : ''}> Mostrar prazo de envio</label>
       <label>Detalhe do envio</label><input class="info-texto" type="text" id="cEnvioDetalhe" value="${(PERS.informacoes.envioDetalhe || 'Correios com rastreio').replace(/"/g, '')}" placeholder="Correios com rastreio">
       <label class="check-info"><input type="checkbox" id="vEnvioDetalhe" onchange="atualizarInfoAdmin(this)" ${PERS.informacoes.visiveis.envioDetalhe !== false ? 'checked' : ''}> Mostrar detalhe do envio</label>
@@ -1308,11 +1310,11 @@ function rPersonalizar() {
   </div>
   <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-preto btn-grande" style="flex:1" onclick="salvarPersonalizar()">Salvar tudo</button>
   <a class="btn btn-borda btn-grande" href="../index.html" target="_blank">Visualizar meu site</a></div></div>`;
-  ['vAtend','vHorario','vPrazoEnvio','vEnvioDetalhe'].forEach(id => atualizarInfoAdmin(document.getElementById(id)));
+   ['vAtend','vHorario','vTrocasPrazo','vPrazoEnvio','vEnvioDetalhe'].forEach(id => atualizarInfoAdmin(document.getElementById(id)));
  }
  function atualizarInfoAdmin(checkbox) {
    if (!checkbox) return;
-   const mapa = { vAtend:'cAtend', vHorario:'cHorario', vPrazoEnvio:'cPrazoEnvio', vEnvioDetalhe:'cEnvioDetalhe' };
+   const mapa = { vAtend:'cAtend', vHorario:'cHorario', vTrocasPrazo:'cTrocasPrazo', vPrazoEnvio:'cPrazoEnvio', vEnvioDetalhe:'cEnvioDetalhe' };
    const campo = document.getElementById(mapa[checkbox.id]);
    const linha = checkbox.closest('.check-info');
    const desabilitado = !checkbox.checked;
@@ -1444,12 +1446,14 @@ function lerBanners() {
   PERS.instagram = $('#cInsta').value.trim();
   PERS.informacoes = {
     atendimento: $('#cAtend').value.trim(),
-    horarioAtendimento: $('#cHorario').value.trim(),
+     horarioAtendimento: $('#cHorario').value.trim(),
+     trocasPrazo: $('#cTrocasPrazo').value.trim(),
     prazoEnvio: $('#cPrazoEnvio').value.trim(),
     envioDetalhe: $('#cEnvioDetalhe').value.trim()
     ,visiveis: {
       atendimento: $('#vAtend').checked,
-      horarioAtendimento: $('#vHorario').checked,
+       horarioAtendimento: $('#vHorario').checked,
+       trocasPrazo: $('#vTrocasPrazo').checked,
       prazoEnvio: $('#vPrazoEnvio').checked,
       envioDetalhe: $('#vEnvioDetalhe').checked
     }
