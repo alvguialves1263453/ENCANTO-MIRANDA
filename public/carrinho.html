@@ -29,7 +29,7 @@
 <h3>Resumo</h3>
 <div class="campo" style="margin-top:10px"><label>Seu nome</label><input id="cliNome" placeholder="Como podemos te chamar?" required aria-required="true"></div>
 <div class="campo"><label>Seu WhatsApp</label><input id="cliFone" inputmode="tel" placeholder="(11) 99999-9999" required aria-required="true"></div>
-<div class="campo"><label>CEP</label><input id="cliCep" inputmode="numeric" maxlength="9" placeholder="00000-000" required aria-required="true" onblur="buscarCepCarrinho()"><small id="cliCepStatus" style="color:#6b7280">Digite o CEP para buscar o endereço.</small></div>
+<div class="campo"><label>CEP</label><input id="cliCep" inputmode="numeric" maxlength="9" placeholder="00000-000" required aria-required="true" oninput="formatarCepCarrinho(this)" onblur="buscarCepCarrinho()"><small id="cliCepStatus" style="color:#6b7280">Digite o CEP para buscar o endereço.</small></div>
 <div class="campo"><label>Número</label><input id="cliNumero" inputmode="numeric" placeholder="Número da residência" required aria-required="true"></div>
 <div class="campo"><label>Endereço encontrado</label><input id="cliEndereco" placeholder="Preencha o CEP" readonly required aria-required="true"></div>
 <div class="campo" id="cartPagWrap"><label>Pagamento</label><select id="pag" required aria-required="true"></select></div>
@@ -128,6 +128,8 @@ async function buscarCepCarrinho(){
   const cep=cepEl.value.replace(/\D/g,'');
   cepEl.value=cep.length>5?cep.slice(0,5)+'-'+cep.slice(5):cep;
   if(cep.length!==8){ endereco.value=''; status.textContent='Digite um CEP válido com 8 números.'; return; }
+  if(cepEl.dataset.cepConsultado===cep && endereco.value) return;
+  cepEl.dataset.cepConsultado=cep;
   status.textContent='Buscando endereço...';
   try{
     const r=await fetch('https://viacep.com.br/ws/'+cep+'/json/'); const d=await r.json();
@@ -135,6 +137,12 @@ async function buscarCepCarrinho(){
     endereco.value=[d.logradouro,d.bairro,d.localidade&&d.uf?d.localidade+' - '+d.uf:''].filter(Boolean).join(', ');
     status.textContent='Endereço encontrado. Informe apenas o número.';
   }catch{ endereco.value=''; status.textContent='Não encontrei esse CEP. Confira os números.'; toast('Não foi possível localizar o CEP.'); }
+}
+function formatarCepCarrinho(el){
+  const cep=el.value.replace(/\D/g,'').slice(0,8);
+  el.value=cep.length>5?cep.slice(0,5)+'-'+cep.slice(5):cep;
+  if(cep.length===8) buscarCepCarrinho();
+  else { el.dataset.cepConsultado=''; document.getElementById('cliEndereco').value=''; }
 }
 function calcTotal(){
   const sub=subtotal();
