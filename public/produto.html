@@ -115,26 +115,30 @@ window.abrirEncomenda=function(){
   setTimeout(()=>{ try{ document.getElementById('encNome').focus(); }catch{} },60);
 };
 window.fecharEncomenda=function(){ document.getElementById('encFundo').classList.remove('aberto'); };
+window.animarEnderecoProduto=function(endereco,texto,status){
+  clearInterval(endereco._animacaoCep);
+  endereco.value=''; let i=0; status.textContent='Preenchendo endereço...';
+  endereco._animacaoCep=setInterval(()=>{ endereco.value=texto.slice(0,++i); if(i>=texto.length){ clearInterval(endereco._animacaoCep); status.textContent='Endereço encontrado. Informe apenas o número.'; } },18);
+};
 window.buscarCepProduto=async function(){
   const cepEl=document.getElementById('encCep'), status=document.getElementById('encCepStatus'), endereco=document.getElementById('encEndereco');
   const cep=cepEl.value.replace(/\D/g,'');
   cepEl.value=cep.length>5?cep.slice(0,5)+'-'+cep.slice(5):cep;
-  if(cep.length!==8){ endereco.value=''; status.textContent='Digite um CEP válido com 8 números.'; return; }
+  if(cep.length!==8){ clearInterval(endereco._animacaoCep); endereco.value=''; status.textContent='Digite um CEP válido com 8 números.'; return; }
   if(cepEl.dataset.cepConsultado===cep && endereco.value) return;
   cepEl.dataset.cepConsultado=cep;
   status.textContent='Buscando endereço...';
   try{
     const r=await fetch('https://viacep.com.br/ws/'+cep+'/json/'); const d=await r.json();
     if(d.erro) throw new Error('CEP não encontrado');
-    endereco.value=[d.logradouro,d.bairro,d.localidade&&d.uf?d.localidade+' - '+d.uf:''].filter(Boolean).join(', ');
-    status.textContent='Endereço encontrado. Informe apenas o número.';
+    window.animarEnderecoProduto(endereco,[d.logradouro,d.bairro,d.localidade&&d.uf?d.localidade+' - '+d.uf:''].filter(Boolean).join(', '),status);
   }catch{ endereco.value=''; status.textContent='Não encontrei esse CEP. Confira os números.'; toast('Não foi possível localizar o CEP.'); }
 };
 window.formatarCepProduto=function(el){
   const cep=el.value.replace(/\D/g,'').slice(0,8);
   el.value=cep.length>5?cep.slice(0,5)+'-'+cep.slice(5):cep;
   if(cep.length===8) window.buscarCepProduto();
-  else { el.dataset.cepConsultado=''; document.getElementById('encEndereco').value=''; }
+  else { el.dataset.cepConsultado=''; const endereco=document.getElementById('encEndereco'); clearInterval(endereco._animacaoCep); endereco.value=''; }
 };
 window.confirmaEncomenda=function(){
   const nome=document.getElementById('encNome').value.trim().replace(/\s+/g,' ');
