@@ -123,26 +123,30 @@ function aplicarCupom(){
   try{ sessionStorage.setItem('em_cupom', cupomAplicado?cupomAplicado.codigo:''); }catch{}
   calcTotal();
 }
+function animarEnderecoCarrinho(endereco, texto, status){
+  clearInterval(endereco._animacaoCep);
+  endereco.value=''; let i=0; status.textContent='Preenchendo endereço...';
+  endereco._animacaoCep=setInterval(()=>{ endereco.value=texto.slice(0,++i); if(i>=texto.length){ clearInterval(endereco._animacaoCep); status.textContent='Endereço encontrado. Informe apenas o número.'; } },18);
+}
 async function buscarCepCarrinho(){
   const cepEl=document.getElementById('cliCep'), status=document.getElementById('cliCepStatus'), endereco=document.getElementById('cliEndereco');
   const cep=cepEl.value.replace(/\D/g,'');
   cepEl.value=cep.length>5?cep.slice(0,5)+'-'+cep.slice(5):cep;
-  if(cep.length!==8){ endereco.value=''; status.textContent='Digite um CEP válido com 8 números.'; return; }
+  if(cep.length!==8){ clearInterval(endereco._animacaoCep); endereco.value=''; status.textContent='Digite um CEP válido com 8 números.'; return; }
   if(cepEl.dataset.cepConsultado===cep && endereco.value) return;
   cepEl.dataset.cepConsultado=cep;
   status.textContent='Buscando endereço...';
   try{
     const r=await fetch('https://viacep.com.br/ws/'+cep+'/json/'); const d=await r.json();
     if(d.erro) throw new Error('CEP não encontrado');
-    endereco.value=[d.logradouro,d.bairro,d.localidade&&d.uf?d.localidade+' - '+d.uf:''].filter(Boolean).join(', ');
-    status.textContent='Endereço encontrado. Informe apenas o número.';
+    animarEnderecoCarrinho(endereco,[d.logradouro,d.bairro,d.localidade&&d.uf?d.localidade+' - '+d.uf:''].filter(Boolean).join(', '),status);
   }catch{ endereco.value=''; status.textContent='Não encontrei esse CEP. Confira os números.'; toast('Não foi possível localizar o CEP.'); }
 }
 function formatarCepCarrinho(el){
   const cep=el.value.replace(/\D/g,'').slice(0,8);
   el.value=cep.length>5?cep.slice(0,5)+'-'+cep.slice(5):cep;
   if(cep.length===8) buscarCepCarrinho();
-  else { el.dataset.cepConsultado=''; document.getElementById('cliEndereco').value=''; }
+  else { el.dataset.cepConsultado=''; const endereco=document.getElementById('cliEndereco'); clearInterval(endereco._animacaoCep); endereco.value=''; }
 }
 function calcTotal(){
   const sub=subtotal();
