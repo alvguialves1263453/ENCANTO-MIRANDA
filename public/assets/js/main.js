@@ -192,12 +192,17 @@ document.addEventListener('DOMContentLoaded', ()=>{
         const info=st.informacoes||{};
          const infoPadrao={atendimento:'Atendimento',horarioAtendimento:'Seg a Sáb, 9h–18h',trocasPrazo:'Trocas em até 30 dias',prazoEnvio:'Envio em até 2 dias úteis',envioDetalhe:'Correios com rastreio'};
         const visiveis=info.visiveis||{};
-        Object.keys(infoPadrao).forEach(k=>{
+          Object.keys(infoPadrao).forEach(k=>{
           const valor=String(info[k]||infoPadrao[k]);
           document.querySelectorAll('[data-info="'+k+'"]').forEach(el=>{
            el.textContent=valor;
            el.style.display=visiveis[k]===false?'none':'';
-           });
+          });
+          const termos=st.termos||{};
+          document.querySelectorAll('[data-termo]').forEach(el=>{
+            const valor=String(termos[el.dataset.termo]||'').trim();
+            if(valor) el.textContent=valor;
+          });
          });
          // Não deixa um cartão vazio quando todas as informações dele foram desativadas.
          document.querySelectorAll('.benefit').forEach(card=>{

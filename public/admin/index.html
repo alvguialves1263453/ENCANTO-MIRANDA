@@ -1578,6 +1578,37 @@ function criarCupom() {
   rPromocoes();
 }
 
+function rTermos() {
+  const s = DB.getSettings();
+  const t = s.termos || {};
+  const esc = valor => String(valor == null ? '' : valor).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const campo = (id, label, valor, placeholder) => `<label>${label}</label><textarea id="${id}" rows="3" placeholder="${placeholder}">${esc(valor)}</textarea>`;
+  $('#admMain').innerHTML = `<div class="secao on"><h2>Termos</h2><p class="adm-sub">Edite as regras de trocas e devoluções exibidas para suas clientes.</p>
+    <div class="card form">
+      ${campo('termoArrependimento', 'Política de devolução por arrependimento', t.arrependimento, 'Ex: Você tem 7 dias corridos após o recebimento...')}
+      ${campo('termoDevolucao', 'Como funciona a devolução', t.devolucao, 'Explique o recebimento da peça e o reembolso.')}
+      ${campo('termoFrete', 'Frete da devolução', t.frete, 'Informe quem paga o frete de devolução.')}
+      ${campo('termoDefeito', 'Produto com defeito', t.defeito, 'Explique o prazo e o procedimento para defeitos.')}
+      ${campo('termoHigiene', 'Regras de higiene', t.higiene, 'Informe quais produtos não podem ser trocados.')}
+      ${campo('termoSolicitacao', 'Como solicitar', t.solicitacao, 'Oriente a cliente sobre pedido e fotos.')}
+      <button class="btn btn-preto" style="margin-top:14px" onclick="salvarTermos()">Salvar termos</button>
+    </div></div>`;
+}
+function salvarTermos() {
+  const s = DB.getSettings();
+  s.termos = {
+    arrependimento: $('#termoArrependimento').value.trim(),
+    devolucao: $('#termoDevolucao').value.trim(),
+    frete: $('#termoFrete').value.trim(),
+    defeito: $('#termoDefeito').value.trim(),
+    higiene: $('#termoHigiene').value.trim(),
+    solicitacao: $('#termoSolicitacao').value.trim()
+  };
+  DB.saveSettings(s);
+  ocultarAvisoNaoSalvo();
+  toast('Termos atualizados!');
+}
+
 // ---------- CONFIG ----------
 function rConfig() {
   const s = DB.getSettings();
@@ -1850,7 +1881,7 @@ async function testarImagekit() {
   } finally { $('#btnIK').disabled = false; }
 }
 
-const RENDER = { inicio: rInicio, produtos: rProdutos, categorias: rCategorias, estoque: rEstoque, pedidos: rPedidos, clientes: rClientes, personalizar: rPersonalizar, whatsapp: rWhatsapp, promocoes: rPromocoes, config: rConfig, testes: rTestes, ajuda: rAjuda };
+const RENDER = { inicio: rInicio, produtos: rProdutos, categorias: rCategorias, estoque: rEstoque, pedidos: rPedidos, clientes: rClientes, personalizar: rPersonalizar, termos: rTermos, whatsapp: rWhatsapp, promocoes: rPromocoes, config: rConfig, testes: rTestes, ajuda: rAjuda };
 (async () => {
   try {
     if (typeof SB !== 'undefined' && SB.ok() && await SB.session()) { sessionStorage.setItem('em_admin', '1'); entrar(); return; }
