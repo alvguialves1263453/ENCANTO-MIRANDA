@@ -73,9 +73,9 @@ const comprarHtml = esgotado
 document.getElementById('prodWrap').innerHTML=`
 <div class="breadcrumb"><a href="index.html">INÍCIO</a> / <a href="categoria.html?cat=${p.cat}">${catNome(p.cat)}</a> / <b>${p.nome}</b></div>
 <div class="prod-grid">
-<div class="prod-fotos${esgotado ? ' esgotado' : ''}"><div class="thumbs">
+<div class="prod-fotos${esgotado ? ' esgotado' : ''}"><div class="thumbs-carousel"><button type="button" onclick="rolarThumbs(-1)" aria-label="Imagens anteriores">▲</button><div class="thumbs" id="thumbsLista">
 ${galHtml}
-</div><div class="foto-principal" style="position:relative"><img id="fotoG" src="${gal[0]}" alt="${p.nome}">${esgotado ? '<span class="selo selo-esgotado" style="position:absolute;margin:12px">Esgotado</span>' : (p.selo==='lanc'?'<span class="selo lanc" style="position:absolute;margin:12px">Lançamento</span>':'')}</div></div>
+</div><button type="button" onclick="rolarThumbs(1)" aria-label="Próximas imagens">▼</button></div><div class="foto-principal" style="position:relative"><img id="fotoG" src="${gal[0]}" alt="${p.nome}">${esgotado ? '<span class="selo selo-esgotado" style="position:absolute;margin:12px">Esgotado</span>' : (p.selo==='lanc'?'<span class="selo lanc" style="position:absolute;margin:12px">Lançamento</span>':'')}</div></div>
 <div class="prod-info">
 <h1>${p.nome}</h1>
 <p style="font-size:13px;color:#6b7280">Ref. EM${String(p.id).slice(-4).padStart(4,'0')} • <a href="categoria.html?cat=${p.cat}" style="color:#6B4A32;font-weight:800">${catNome(p.cat)}</a></p>
@@ -94,6 +94,7 @@ ${comprarHtml}
 <details><summary>Trocas</summary><p class="texto" style="margin-top:8px">Trocas e devoluções em até 30 dias após o recebimento. Ver <a href="trocas.html" style="color:#6B4A32">política completa</a>.</p></details>
 </div></div></div>`;
 window.trocaFoto=function(el,src){document.querySelectorAll('.thumbs img').forEach(i=>i.classList.remove('ativo'));el.classList.add('ativo');document.getElementById('fotoG').src=src;};
+window.rolarThumbs=function(d){const box=document.getElementById('thumbsLista');if(box)box.scrollBy({top:d*190,behavior:'smooth'});};
 window.selCor=function(el,c){if(!( +p.estoque > 0)) return;corSel=c;document.getElementById('corLbl').textContent=c;document.querySelectorAll('.cor').forEach(b=>b.classList.remove('ativo'));el.classList.add('ativo');};
 window.selTam=function(el,t){if(!( +p.estoque > 0)) return;tamSel=t;document.getElementById('tamLbl').textContent=t;document.querySelectorAll('.tam').forEach(b=>b.classList.remove('ativo'));el.classList.add('ativo');};
 window.mQtd=function(d){if(!( +p.estoque > 0)) return;qtd=Math.max(1,Math.min(p.estoque||1,qtd+d));document.getElementById('qtdLbl').textContent=qtd;};

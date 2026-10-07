@@ -662,6 +662,14 @@ footer{background:var(--brown-dark);color:var(--brown-light)}
 }
 .whats img{width:62px!important;height:62px!important;object-fit:contain;display:block}
 
+/* Galeria vertical do produto: miniaturas em uma janela fixa, sem esticar a página. */
+.thumbs-carousel{display:flex;flex-direction:column;align-items:stretch;gap:6px;min-width:0}
+.thumbs-carousel>button{height:26px;border:1px solid var(--line);border-radius:5px;background:var(--surface);color:var(--brown);font-weight:800;cursor:pointer;line-height:1}
+.thumbs-carousel>button:hover{background:var(--brown-light)}
+.thumbs-carousel .thumbs{max-height:500px;overflow:hidden;scroll-behavior:smooth;gap:8px}
+.thumbs-carousel .thumbs img{flex:0 0 auto;width:100%;}
+@media(max-width:600px){.thumbs-carousel .thumbs{max-height:360px}.thumbs-carousel>button{height:24px}}
+
 /* A sacola nunca deve desaparecer no celular. */
 @media(max-width:600px){
   .h-actions>a.icon-btn.cart{display:flex!important;visibility:visible!important;opacity:1!important;align-items:center!important;}
