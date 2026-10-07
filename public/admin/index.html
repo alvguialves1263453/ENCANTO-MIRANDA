@@ -258,7 +258,9 @@ details.mini-opt summary{cursor:pointer;font-size:13px;font-weight:700;color:#5A
  .check-info{display:flex;align-items:center;gap:8px;color:var(--adm-mut);font-size:12px!important;margin:6px 0 14px!important;cursor:pointer}
  .check-info.info-desabilitado{color:#aaa!important}
  .check-info input{width:auto!important;margin:0;accent-color:var(--adm)}
- #avisoNaoSalvo{display:none;position:fixed;right:18px;bottom:18px;z-index:300;background:#B3261E;color:#fff;border-radius:8px;padding:12px 16px;box-shadow:0 8px 24px rgba(80,0,0,.28);font-size:13px;font-weight:800;max-width:300px;line-height:1.35}
+ #avisoNaoSalvo{display:none;position:fixed;right:18px;bottom:18px;z-index:300;background:#B3261E;color:#fff;border-radius:8px;padding:12px 16px;box-shadow:0 8px 24px rgba(80,0,0,.28);font-size:13px;font-weight:800;max-width:320px;line-height:1.35}
+ #avisoNaoSalvo button{display:block;width:100%;margin-top:9px;border:0;border-radius:6px;background:#43A047;color:#fff;padding:9px 12px;font-size:12px;font-weight:900;letter-spacing:.04em;cursor:pointer}
+ #avisoNaoSalvo button:hover{background:#2E7D32}
  #avisoNaoSalvo.mostrar{display:block;animation:avisoEntrar .2s ease}
  @keyframes avisoEntrar{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
  @media(max-width:640px){#avisoNaoSalvo{right:10px;bottom:10px;left:10px;max-width:none;text-align:center}}
@@ -292,7 +294,7 @@ details.mini-opt summary{cursor:pointer;font-size:13px;font-weight:700;color:#5A
 </div>
 
 <div class="modal-fundo" id="modalFundo"><div class="modal" id="modalBox"></div></div>
-<div id="avisoNaoSalvo" role="status" aria-live="polite">⚠ Você tem alterações não salvas!</div>
+<div id="avisoNaoSalvo" role="status" aria-live="polite">⚠ Você tem alterações não salvas!<button type="button" onclick="salvarTudoAviso()">SALVAR TUDO</button></div>
 
 <script src="../assets/js/data.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -329,6 +331,15 @@ function mostrarAvisoNaoSalvo() {
 function ocultarAvisoNaoSalvo() {
   const el = document.getElementById('avisoNaoSalvo');
   if (el) el.classList.remove('mostrar');
+}
+function salvarTudoAviso() {
+  try {
+    if (TELA === 'personalizar' && typeof salvarPersonalizar === 'function') return salvarPersonalizar();
+    if (TELA === 'whatsapp' && typeof salvarWhatsapp === 'function') return salvarWhatsapp();
+    if (TELA === 'config' && typeof salvarPag === 'function') return salvarPag();
+    if (typeof WIZ !== 'undefined' && WIZ && document.getElementById('modalFundo').classList.contains('aberto')) return salvarWizard(false);
+    toast('Use o botão de salvar da seção atual.');
+  } catch { toast('Não consegui salvar. Confira os campos.'); }
 }
 // Detecta edições mesmo em formulários que são recriados pelo painel.
 document.addEventListener('input', e => {
