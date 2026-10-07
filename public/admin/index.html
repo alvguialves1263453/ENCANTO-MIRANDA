@@ -1608,7 +1608,7 @@ function restaurarSelecaoTermo() {
 }
 function formatarTermo(cmd, valor) {
   const ed = document.getElementById('termoEditor'); if (!ed) return;
-  restaurarSelecaoTermo(); ed.focus();
+  ed.focus(); restaurarSelecaoTermo();
   document.execCommand(cmd, false, valor || null);
   guardarSelecaoTermo();
 }
@@ -1642,6 +1642,8 @@ function editarTermo(chave) {
   const ed = document.getElementById('termoEditor'); if (ed) {
     ed.addEventListener('keydown', selecionarTodoTermo);
     ed.addEventListener('keyup', guardarSelecaoTermo);
+    const toolbar = document.querySelector('#modalBox .desc-toolbar');
+    if (toolbar) toolbar.addEventListener('mousedown', guardarSelecaoTermo);
   }
 }
 function aplicarTermoEditado() {
