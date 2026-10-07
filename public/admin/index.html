@@ -707,7 +707,7 @@ function alternarTam(v) {
 function desenharChipsTam() {
   const box = document.getElementById('wTamsChips'); if (!box) return;
   const atual = tamsAtuais().map(x => x.toLowerCase());
-  const opcoes = ['P', 'M', 'G', 'GG', 'XG', 'Único'];
+   const opcoes = ['PP', 'P', 'M', 'G', 'GG', 'XG', '34', '36', '38', '40', '42', '44', '46', '48', 'Único'];
   box.innerHTML = opcoes.map(o => `<button type="button" class="chip-pick${atual.includes(o.toLowerCase()) ? ' on' : ''}" onclick="alternarTam('${o}')">${o}</button>`).join('');
 }
 function alternarCor(v) {
@@ -757,7 +757,7 @@ function desenharWizard(titulo) {
   + `<span class="chip-status">Arraste para trocar a capa · a 1ª é a capa.</span></div><div class="wgal" id="wFotos"></div></div>`
   + `<div class="wiz-sec"><h3><span class="n">5</span> Tamanhos e cores</h3>`
   + `<label>Toque para escolher</label><div id="wTamsChips" style="margin-bottom:6px"></div>`
-  + `<input type="text" id="wTams" value="${escWiz(WIZ.tamsTxt)}" placeholder="P, M, G">`
+   + `<input type="text" id="wTams" value="${escWiz(WIZ.tamsTxt)}" placeholder="P, M, G ou 36, 38, 40">`
   + `<label style="margin-top:8px">Cores</label><div id="wCoresChips" style="margin-bottom:6px"></div>`
   + `<input type="text" id="wCores" value="${escWiz(WIZ.coresTxt)}" placeholder="Preto, Branco"></div>`
   + `</div>`

@@ -157,9 +157,12 @@ document.addEventListener('DOMContentLoaded', ()=>{
             a.href=a.href.replace(/wa\.me\/\d+/, 'wa.me/'+st.whatsapp);
           });
         }
-        if(st.nomeLoja){
-          document.querySelectorAll('.copy').forEach(el=>{ el.innerHTML=el.innerHTML.replace(/Encanto Miranda/g, st.nomeLoja); });
-        }
+         if(st.nomeLoja){
+           document.querySelectorAll('.copy').forEach(el=>{ el.innerHTML=el.innerHTML.replace(/Encanto Miranda/g, st.nomeLoja); });
+         }
+         if(st.endereco){
+           document.querySelectorAll('[data-loja-info="endereco"]').forEach(el=>{ el.textContent=st.endereco; });
+         }
         const info=st.informacoes||{};
         const infoPadrao={atendimento:'Atendimento',horarioAtendimento:'Seg a Sáb, 9h–18h',prazoEnvio:'Envio em 2 dias úteis',envioDetalhe:'Correios com rastreio'};
         const visiveis=info.visiveis||{};
