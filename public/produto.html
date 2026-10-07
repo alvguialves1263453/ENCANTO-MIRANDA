@@ -44,10 +44,10 @@
 <h2 style="font-family:Georgia,serif;font-weight:400;margin:0">Confirmar encomenda</h2>
 <p style="font-size:13px;color:#6b7280;margin:6px 0 0">Confira o pedido e diga quem é você para chamar no WhatsApp.</p>
 <div id="encResumo"></div>
-<div class="campo" style="margin-top:10px"><label>Seu nome</label><input id="encNome" placeholder="Como podemos te chamar?" autocomplete="name"></div>
-<div class="campo" style="margin-top:10px"><label>Seu WhatsApp</label><input id="encFone" inputmode="tel" placeholder="(11) 99999-9999" autocomplete="tel"></div>
-<div class="campo" style="margin-top:10px"><label>Seu endereço</label><input id="encEndereco" placeholder="Rua, número, bairro, cidade - UF" autocomplete="street-address"></div>
-<div class="campo" style="margin-top:10px"><label>Pagamento</label><select id="encPag"></select></div>
+<div class="campo" style="margin-top:10px"><label>Seu nome</label><input id="encNome" placeholder="Como podemos te chamar?" autocomplete="name" required aria-required="true"></div>
+<div class="campo" style="margin-top:10px"><label>Seu WhatsApp</label><input id="encFone" inputmode="tel" placeholder="(11) 99999-9999" autocomplete="tel" required aria-required="true"></div>
+<div class="campo" style="margin-top:10px"><label>Seu endereço</label><input id="encEndereco" placeholder="Rua, número, bairro, cidade - UF" autocomplete="street-address" required aria-required="true"></div>
+<div class="campo" style="margin-top:10px"><label>Pagamento</label><select id="encPag" required aria-required="true"></select></div>
 <div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-borda" style="flex:1" onclick="fecharEncomenda()">Voltar</button><button class="btn btn-rosa" style="flex:2" onclick="confirmaEncomenda()">Confirmar no WhatsApp →</button></div>
 </div></div>
 
@@ -122,9 +122,11 @@ window.confirmaEncomenda=function(){
   if(nome.length<2) { toast('Digite seu nome completo.'); return; }
   if(/[A-Za-zÀ-ÖØ-öø-ÿ]/.test(fone)) { toast('Telefone não pode ter letra, só números.'); return; }
    if(fone.replace(/\D/g,'').length<10) { toast('Digite seu WhatsApp com DDD.'); return; }
-   if(!endereco) { toast('Digite seu endereço para entrega.'); return; }
+    if(!endereco) { toast('Digite seu endereço para entrega.'); return; }
+    const pagEl=document.getElementById('encPag');
+    if(!pagEl.value) { toast('Selecione a forma de pagamento.'); return; }
    const stCfg=(typeof DB!=='undefined')?DB.getSettings():{}; const infCfg=stCfg.informacoes||{}; const limiteCfg=+stCfg.freteGratis||0; const freteGratisCfg=infCfg.freteGratisAtivo===true && limiteCfg>0 && p.preco*qtd>=limiteCfg; const freteCfg=freteGratisCfg?0:Math.max(0,+infCfg.fretePadrao||0); const total=BRL(p.preco*qtd+freteCfg);
-   const pag=document.getElementById('encPag').value||'Não informado'; let numero='—';
+    const pag=pagEl.value||'Não informado'; let numero='—';
    const item={id:p.id,nome:p.nome,cor:corSel,tam:tamSel,qtd,preco:p.preco};
     try{ if(typeof DB!=='undefined'){ const ped=DB.logOrder({nome,fone,endereco,itens:[item],subtotal:p.preco*qtd,desconto:0,frete:freteCfg,total:p.preco*qtd+freteCfg,pag, cupom:''}); numero=ped.numero; } }catch{}
    const cfg=(typeof DB!=='undefined'&&DB.getSettings().whatsappConfig)||{};
