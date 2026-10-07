@@ -177,17 +177,6 @@ details.mini-opt summary{cursor:pointer;font-size:13px;font-weight:700;color:#5A
 .est-modal{max-width:420px;width:100%;margin:0 auto;text-align:center}
 .est-modal .est-prod,.est-modal .est-prev{text-align:left}
 .est-modal .est-prod .badge{margin-left:auto}
-.cor-modal-head{text-align:left;border-bottom:1px solid var(--adm-line);padding-bottom:12px;margin-bottom:12px}
-.cor-modal-head h2{margin:0;color:var(--adm-dark);font-family:Georgia,serif;font-weight:400}
-.cor-modal-head p{margin:4px 0 0;color:var(--adm-mut);font-size:12px}
-.cor-stock-list{display:grid;gap:8px;max-height:55vh;overflow:auto;text-align:left}
-.cor-stock-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:8px;padding:10px 11px;border:1px solid var(--adm-line);border-radius:9px;background:#FCFAF7}
-.cor-stock-name{font-size:13px;font-weight:800;color:var(--adm-dark);overflow-wrap:anywhere}
-.cor-stock-qty{font-size:13px;color:#5A422F;white-space:nowrap}
-.cor-stock-actions{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr 1.5fr;gap:6px;border-top:1px solid #EEE5DA;padding-top:8px}
-.cor-stock-actions .btn-mini{margin:0;text-align:center;padding:7px 5px}
-.cor-stock-actions .btn-add{background:var(--adm-dark);color:#fff;border-color:var(--adm-dark)}
-.cor-stock-actions .btn-add:hover{background:#5a412f}
 /* Banners só-imagem: cards + editor ampliado */
 .banner-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin:14px 0}
 .banner-card{border:1px solid var(--adm-line);border-radius:12px;overflow:hidden;background:#FBF7F1;padding:0;text-align:left;cursor:pointer;transition:transform .18s,box-shadow .18s,border-color .18s}
@@ -1145,7 +1134,7 @@ function verEstoqueCores(id) {
   const p = DB.getProduct(id);
   if (!p || !p.estoquePorCor) return;
   const cores = Object.entries(p.estoquePorCor);
-  abrirModal(`<div class="est-modal"><div class="cor-modal-head"><h2>Estoque por cor</h2><p>${escWiz(p.nome)} &middot; ${cores.reduce((s, [,q]) => s + (+q || 0), 0)} peças no total</p></div><div class="cor-stock-list">${cores.map(([cor, qtd], i) => `<div class="cor-stock-row"><span class="cor-stock-name">${escWiz(cor)}</span><strong class="cor-stock-qty">${+qtd || 0} un.</strong><div class="cor-stock-actions"><button type="button" class="btn-mini btn-add" data-est-cor="${i}" data-est-modo="entra">+ Adicionar</button><button type="button" class="btn-mini" data-est-cor="${i}" data-est-modo="sai">&minus; Retirar</button><button type="button" class="btn-mini" data-est-cor="${i}" data-est-modo="corrige">Corrigir</button></div></div>`).join('')}</div><button class="btn btn-borda" style="width:100%;margin-top:14px" onclick="fecharModal()">Fechar</button></div>`);
+  abrirModal(`<div class="est-modal"><h2 style="font-family:Georgia,serif;font-weight:400;color:#38271D;margin:0">Estoque por cor</h2><p class="chip-status" style="margin:6px 0 12px">${escWiz(p.nome)} &middot; ${cores.reduce((s, [,q]) => s + (+q || 0), 0)} peças no total</p><div style="display:grid;gap:8px;max-height:55vh;overflow:auto">${cores.map(([cor, qtd], i) => `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:9px;border:1px solid #E6DCCF;border-radius:8px;background:#FCFAF7"><b style="flex:1;overflow-wrap:anywhere">${escWiz(cor)}</b><strong>${+qtd || 0} un.</strong><button type="button" class="btn-mini btn-add" data-est-cor="${i}" data-est-modo="entra">+</button><button type="button" class="btn-mini" data-est-cor="${i}" data-est-modo="sai">&minus;</button><button type="button" class="btn-mini" data-est-cor="${i}" data-est-modo="corrige">Corrigir</button></div>`).join('')}</div><button class="btn btn-borda" style="width:100%;margin-top:12px" onclick="fecharModal()">Fechar</button></div>`);
   document.querySelectorAll('[data-est-cor]').forEach(btn => {
     btn.addEventListener('click', () => abrirMovEstoque(id, btn.dataset.estModo, cores[+btn.dataset.estCor][0]));
   });
