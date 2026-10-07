@@ -1132,9 +1132,15 @@ function verEstoqueCores(id) {
   const p = DB.getProduct(id);
   if (!p || !p.estoquePorCor) return;
   const cores = Object.entries(p.estoquePorCor);
-  abrirModal(`<div class="est-modal"><h2 style="font-family:Georgia,serif;font-weight:400;color:#38271D;margin:0">Estoque por cor</h2><p class="chip-status" style="margin:6px 0 12px">${escWiz(p.nome)} &middot; ${cores.reduce((s, [,q]) => s + (+q || 0), 0)} pe&#231;as no total</p><div style="display:grid;gap:8px;max-height:55vh;overflow:auto">${cores.map(([cor, qtd]) => `<div style="display:flex;align-items:center;gap:8px;padding:9px;border:1px solid #E6DCCF;border-radius:8px;background:#FCFAF7"><b style="flex:1">${escWiz(cor)}</b><strong>${+qtd || 0} un.</strong><button class="btn-mini btn-add" onclick="mexerEstoqueCor('${p.id}',${JSON.stringify(cor)},1)">+</button><button class="btn-mini" onclick="mexerEstoqueCor('${p.id}',${JSON.stringify(cor)},-1)">&minus;</button><button class="btn-mini" onclick="corrigirEstoqueCor('${p.id}',${JSON.stringify(cor)})">Corrigir</button></div>`).join('')}</div><button class="btn btn-borda" style="width:100%;margin-top:12px" onclick="fecharModal()">Fechar</button></div>`);
+  abrirModal(`<div class="est-modal"><h2 style="font-family:Georgia,serif;font-weight:400;color:#38271D;margin:0">Estoque por cor</h2><p class="chip-status" style="margin:6px 0 12px">${escWiz(p.nome)} &middot; ${cores.reduce((s, [,q]) => s + (+q || 0), 0)} peças no total</p><div style="display:grid;gap:8px;max-height:55vh;overflow:auto">${cores.map(([cor, qtd], i) => `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:9px;border:1px solid #E6DCCF;border-radius:8px;background:#FCFAF7"><b style="flex:1;overflow-wrap:anywhere">${escWiz(cor)}</b><strong>${+qtd || 0} un.</strong><button type="button" class="btn-mini btn-add" data-est-cor="${i}" data-est-modo="entra">+</button><button type="button" class="btn-mini" data-est-cor="${i}" data-est-modo="sai">&minus;</button><button type="button" class="btn-mini" data-est-cor="${i}" data-est-modo="corrige">Corrigir</button></div>`).join('')}</div><button class="btn btn-borda" style="width:100%;margin-top:12px" onclick="fecharModal()">Fechar</button></div>`);
+  document.querySelectorAll('[data-est-cor]').forEach(btn => {
+    btn.addEventListener('click', () => abrirMovEstoque(id, btn.dataset.estModo, cores[+btn.dataset.estCor][0]));
+  });
 }
 function estoqueRapido(id, dir) {
+  const p = DB.getProduct(id);
+  if (estoqueNaoControlado(p)) return;
+  if (p && p.controlaEstoquePorCor) return verEstoqueCores(id);
   try { DB.adjustStock(id, dir); toast(dir > 0 ? '+1 peça!' : '−1 peça!'); rEstoque(); } catch { toast('Não consegui atualizar.'); }
 }
 function mudaQtdEst(d) {
@@ -1160,6 +1166,8 @@ function atualizaPrevEst() {
 }
 function abrirMovEstoque(id, modo, cor) {
   const p = DB.getProduct(id); if (!p) return;
+  if (estoqueNaoControlado(p)) return;
+  if (p.controlaEstoquePorCor && cor == null) return verEstoqueCores(id);
   const mapa = p.estoquePorCor || {};
   const base = cor && Object.prototype.hasOwnProperty.call(mapa, cor) ? (+mapa[cor] || 0) : (+p.estoque || 0);
   window.__estCtx = { id, modo, base, cor };
@@ -1194,6 +1202,7 @@ function confirmaEst() {
     toast(ctx.modo === 'entra' ? `+${qtd} peça(s)!` : `−${qtd} peça(s)!`);
   }
   window.__estCtx = null; ocultarAvisoNaoSalvo(); fecharModal(); rEstoque();
+  if (ctx.cor != null) verEstoqueCores(ctx.id);
 }
 
 // ---------- PEDIDOS ----------

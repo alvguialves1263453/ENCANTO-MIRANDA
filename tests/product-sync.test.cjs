@@ -130,6 +130,33 @@ test('Produtos e Início do admin renderizam um card e um alerta de estoque', as
   }
 });
 
+test('botões por cor encaminham as três ações sem inserir nomes nos comandos HTML', () => {
+  const admin = fs.readFileSync(path.join(root, 'public', 'admin', 'index.html'), 'utf8');
+  const source = admin.match(/function verEstoqueCores\(id\) \{[\s\S]*?\n\}/)[0];
+  const cor = 'Azul "marinho" d\'água';
+  const calls = [];
+  let html = '';
+  let buttons = [];
+  const context = vm.createContext({
+    DB: { getProduct: () => ({ nome: 'Produto', estoquePorCor: { [cor]: 5 } }) },
+    escWiz: s => s.replace(/"/g, '&quot;'),
+    abrirModal: value => {
+      html = value;
+      buttons = [...html.matchAll(/data-est-cor="(\d+)" data-est-modo="([^"]+)"/g)].map(m => ({
+        dataset: { estCor: m[1], estModo: m[2] },
+        addEventListener(event, fn) { assert.equal(event, 'click'); this.click = fn; }
+      }));
+    },
+    document: { querySelectorAll: () => buttons },
+    abrirMovEstoque: (...args) => calls.push(args)
+  });
+  vm.runInContext(source + '; verEstoqueCores("produto");', context);
+  assert.equal(buttons.length, 3);
+  buttons.forEach(btn => btn.click());
+  assert.deepEqual(calls, ['entra', 'sai', 'corrige'].map(modo => ['produto', modo, cor]));
+  assert.doesNotMatch(html, /onclick="(?:mexerEstoqueCor|corrigirEstoqueCor)/);
+});
+
 test('listas da interface contaminadas não são reutilizadas como fonte', async () => {
   const app = boot();
   await app.DB.ready;
