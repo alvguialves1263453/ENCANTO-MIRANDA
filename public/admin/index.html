@@ -250,6 +250,8 @@ details.mini-opt summary{cursor:pointer;font-size:13px;font-weight:700;color:#5A
  .desc-family{width:108px!important;height:30px!important;padding:2px 5px!important;font-size:11px!important;color:#463426!important;background:#fff!important;line-height:normal!important}
   .desc-editable{min-height:150px;padding:12px;outline:0;font-size:14px;line-height:1.6;white-space:pre-wrap}
   .termo-editable{min-height:52vh;max-height:62vh;overflow:auto;background:#fff}
+  .termo-modal-content{padding:22px;background:var(--adm-card)}
+  .termo-modal-content h3{font-family:Georgia,serif;font-weight:400;color:var(--adm-dark);margin:0 0 6px}
   .termo-resumo{display:flex;align-items:center;gap:12px;border:1px solid var(--adm-line);border-radius:8px;padding:11px 12px;margin:8px 0 14px;background:#fff}
   .termo-resumo p{flex:1;margin:0;color:var(--adm-mut);font-size:12px;line-height:1.45;max-height:38px;overflow:hidden}
  .desc-editable:empty:before{content:attr(data-placeholder);color:#9A8978}
@@ -497,10 +499,12 @@ function ir(tela) {
 }
 
 // ---------- modal ----------
-function abrirModal(html) { $('#modalBox').classList.remove('banner-modal-box'); $('#modalBox').innerHTML = html; $('#modalFundo').classList.add('aberto'); }
+function abrirModal(html) { $('#modalBox').classList.remove('banner-modal-box', 'modal-mini'); $('#modalBox').style.maxWidth = ''; $('#modalBox').style.width = ''; $('#modalBox').innerHTML = html; $('#modalFundo').classList.add('aberto'); }
 function fecharModal() {
   $('#modalFundo').classList.remove('aberto');
-  $('#modalBox').classList.remove('banner-modal-box');
+  $('#modalBox').classList.remove('banner-modal-box', 'modal-mini');
+  $('#modalBox').style.maxWidth = '';
+  $('#modalBox').style.width = '';
   // se tinha um popup com promessa pendente e fechou pelo X/fundo/ESC, resolve como cancelado
   try { if (window.__popCanc) { const c = window.__popCanc; window.__popCanc = null; c(); } } catch {}
 }
@@ -1620,9 +1624,12 @@ function editarTermo(chave) {
   const campo = TERMOS_CAMPOS.find(x => x[0] === chave); if (!campo) return;
   termoEditando = chave; selecaoTermo = null;
   const valor = termoRascunho && termoRascunho[chave] || '';
-  abrirModal(`<div class="modal-mini" style="max-width:900px;width:96vw"><h3>${campo[1]}</h3><p class="chip-status">Use a barra para formatar o texto. O conteúdo será sanitizado antes de ser salvo.</p>
+  abrirModal(`<div class="termo-modal-content"><h3>${campo[1]}</h3><p class="chip-status">Use a barra para formatar o texto. O conteúdo será sanitizado antes de ser salvo.</p>
     <div class="desc-editor"><div class="desc-toolbar"><button type="button" title="Negrito" onmousedown="event.preventDefault()" onclick="formatarTermo('bold')"><b>B</b></button><button type="button" title="Itálico" onmousedown="event.preventDefault()" onclick="formatarTermo('italic')"><i>I</i></button><button type="button" title="Sublinhado" onmousedown="event.preventDefault()" onclick="formatarTermo('underline')"><u>U</u></button><button type="button" title="Lista" onmousedown="event.preventDefault()" onclick="formatarTermo('insertUnorderedList')">☷</button><select class="desc-family" title="Fonte" onchange="fonteTermo(this.value)"><option value="Arial">Arial</option><option value="Georgia">Georgia</option><option value="Verdana">Verdana</option><option value="Tahoma">Tahoma</option><option value="Courier New">Courier New</option><option value="Times New Roman">Times New Roman</option></select><input class="desc-font-number" type="number" min="8" max="72" value="14" title="Tamanho em pixels" onchange="tamanhoTermo(this.value)"><input type="color" title="Cor do texto" value="#38271D" onchange="colorirTermo(this.value)"></div><div id="termoEditor" class="desc-editable termo-editable" contenteditable="true" data-placeholder="Escreva o termo completo...">${descricaoInicial(valor)}</div></div>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px"><button class="btn btn-borda" type="button" onclick="fecharModal()">Cancelar</button><button class="btn btn-preto" type="button" onclick="aplicarTermoEditado()">Aplicar</button></div></div>`);
+  $('#modalBox').classList.add('modal-mini');
+  $('#modalBox').style.maxWidth = '900px';
+  $('#modalBox').style.width = '96vw';
   const ed = document.getElementById('termoEditor'); if (ed) ed.addEventListener('keyup', guardarSelecaoTermo);
 }
 function aplicarTermoEditado() {
