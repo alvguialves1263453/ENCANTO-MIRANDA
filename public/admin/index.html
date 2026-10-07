@@ -1620,6 +1620,15 @@ function tamanhoTermo(tamanho) {
   if (ed) ed.querySelectorAll('font[size="7"]').forEach(el => { el.removeAttribute('size'); el.style.fontSize = px + 'px'; });
 }
 function fonteTermo(fonte) { formatarTermo('fontName', fonte); }
+function selecionarTodoTermo(e) {
+  if (!((e.ctrlKey || e.metaKey) && String(e.key).toLowerCase() === 'a')) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const ed = document.getElementById('termoEditor'); if (!ed) return;
+  const range = document.createRange(); range.selectNodeContents(ed);
+  const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+  selecaoTermo = range.cloneRange();
+}
 function editarTermo(chave) {
   const campo = TERMOS_CAMPOS.find(x => x[0] === chave); if (!campo) return;
   termoEditando = chave; selecaoTermo = null;
@@ -1630,7 +1639,10 @@ function editarTermo(chave) {
   $('#modalBox').classList.add('modal-mini');
   $('#modalBox').style.maxWidth = '900px';
   $('#modalBox').style.width = '96vw';
-  const ed = document.getElementById('termoEditor'); if (ed) ed.addEventListener('keyup', guardarSelecaoTermo);
+  const ed = document.getElementById('termoEditor'); if (ed) {
+    ed.addEventListener('keydown', selecionarTodoTermo);
+    ed.addEventListener('keyup', guardarSelecaoTermo);
+  }
 }
 function aplicarTermoEditado() {
   const ed = document.getElementById('termoEditor'); if (!ed || !termoEditando) return;
