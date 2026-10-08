@@ -614,6 +614,7 @@ function rInicio() {
 
 // ---------- PRODUTOS ----------
 let buscaP = '', filtroStatus = '', filtroCatP = '';
+function codigoProdutoAdmin(id) { const s=String(id==null?'':id); if(/^p\d+$/i.test(s)) return 'P'+s.slice(1); let h=0; for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0; return 'P'+(h%60466176).toString(36).toUpperCase().padStart(5,'0'); }
 function rProdutos() {
   const codigo = id => { const s = String(id == null ? '' : id); if (/^p\d+$/i.test(s)) return 'P' + s.slice(1); let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return 'P' + (h % 60466176).toString(36).toUpperCase().padStart(5, '0'); };
   const catsP = DB.listCategories();
@@ -895,7 +896,7 @@ function desenharWizard(titulo) {
   + `<div class="wiz-body"><div class="mini-layout"><div class="form compacto">`
    + `<div class="wiz-sec"><h3><span class="n">1</span> Produto</h3>`
    + `<label>Nome <span class="fld-req">*</span></label><input type="text" id="wNome" maxlength="80" value="${escWiz(WIZ.nome)}" placeholder="Ex: Vestido floral midi">`
-   + `<label style="margin-top:8px">ID do produto</label><input type="text" value="${WIZ.id ? escWiz(WIZ.id) : 'Será gerado ao salvar'}" readonly style="background:#f1f1f1;color:#777;cursor:not-allowed">`
+    + `<label style="margin-top:8px">ID do produto</label><input type="text" value="${WIZ.id ? codigoProdutoAdmin(WIZ.id) : 'Será gerado ao salvar'}" readonly style="background:#f1f1f1;color:#777;cursor:not-allowed">`
   + `<div class="mini-row" style="margin-top:8px"><div><label>Categoria</label><select id="wCat">${cats}</select></div>`
   + `<div><label>Parcelas</label><select id="wParc">${Array.from({ length: 12 }, (_, i) => `<option value="${i + 1}" ${(+(WIZ.parcelas || 6)) === i + 1 ? 'selected' : ''}>${i + 1}x</option>`).join('')}</select></div></div>`
     + `<label style="margin-top:8px">Descrição do produto</label><div class="desc-editor"><div class="desc-toolbar"><button type="button" title="Negrito" onmousedown="event.preventDefault()" onclick="formatarDescricao('bold')"><b>B</b></button><button type="button" title="Itálico" onmousedown="event.preventDefault()" onclick="formatarDescricao('italic')"><i>I</i></button><button type="button" title="Sublinhado" onmousedown="event.preventDefault()" onclick="formatarDescricao('underline')"><u>U</u></button><button type="button" title="Lista" onmousedown="event.preventDefault()" onclick="formatarDescricao('insertUnorderedList')">☷</button><select class="desc-family" title="Fonte" onchange="fonteDescricao(this.value)"><option value="Arial">Arial</option><option value="Georgia">Georgia</option><option value="Verdana">Verdana</option><option value="Tahoma">Tahoma</option><option value="Courier New">Courier New</option><option value="Times New Roman">Times New Roman</option></select><input class="desc-font-number" type="number" min="8" max="72" value="14" title="Tamanho em pixels" onchange="tamanhoDescricao(this.value)"><input type="color" title="Cor do texto" value="#38271D" onchange="colorirDescricao(this.value)"></div><div id="wDesc" class="desc-editable" contenteditable="true" data-placeholder="Escreva a descrição, cole um texto formatado ou use a barra acima...">${descricaoInicial(WIZ.desc)}</div></div>`
