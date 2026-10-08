@@ -323,7 +323,8 @@ details.mini-opt summary{cursor:pointer;font-size:13px;font-weight:700;color:#5A
   <div class="adm-shell">
     <aside class="adm-side">
       <div class="logo"><img src="../assets/img/logo.png" alt=""></div>
-      <small>PAINEL DA LOJA</small>
+       <small>PAINEL DA LOJA</small>
+       <small id="adminPresenca" style="letter-spacing:.04em;color:#B8A592;margin-top:-10px">● 0 usuários no painel</small>
       <nav class="adm-nav" id="admNav"></nav>
     </aside>
     <div class="adm-main" id="admMain"></div>
@@ -336,7 +337,7 @@ details.mini-opt summary{cursor:pointer;font-size:13px;font-weight:700;color:#5A
 <script src="../assets/js/data.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2"><\/script>')</script>
-<script src="../assets/js/supabase.js?v=2"></script>
+ <script src="../assets/js/supabase.js?v=3"></script>
  <script src="../assets/js/loja-db.js?v=10"></script>
 <script src="../assets/js/main.js?v=7"></script>
 <script>
@@ -451,13 +452,22 @@ async function entrar() {
     let nuvem = false;
     try { if (typeof SB !== 'undefined' && SB.ok() && await SB.session()) nuvem = true; } catch {}
     const el = document.querySelector('.adm-side small');
-    if (el) { el.textContent = nuvem ? '● NUVEM CONECTADA' : '● SÓ NESTE APARELHO'; el.style.color = nuvem ? '#9FD6A4' : '#E8B34B'; }
-  })();
+     if (el) { el.textContent = nuvem ? '● NUVEM CONECTADA' : '● SÓ NESTE APARELHO'; el.style.color = nuvem ? '#9FD6A4' : '#E8B34B'; }
+     iniciarPresenca();
+   })();
   // ao entrar, manda a fila pendente e busca o novo da nuvem
   try { if (typeof DB !== 'undefined' && DB.sincronizar) DB.sincronizar().then(mudou => { if (mudou) RENDER[TELA](); checaNuvem(); }).catch(() => {}); } catch {}
   setTimeout(checaNuvem, 6000);
   armaSyncAdmin();
   ir('inicio');
+}
+let pararPresenca = null;
+function iniciarPresenca() {
+  if (pararPresenca || typeof SB === 'undefined' || !SB.presencaAdmin) return;
+  pararPresenca = SB.presencaAdmin(total => {
+    const el = document.getElementById('adminPresenca');
+    if (el) el.textContent = `● ${total} ${total === 1 ? 'usuário conectado' : 'usuários conectados'}`;
+  });
 }
 async function checaNuvem() {
   let ok = false;

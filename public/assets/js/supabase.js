@@ -105,6 +105,25 @@ const SB = (() => {
       return canal;
     } catch { return null; }
   }
+  function presencaAdmin(cb) {
+    const c = cli();
+    if (!c || typeof cb !== 'function') return () => {};
+    const key = 'admin-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    const canal = c.channel('encanto-admin-presence', { config: { presence: { key } } });
+    const atualizar = () => {
+      try { cb(Object.keys(canal.presenceState()).length); } catch {}
+    };
+    canal.on('presence', { event: 'sync' }, atualizar);
+    canal.on('presence', { event: 'join' }, atualizar);
+    canal.on('presence', { event: 'leave' }, atualizar);
+    canal.subscribe(async status => {
+      if (status === 'SUBSCRIBED') {
+        try { await canal.track({ painel: true, online_at: new Date().toISOString() }); } catch {}
+        atualizar();
+      }
+    });
+    return () => { try { c.removeChannel(canal); } catch {} };
+  }
 
-  return { ok, login, logout, senha, session, ler, lerUm, gravar, apagar, foto, aoMudar, vivo };
+  return { ok, login, logout, senha, session, ler, lerUm, gravar, apagar, foto, aoMudar, presencaAdmin, vivo };
 })();
