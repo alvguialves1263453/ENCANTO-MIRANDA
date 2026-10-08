@@ -668,8 +668,8 @@ footer{background:var(--brown-dark);color:var(--brown-light)}
   border:0!important;
   border-color:transparent!important;
   background:transparent!important;
-  box-shadow:0 5px 14px rgba(0,0,0,.24)!important;
-  border-radius:50%;
+  box-shadow:none!important;
+  border-radius:0;
   transition:transform .2s ease,filter .2s ease;
 }
 .whats img{width:54px!important;height:54px!important;object-fit:contain;display:block}
@@ -686,8 +686,8 @@ footer{background:var(--brown-dark);color:var(--brown-light)}
   padding:0;
   border:0;
   background:transparent;
-   box-shadow:0 5px 14px rgba(0,0,0,.24);
-   border-radius:50%;
+   box-shadow:none;
+   border-radius:0;
    transition:transform .2s ease,filter .2s ease;
 }
 .instagram[hidden]{display:none}
