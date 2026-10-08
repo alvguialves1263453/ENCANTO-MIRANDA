@@ -241,10 +241,11 @@ const DB = (() => {
       let snapshot, revision;
       do {
         revision = writeRevision;
+        const pedidos = SB.session().then(session => session ? SB.ler('pedidos', { col: 'data', asc: false }) : []).catch(() => []);
         snapshot = await Promise.all([
           SB.ler('categorias', { col: 'ordem' }), SB.ler('produtos'),
           SB.ler('cupons'), SB.lerUm('configuracoes', 'id', 1),
-          SB.ler('pedidos', { col: 'data', asc: false }).catch(() => [])
+          pedidos
         ]);
       } while (revision !== writeRevision);
       const [cats, prods, cups, cfg, peds] = snapshot;
