@@ -46,10 +46,10 @@
 <div id="encResumo"></div>
 <div class="campo" style="margin-top:10px"><label>Seu nome</label><input id="encNome" placeholder="Como podemos te chamar?" autocomplete="name" required aria-required="true"></div>
 <div class="campo" style="margin-top:10px"><label>Seu WhatsApp</label><input id="encFone" inputmode="tel" placeholder="(11) 99999-9999" autocomplete="tel" required aria-required="true"></div>
-<div class="campo" style="margin-top:10px"><label>CEP</label><input id="encCep" inputmode="numeric" maxlength="9" placeholder="00000-000" autocomplete="postal-code" required aria-required="true" oninput="formatarCepProduto(this)" onblur="buscarCepProduto()"><small id="encCepStatus" style="color:#6b7280">Digite o CEP para buscar o endereço.</small></div>
+ <div class="campo" style="margin-top:10px"><label>CEP (opcional)</label><input id="encCep" inputmode="numeric" maxlength="9" placeholder="00000-000" autocomplete="postal-code" oninput="formatarCepProduto(this)" onblur="buscarCepProduto()"><small id="encCepStatus" style="color:#6b7280">Se informar, rua e bairro serão preenchidos automaticamente.</small></div>
 <div class="campo" style="margin-top:10px"><label>Número</label><input id="encNumero" inputmode="numeric" pattern="[0-9]+" placeholder="Número da residência" required aria-required="true" oninput="this.value=this.value.replace(/\D/g,'')"></div>
- <div class="campo" style="margin-top:10px"><label>Rua</label><input id="encRua" placeholder="Preenchida pelo CEP" autocomplete="street-address" readonly required aria-required="true"></div>
- <div class="campo" style="margin-top:10px"><label>Bairro</label><input id="encBairro" placeholder="Preenchido pelo CEP" readonly required aria-required="true"></div>
+ <div class="campo" style="margin-top:10px"><label>Rua</label><input id="encRua" placeholder="Digite sua rua" autocomplete="street-address" required aria-required="true"></div>
+ <div class="campo" style="margin-top:10px"><label>Bairro</label><input id="encBairro" placeholder="Digite seu bairro" required aria-required="true"></div>
 <div class="campo" style="margin-top:10px"><label>Pagamento</label><select id="encPag" required aria-required="true"></select></div>
 <div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-borda" style="flex:1" onclick="fecharEncomenda()">Voltar</button><button class="btn btn-rosa" style="flex:2" onclick="confirmaEncomenda()">Confirmar no WhatsApp →</button></div>
 </div></div>
@@ -128,7 +128,7 @@ window.fecharEncomenda=function(){ document.getElementById('encFundo').classList
    const cepEl=document.getElementById('encCep'), status=document.getElementById('encCepStatus'), rua=document.getElementById('encRua'), bairro=document.getElementById('encBairro');
   const cep=cepEl.value.replace(/\D/g,'');
   cepEl.value=cep.length>5?cep.slice(0,5)+'-'+cep.slice(5):cep;
-   if(cep.length!==8){ rua.value=''; bairro.value=''; status.textContent='Digite um CEP válido com 8 números.'; return; }
+   if(cep.length!==8){ status.textContent=cep.length ? 'CEP incompleto. Você também pode preencher rua e bairro manualmente.' : 'CEP não informado. Preencha rua e bairro manualmente.'; return; }
    if(cepEl.dataset.cepConsultado===cep && rua.value && bairro.value) return;
   cepEl.dataset.cepConsultado=cep;
   status.textContent='Buscando endereço...';
@@ -136,13 +136,13 @@ window.fecharEncomenda=function(){ document.getElementById('encFundo').classList
     const r=await fetch('https://viacep.com.br/ws/'+cep+'/json/'); const d=await r.json();
     if(d.erro) throw new Error('CEP não encontrado');
      rua.value=d.logradouro||''; bairro.value=d.bairro||''; status.textContent='Endereço encontrado. Informe apenas o número.';
-   }catch{ rua.value=''; bairro.value=''; status.textContent='Não encontrei esse CEP. Confira os números.'; toast('Não foi possível localizar o CEP.'); }
+   }catch{ status.textContent='CEP não encontrado. Preencha rua e bairro manualmente.'; toast('Não foi possível localizar o CEP.'); }
 };
 window.formatarCepProduto=function(el){
   const cep=el.value.replace(/\D/g,'').slice(0,8);
   el.value=cep.length>5?cep.slice(0,5)+'-'+cep.slice(5):cep;
   if(cep.length===8) window.buscarCepProduto();
-   else { el.dataset.cepConsultado=''; document.getElementById('encRua').value=''; document.getElementById('encBairro').value=''; }
+   else { el.dataset.cepConsultado=''; }
 };
 window.confirmaEncomenda=function(){
   const nome=document.getElementById('encNome').value.trim().replace(/\s+/g,' ');
@@ -151,7 +151,7 @@ window.confirmaEncomenda=function(){
     const numeroResidencia=document.getElementById('encNumero').value.trim();
      const rua=document.getElementById('encRua').value.trim();
      const bairro=document.getElementById('encBairro').value.trim();
-     const endereco=rua && bairro && numeroResidencia ? `${rua}, nº ${numeroResidencia} - ${bairro} - CEP ${cep}` : '';
+     const endereco=rua && bairro && numeroResidencia ? `${rua}, nº ${numeroResidencia} - ${bairro}${cep ? ' - CEP '+cep : ''}` : '';
   if(!nome) { toast('Diga seu nome para encomendar.'); return; }
   if(/\d/.test(nome)) { toast('Nome não pode ter número.'); return; }
   if(nome.length<2) { toast('Digite seu nome completo.'); return; }
