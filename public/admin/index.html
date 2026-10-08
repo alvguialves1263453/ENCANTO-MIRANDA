@@ -1046,11 +1046,16 @@ async function salvarWizard(rascunho) {
   fotoNormalizada();
    const fotosPorCor = Object.fromEntries(Object.entries(normalizarMapaFotos(WIZ.fotosPorCor)).filter(([cor, fotos]) => cores.includes(cor) && fotos.some(f => WIZ.fotos.includes(f))));
    const id = DB.saveProduct({ id: WIZ.id, nome: WIZ.nome, desc: WIZ.desc, tecido: (WIZ.desc || '').slice(0, 60) || WIZ.nome, preco: +WIZ.preco, antigo: WIZ.antigo === '' ? null : +WIZ.antigo, cat: WIZ.cat, selo: (WIZ.antigo !== '' && +WIZ.antigo > +WIZ.preco) ? 'promo' : (WIZ.id ? (DB.getProduct(WIZ.id) || {}).selo : 'lanc'), cores: cores.length ? cores : ['Única'], tams: tams.length ? tams : ['Único'], estoque: estoqueFinal, estoquePorCor, controlaEstoquePorCor: !!WIZ.controlaEstoquePorCor, parcelas: parcFinal, foto: WIZ.foto, fotos: WIZ.fotos, fotosPorCor, destaque: !!WIZ.destaque, rascunho });
-  WIZ.id = id; // se clicar de novo, edita o mesmo em vez de criar outro
-  fecharModal();
-  ocultarAvisoNaoSalvo();
-  toast(rascunho ? 'Salvo como rascunho.' : 'Produto na loja! 🎉'.replace(' 🎉', ''));
-  rProdutos();
+   const sincronizado = await DB.aguardarUltimoEnvio();
+   WIZ.id = id; // se clicar de novo, edita o mesmo em vez de criar outro
+   fecharModal();
+   if (sincronizado) {
+     ocultarAvisoNaoSalvo();
+     toast(rascunho ? 'Rascunho salvo na nuvem.' : 'Produto publicado na nuvem!');
+   } else {
+     toast('Produto salvo só neste aparelho. Entre na nuvem para publicar.');
+   }
+   rProdutos();
 }
 async function duplicarProduto(id) {
   const p = DB.getProduct(id);

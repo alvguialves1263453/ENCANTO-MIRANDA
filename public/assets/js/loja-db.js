@@ -172,6 +172,8 @@ const DB = (() => {
   function avisaLocal() {
     try { if (String(location.href).includes('/admin/') && typeof toast === 'function') toast('Sem nuvem agora: salvo só neste aparelho.'); } catch {}
   }
+  let ultimoEnvio = Promise.resolve(true);
+  function aguardarUltimoEnvio() { return ultimoEnvio; }
   function paraNuvem(op) {
     // Registra a intenção antes da rede: uma falha nunca apaga o produto.
     filaPush(op);
@@ -348,10 +350,11 @@ const DB = (() => {
        S.products[id] = Object.assign({}, S.products[id], { nome: p.nome, desc: p.desc, tecido: p.tecido, preco: +p.preco, antigo: p.antigo === '' || p.antigo == null ? null : +p.antigo, cat: p.cat, selo: p.selo || null, cores: p.cores || [], tams: p.tams || [], estoque: Math.max(0, Math.round(+p.estoque || 0)), estoquePorCor: estoqueCoresNormalizado(p.estoquePorCor), controlaEstoquePorCor: !!p.controlaEstoquePorCor, parcelas: Math.min(12, Math.max(1, Math.round(+p.parcelas || (S.products[id] || {}).parcelas || 6))), foto: capa, fotos: fa, rascunho: !!p.rascunho, destaque: !!p.destaque });
     } else {
        S.products[id] = Object.assign({}, p, { preco: +p.preco, antigo: p.antigo === '' || p.antigo == null ? null : +p.antigo, estoque: Math.max(0, Math.round(+p.estoque || 0)), estoquePorCor: estoqueCoresNormalizado(p.estoquePorCor), controlaEstoquePorCor: !!p.controlaEstoquePorCor, parcelas: Math.min(12, Math.max(1, Math.round(+p.parcelas || 6))), foto: capa, fotos: fa });
-    }
-    persist();
-    paraNuvem({ k: 'pUp', p: getProduct(id) });
-    return id;
+     }
+     persist();
+     // Mantém a promessa para o painel confirmar se o produto chegou à nuvem.
+     ultimoEnvio = paraNuvem({ k: 'pUp', p: getProduct(id) });
+     return id;
   }
   function deleteProduct(id) {
     id = String(id);
@@ -551,6 +554,6 @@ const DB = (() => {
 
   const pendencias = () => { try { return JSON.parse(localStorage.getItem('em_outbox') || '[]').length; } catch { return 0; } };
 
-  return { listProducts, getProduct, saveProduct, deleteProduct, adjustStock, setStock, listCategories, saveCategory, newCategory, deleteCategory, moveCategory, countByCat, logOrder, listOrders, setOrderStatus, clients, saveCoupon, deleteCoupon, listCoupons, validateCoupon, getSettings, saveSettings, applyToShop, resetAll, semFoto: SEM_FOTO, ready: pronto, puxarNuvem, sincronizar, nuvem: nuvemLigada, pendencias };
+  return { listProducts, getProduct, saveProduct, aguardarUltimoEnvio, deleteProduct, adjustStock, setStock, listCategories, saveCategory, newCategory, deleteCategory, moveCategory, countByCat, logOrder, listOrders, setOrderStatus, clients, saveCoupon, deleteCoupon, listCoupons, validateCoupon, getSettings, saveSettings, applyToShop, resetAll, semFoto: SEM_FOTO, ready: pronto, puxarNuvem, sincronizar, nuvem: nuvemLigada, pendencias };
 })();
 if (typeof DB !== 'undefined' && typeof PRODUTOS !== 'undefined') DB.applyToShop();
