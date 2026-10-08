@@ -277,7 +277,8 @@ const DB = (() => {
       let snapshot, revision;
       do {
         revision = writeRevision;
-        const pedidos = SB.session().then(session => session ? SB.ler('pedidos', { col: 'data', asc: false }) : []).catch(() => []);
+        // null indica leitura indisponível; [] é uma tabela realmente vazia.
+        const pedidos = SB.session().then(session => session ? SB.ler('pedidos', { col: 'data', asc: false }) : null).catch(() => null);
         snapshot = await Promise.all([
           SB.ler('categorias', { col: 'ordem' }), SB.ler('produtos'),
           SB.ler('cupons'), SB.lerUm('configuracoes', 'id', 1),
@@ -309,11 +310,15 @@ const DB = (() => {
       const pendingSettings = compactQueue(readQueue()).find(op => op.k === 'sUp' && op.s);
       if (pendingSettings) S.settings = pendingSettings.s;
       else if (cfg) S.settings = sFromRow(cfg);
-      if (peds.length) {
-        const locais = {};
-        S.orders.forEach(o => locais[o.numero] = o);
-        peds.forEach(r => { locais[r.numero] = oFromRow(r); });
-        S.orders = keepLatestOrders(Object.values(locais));
+      if (Array.isArray(peds)) {
+        // O snapshot substitui o cache: pedidos removidos da nuvem não podem
+        // sobreviver aqui. Preserva apenas alterações explicitamente pendentes.
+        const orders = new Map(peds.map(r => [String(r.numero), oFromRow(r)]));
+        compactQueue(readQueue()).forEach(op => {
+          if ((op.k === 'oNew' || op.k === 'oUpd') && op.o) orders.set(String(op.o.numero), op.o);
+          if (op.k === 'oDel') orders.delete(String(op.numero));
+        });
+        S.orders = keepLatestOrders([...orders.values()]);
         const max = S.orders.reduce((m, o) => { const n = parseInt(String(o.numero).replace(/\D/g, ''), 10); return isNaN(n) ? m : Math.max(m, n); }, 0);
         S.seq = Math.max(S.seq, max + 1);
       }

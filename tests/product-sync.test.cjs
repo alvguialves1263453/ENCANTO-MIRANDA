@@ -84,6 +84,47 @@ test('remove do cache os três pedidos confirmados como ausentes do Supabase', (
   assert.deepEqual(JSON.parse(JSON.stringify(app.DB.listOrders().map(o => o.numero))), [keep.numero]);
 });
 
+test('snapshot substitui pedidos locais e realtime limpa uma tabela esvaziada', async () => {
+  const storage = createStorage({ em_db_v1: JSON.stringify({ orders: [{ numero: '#LOCAL-ANTIGO', status: 'Novo' }] }) });
+  const app = boot({ storage, configure: (SB, cloud) => {
+    cloud.pedidos = [{ numero: '#000001', status: 'Novo', data: '2026-10-08T12:00:00Z' }];
+  } });
+  await app.DB.ready;
+  assert.deepEqual(copy(app.DB.listOrders()).map(o => o.numero), ['#000001']);
+  app.cloud.pedidos = [];
+  await app.emitChange();
+  assert.deepEqual(copy(app.DB.listOrders()), []);
+  assert.deepEqual(JSON.parse(storage.getItem('em_db_v1')).orders, []);
+  assert.equal(app.calls.length, 0);
+});
+
+test('erro de leitura ou ausência de sessão não é tratado como tabela vazia', async () => {
+  for (const mode of ['error', 'visitor']) {
+    const storage = createStorage({ em_db_v1: JSON.stringify({ orders: [{ numero: '#000001', status: 'Novo' }] }) });
+    const app = boot({ storage, configure: SB => {
+      if (mode === 'visitor') SB.session = async () => null;
+      else {
+        const read = SB.ler;
+        SB.ler = async table => { if (table === 'pedidos') throw new Error('Sem acesso'); return read(table); };
+      }
+    } });
+    await app.DB.ready;
+    assert.deepEqual(copy(app.DB.listOrders()).map(o => o.numero), ['#000001']);
+  }
+});
+
+test('snapshot vazio preserva pedido com envio pendente sem preservar cache órfão', async () => {
+  const pending = { numero: '#PENDENTE', status: 'Novo' };
+  const storage = createStorage({
+    em_db_v1: JSON.stringify({ orders: [pending, { numero: '#ORFAO' }] }),
+    em_outbox: JSON.stringify([{ k: 'oNew', o: pending }])
+  });
+  const app = boot({ storage, configure: SB => { SB.rpc = async () => { throw new Error('Falha de envio'); }; } });
+  await app.DB.ready;
+  assert.deepEqual(copy(app.DB.listOrders()).map(o => o.numero), ['#PENDENTE']);
+  assert.equal(JSON.parse(storage.getItem('em_outbox')).length, 1);
+});
+
 test('um registro continua sendo um após renderizações e sincronizações repetidas', async () => {
   const app = boot();
   await app.DB.ready;
@@ -396,7 +437,7 @@ test('scripts reais da loja/admin compilam e todas as páginas usam o cache atua
     for (const match of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)) {
       if (!/\bsrc\s*=/.test(match[1])) new vm.Script(match[2], { filename: path.basename(file) + ':' + (++index) });
     }
-    if (html.includes('loja-db.js')) assert.ok(/loja-db\.js\?v=(10|11|12|13|14|15)/.test(html), file);
+    if (html.includes('loja-db.js')) assert.ok(/loja-db\.js\?v=(10|11|12|13|14|15|16)\b/.test(html), file);
     assert.ok(!html.includes('limparSoAqui('), 'não oferece exclusão por prefixo do ID');
     assert.ok(!html.includes('limparDuplicados('), 'não oferece exclusão por nome/preço');
   }
