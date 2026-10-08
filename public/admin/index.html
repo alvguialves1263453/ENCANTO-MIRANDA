@@ -53,6 +53,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px}
 .adm-sugestoes{position:absolute;z-index:50;top:calc(100% + 5px);left:0;right:0;background:#fff;border:1px solid var(--adm-line);border-radius:8px;box-shadow:0 10px 24px #2d1b1026;overflow:hidden}
 .adm-sugestao{display:block;width:100%;padding:10px 12px;border:0;border-bottom:1px solid var(--adm-line);background:#fff;color:var(--adm-dark);text-align:left;cursor:pointer;font:inherit}
 .adm-sugestao:last-child{border-bottom:0}.adm-sugestao:hover{background:var(--adm-bg)}.adm-sugestao small{display:block;color:#8c7b6b;font-size:11px;margin-top:2px}
+.adm-sugestao{display:flex;align-items:center;gap:10px}.adm-sugestao img{width:38px;height:48px;flex:0 0 38px;object-fit:cover;border-radius:5px;background:var(--adm-bg)}.adm-sugestao span{min-width:0;display:block}
 .form label{display:block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--adm-mut);margin:14px 0 6px}
 .form input[type=text],.form input[type=number],.form input[type=date],.form select,.form textarea{width:100%;padding:12px 14px;border:1px solid #DCCDBB;border-radius:8px;font-size:14px;background:#fff;font-family:inherit}
 .form textarea{min-height:80px;resize:vertical}
@@ -653,7 +654,7 @@ function renderSugestoesAdmin() {
   const codigo = id => { const s=String(id==null?'':id); if(/^p\d+$/i.test(s)) return 'P'+s.slice(1); let h=0; for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0; return 'P'+(h%60466176).toString(36).toUpperCase().padStart(5,'0'); };
   const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const lista = DB.listProducts(true).filter(p => [p.nome,p.id,codigo(p.id)].join(' ').toLowerCase().includes(termo)).slice(0,8);
-  box.innerHTML = lista.map(p => `<button type="button" class="adm-sugestao" onclick="editarProduto('${String(p.id).replace(/'/g,'\\&#39;')}')"><b>${esc(p.nome)}</b><small>ID: ${esc(codigo(p.id))} · ${esc(p.id)}</small></button>`).join('') || '<div class="adm-sugestao" style="cursor:default">Nenhum produto encontrado.</div>';
+   box.innerHTML = lista.map(p => `<button type="button" class="adm-sugestao" onclick="editarProduto('${String(p.id).replace(/'/g,'\\&#39;')}')"><img src="${fotoSrc(p)}" alt=""><span><b>${esc(p.nome)}</b><small>ID: ${esc(codigo(p.id))} · ${esc(p.id)}</small></span></button>`).join('') || '<div class="adm-sugestao" style="cursor:default">Nenhum produto encontrado.</div>';
   box.hidden = false;
 }
 // mostra em cada card se já está na nuvem ou só neste aparelho
@@ -1192,7 +1193,7 @@ function rEstoque() {
   const badge = p => estoqueNaoControlado(p) ? '<span class="badge ok">Sempre disponível</span>' : (!(p.estoque > 0) ? '<span class="badge zero">Esgotado</span>' : ((p.estoque || 0) <= 5 ? '<span class="badge baixo">Está acabando</span>' : '<span class="badge ok">OK</span>'));
   $('#admMain').innerHTML = `<div class="secao on"><h2>Estoque</h2><p class="adm-sub">Controle de peças: chegou, vendeu ou contou tudo.</p>
   <div class="est-resumo"><div class="est-box"><b>${totalPecas}</b><span>peças no total</span></div><div class="est-box"><b>${nBaixo}</b><span>acabando ≤ 5</span></div><div class="est-box"><b>${nEsgot}</b><span>esgotados</span></div></div>
-  <div class="toolbar"><input id="qEst" placeholder="🔍 Procurar produto..." value="${buscaEst.replace(/"/g, '')}"><select id="catEst"><option value="">Todas as categorias</option>${catsEst.map(c => `<option value="${c.slug}" ${filtroCatEst === c.slug ? 'selected' : ''}>${c.nome}</option>`).join('')}</select><select id="ckBaixoSel"><option value="">Tudo</option><option value="baixo" ${soBaixo ? 'selected' : ''}>Só quem está acabando</option></select></div>
+   <div class="toolbar"><div style="position:relative;flex:1;min-width:220px"><input id="qEst" style="width:100%" placeholder="🔍 Procurar por nome ou ID..." value="${buscaEst.replace(/"/g, '')}"><div id="estoqueSugestoes" class="adm-sugestoes" hidden></div></div><select id="catEst"><option value="">Todas as categorias</option>${catsEst.map(c => `<option value="${c.slug}" ${filtroCatEst === c.slug ? 'selected' : ''}>${c.nome}</option>`).join('')}</select><select id="ckBaixoSel"><option value="">Tudo</option><option value="baixo" ${soBaixo ? 'selected' : ''}>Só quem está acabando</option></select></div>
   <div class="est-grid">${lista.map(p => {
      const ilimitado = estoqueNaoControlado(p);
      const est = ilimitado ? 0 : (+p.estoque || 0);
@@ -1207,7 +1208,8 @@ function rEstoque() {
      + `<button class="btn-mini" onclick="corrigirEstoque('${p.id}')">Corrigir</button></div>`) + `</div>`;
   }).join('') || '<div class="vazio">Nada por aqui. Ajuste a busca.</div>'}</div></div>`;
   const q = document.getElementById('qEst');
-  if (q) q.addEventListener('input', e => { buscaEst = e.target.value.toLowerCase(); const pos = e.target.selectionStart; rEstoque(); const q2 = document.getElementById('qEst'); if (q2) { q2.focus(); try { q2.setSelectionRange(pos, pos); } catch {} } });
+   if (q) q.addEventListener('input', e => { buscaEst = e.target.value.toLowerCase(); const pos = e.target.selectionStart; rEstoque(); const q2 = document.getElementById('qEst'); if (q2) { q2.focus(); try { q2.setSelectionRange(pos, pos); } catch {} } });
+   renderSugestoesEstoque();
   const catSel = document.getElementById('catEst');
   if (catSel) catSel.addEventListener('change', e => { filtroCatEst = e.target.value; rEstoque(); });
   const sel = document.getElementById('ckBaixoSel');
@@ -1215,7 +1217,17 @@ function rEstoque() {
   const ck = document.getElementById('ckBaixo');
   if (ck) ck.addEventListener('change', e => { soBaixo = e.target.checked; rEstoque(); });
 }
-function verEstoqueCores(id) {
+ function renderSugestoesEstoque() {
+   const box=document.getElementById('estoqueSugestoes'); if(!box) return;
+   const termo=String(buscaEst||'').trim(); if(!termo){box.hidden=true;box.innerHTML='';return;}
+   const codigo=id=>{const s=String(id==null?'':id);if(/^p\d+$/i.test(s))return 'P'+s.slice(1);let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return 'P'+(h%60466176).toString(36).toUpperCase().padStart(5,'0');};
+   const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+   const lista=DB.listProducts(false).filter(p=>[p.nome,p.id,codigo(p.id)].join(' ').toLowerCase().includes(termo)).slice(0,8);
+   box.innerHTML=lista.map(p=>`<button type="button" class="adm-sugestao" onclick="selecionarEstoque('${String(p.id).replace(/'/g,'\\&#39;')}')"><img src="${fotoSrc(p)}" alt=""><span><b>${esc(p.nome)}</b><small>ID: ${esc(codigo(p.id))}</small></span></button>`).join('')||'<div class="adm-sugestao" style="cursor:default">Nenhum produto encontrado.</div>';
+   box.hidden=false;
+ }
+ function selecionarEstoque(id){buscaEst=String(id).toLowerCase();rEstoque();}
+ function verEstoqueCores(id) {
   const p = DB.getProduct(id);
   if (!p || !p.estoquePorCor) return;
   const cores = Object.entries(p.estoquePorCor);
