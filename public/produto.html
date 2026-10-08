@@ -90,7 +90,7 @@ ${galHtml}
  </div><button type="button" onclick="rolarThumbs(1)" aria-label="Próximas imagens">▼</button></div><div class="foto-principal" style="position:relative"><img id="fotoG" src="${galInicial[0]||imgProduto(p,1)}" alt="${p.nome}">${esgotado ? '<span class="selo selo-esgotado" style="position:absolute;margin:12px">Esgotado</span>' : (p.selo==='lanc'?'<span class="selo lanc" style="position:absolute;margin:12px">Lançamento</span>':'')}</div></div>
 <div class="prod-info">
 <h1>${p.nome}</h1>
-<p style="font-size:13px;color:#6b7280">Ref. EM${String(p.id).slice(-4).padStart(4,'0')} • <a href="categoria.html?cat=${p.cat}" style="color:#6B4A32;font-weight:800">${catNome(p.cat)}</a></p>
+ <p style="font-size:13px;color:#6b7280">ID ${codigoProdutoCurto(p.id)} • <a href="categoria.html?cat=${p.cat}" style="color:#6B4A32;font-weight:800">${catNome(p.cat)}</a></p>
 ${p.antigo?`<div class="preco-ant" style="font-size:15px;margin-top:8px">De ${BRL(p.antigo)} <b style="color:#16a34a">-${off}%</b></div>`:''}
 <div class="prod-preco">${BRL(p.preco)}</div>
 <div class="parcelas">${(typeof parcelasDoProduto==='function' && parcelasDoProduto(p) <= 1) ? textoParcela(p) : ('ou ' + ((typeof textoParcela==='function') ? textoParcela(p) : ('6x de ' + BRL(p.preco*1.09/6))) + ' com juros')}</div>

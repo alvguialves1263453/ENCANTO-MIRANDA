@@ -228,7 +228,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
         const busca=[p.nome,p.id,codigoBuscaProduto(p.id)].join(' ').toLowerCase();
         return busca.includes(termo);
       }).slice(0,8);
-      sugestoes.innerHTML=lista.map(p=>`<a class="busca-sugestao" href="produto.html?id=${encodeURIComponent(p.id)}"><b>${escapar(p.nome)}</b><small>ID: ${escapar(p.id)}</small></a>`).join('')||'<div class="busca-sugestao" style="cursor:default">Nenhum produto encontrado.</div>';
+      sugestoes.innerHTML=lista.map(p=>`<a class="busca-sugestao" href="produto.html?id=${encodeURIComponent(p.id)}"><b>${escapar(p.nome)}</b><small>ID: ${escapar(codigoBuscaProduto(p.id))}</small></a>`).join('')||'<div class="busca-sugestao" style="cursor:default">Nenhum produto encontrado.</div>';
       sugestoes.hidden=false;
     };
     input.addEventListener('input',atualizarSugestoes);
