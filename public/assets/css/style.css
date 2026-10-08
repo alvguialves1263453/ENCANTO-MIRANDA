@@ -662,15 +662,18 @@ footer{background:var(--brown-dark);color:var(--brown-light)}
 
 /* WhatsApp flutuante: somente o ícone, sem a borda do tema */
 .whats{
-  width:68px!important;
-  height:68px!important;
+  width:58px!important;
+  height:58px!important;
   padding:0!important;
   border:0!important;
   border-color:transparent!important;
   background:transparent!important;
-  box-shadow:none!important;
+  box-shadow:0 5px 14px rgba(0,0,0,.24)!important;
+  border-radius:50%;
+  transition:transform .2s ease,filter .2s ease;
 }
-.whats img{width:62px!important;height:62px!important;object-fit:contain;display:block}
+.whats img{width:54px!important;height:54px!important;object-fit:contain;display:block}
+.whats:hover{transform:translateY(-3px) scale(1.06);filter:brightness(1.05)}
 
 /* Instagram flutuante: fica acima do WhatsApp e só aparece quando configurado. */
 .instagram{
@@ -678,18 +681,21 @@ footer{background:var(--brown-dark);color:var(--brown-light)}
   z-index:20;
   right:20px;
   bottom:92px;
-  width:68px;
-  height:68px;
+   width:58px;
+   height:58px;
   padding:0;
   border:0;
   background:transparent;
-  box-shadow:none;
+   box-shadow:0 5px 14px rgba(0,0,0,.24);
+   border-radius:50%;
+   transition:transform .2s ease,filter .2s ease;
 }
 .instagram[hidden]{display:none}
-.instagram img{width:62px;height:62px;object-fit:contain;display:block}
+.instagram img{width:54px;height:54px;object-fit:contain;display:block}
+.instagram:hover{transform:translateY(-3px) scale(1.06);filter:brightness(1.05)}
 @media(max-width:600px){
-  .instagram{right:14px;bottom:78px;width:48px;height:48px}
-  .instagram img{width:48px;height:48px}
+  .instagram{right:14px;bottom:78px;width:46px;height:46px}
+  .instagram img{width:44px;height:44px}
 }
 
 /* Galeria vertical do produto: miniaturas em uma janela fixa, sem esticar a página. */
