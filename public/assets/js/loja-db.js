@@ -2,8 +2,15 @@
 // PRODUTOS/CATEGORIAS são saídas para a interface, nunca fontes do cache.
 const DB = (() => {
   const KEY = 'em_db_v1';
-  const initialProducts = typeof PRODUTOS !== 'undefined' ? JSON.parse(JSON.stringify(PRODUTOS)) : [];
-  const initialCategories = typeof CATEGORIAS !== 'undefined' ? JSON.parse(JSON.stringify(CATEGORIAS)) : [];
+  const copiaSegura = valor => {
+    try {
+      if (valor == null) return [];
+      const texto = JSON.stringify(valor);
+      return texto == null ? [] : JSON.parse(texto);
+    } catch { return []; }
+  };
+  const initialProducts = typeof PRODUTOS !== 'undefined' ? copiaSegura(PRODUTOS) : [];
+  const initialCategories = typeof CATEGORIAS !== 'undefined' ? copiaSegura(CATEGORIAS) : [];
   const baseProdutos = () => initialProducts;
   const baseCategorias = () => initialCategories;
   const blank = () => ({ products: {}, deleted: [], categories: {}, catDeleted: [], catOrder: null, orders: [], seq: 1, coupons: {}, settings: null, catalogSynced: false });
@@ -69,7 +76,7 @@ const DB = (() => {
   const pFromRow = r => { const pacoteFotos = fotosDaNuvem(r.foto), fa = pacoteFotos.geral, estoquePorCor = estoqueCoresNormalizado(r.estoque_por_cor); return { id: r.id, nome: r.nome, desc: r.descricao || '', tecido: r.tecido || '', preco: +r.preco, antigo: r.preco_antigo == null ? null : +r.preco_antigo, cat: r.categoria, selo: r.selo, cores: r.cores || [], tams: r.tamanhos || [], estoque: r.estoque || 0, estoquePorCor, controlaEstoquePorCor: Object.keys(estoquePorCor).length > 0, parcelas: Math.min(12, Math.max(1, Math.round(+r.parcelas || 6))), foto: fa[0] || null, fotos: fa, fotosPorCor: pacoteFotos.porCor, rascunho: !!r.rascunho, destaque: !!r.destaque }; };
   const oToRow = o => ({ numero: o.numero, data: o.data, cliente_nome: o.nome || '', cliente_fone: o.fone || '', cliente_endereco: o.endereco || '', itens: o.itens || [], subtotal: +o.subtotal || 0, desconto: +o.desconto || 0, total: +o.total || 0, pagamento: o.pag || '', cupom: o.cupom || '', status: o.status || 'Novo', estoque_baixado: !!o.baixado });
   const oFromRow = r => ({ numero: r.numero, data: r.data, nome: r.cliente_nome, fone: r.cliente_fone, endereco: r.cliente_endereco || '', itens: r.itens || [], subtotal: +r.subtotal, desconto: +r.desconto, total: +r.total, pag: r.pagamento, cupom: r.cupom, status: r.status, baixado: !!r.estoque_baixado });
-  const sToRow = () => { const s = getSettings(); return { id: 1, nome_loja: s.nomeLoja, whatsapp: s.whatsapp, whatsapp_config: s.whatsappConfig, email: s.email, endereco: s.endereco, instagram: s.instagram, frete_gratis: s.freteGratis, cor: s.cor, banners: s.banners, pagamento: s.pagamento, informacoes: Object.assign({}, s.informacoes, { termos: s.termos }) }; };
+  const sToRow = settings => { const s = settings || getSettings(); return { id: 1, nome_loja: s.nomeLoja, whatsapp: s.whatsapp, whatsapp_config: s.whatsappConfig, email: s.email, endereco: s.endereco, instagram: s.instagram, frete_gratis: s.freteGratis, cor: s.cor, banners: s.banners, pagamento: s.pagamento, informacoes: Object.assign({}, s.informacoes, { termos: s.termos }) }; };
   const limpaExtras = a => {
     if (!Array.isArray(a)) return [];
     const vistos = new Set(), out = [];
@@ -159,7 +166,7 @@ const DB = (() => {
       case 'oUpd': await SB.gravar('pedidos', oToRow(op.o)); break;
       case 'kUp': await SB.gravar('cupons', op.row); break;
       case 'kDel': await SB.apagar('cupons', 'codigo', op.codigo); break;
-      case 'sUp': await SB.gravar('configuracoes', sToRow()); break;
+      case 'sUp': await SB.gravar('configuracoes', sToRow(op.s)); break;
     }
   }
   function avisaLocal() {
@@ -168,8 +175,14 @@ const DB = (() => {
   function paraNuvem(op) {
     // Registra a intenção antes da rede: uma falha nunca apaga o produto.
     filaPush(op);
-    if (nuvemLigada()) empurraFila().catch(avisaLocal);
-    else avisaLocal();
+    if (!nuvemLigada()) {
+      avisaLocal();
+      return Promise.resolve(false);
+    }
+    return empurraFila().then(() => pendencias() === 0).catch(() => {
+      avisaLocal();
+      return false;
+    });
   }
   async function sincronizar() {
     if (syncPromise) return syncPromise;
@@ -249,7 +262,11 @@ const DB = (() => {
       S.catalogSynced = true;
       S.coupons = {};
       cups.forEach(c => { S.coupons[c.codigo] = { codigo: c.codigo, tipo: c.tipo, valor: +c.valor, validade: c.validade || '', minimo: +c.minimo || 0 }; });
-      if (cfg) S.settings = sFromRow(cfg);
+      // Uma configuração pendente ainda não pode ser substituída pelo snapshot
+      // antigo da nuvem. Ela permanece local até a fila confirmar o upsert.
+      const pendingSettings = compactQueue(readQueue()).find(op => op.k === 'sUp' && op.s);
+      if (pendingSettings) S.settings = pendingSettings.s;
+      else if (cfg) S.settings = sFromRow(cfg);
       if (peds.length) {
         const locais = {};
         S.orders.forEach(o => locais[o.numero] = o);
@@ -491,7 +508,13 @@ const DB = (() => {
   ];
     const DEFAULT_SETTINGS = { whatsapp: '5511968422230', whatsappConfig: { mensagemPedido: 'Olá! Sou [nome], quero finalizar meu pedido [pedido] na [loja].\n\n[itens]\n\nSubtotal: [subtotal]\nDesconto: [desconto]\nCupom: [cupom]\nFrete: [frete]\nTotal: [valor total]\nPagamento: [pagamento]' }, email: 'contato@encantomiranda.com.br', endereco: 'Rua Ponche Verde, 49 — SP', instagram: '', freteGratis: 399, cor: '#78583E', nomeLoja: 'Encanto Miranda', banners: DEFAULT_BANNERS, pagamento: { pix: true, boleto: true, cartao: true, extras: [], mostrarCarrinho: true }, informacoes: { atendimento: 'Atendimento', horarioAtendimento: 'Seg a Sáb, 9h–18h', trocasPrazo: 'Trocas em até 30 dias', prazoEnvio: 'Envio em até 2 dias úteis', envioDetalhe: 'Correios com rastreio', freteGratisAtivo: false, fretePadrao: 0, visiveis: { atendimento: true, horarioAtendimento: true, trocasPrazo: true, prazoEnvio: true, envioDetalhe: true } }, termos: normalizaTermos({}) };
   const getSettings = () => Object.assign({}, DEFAULT_SETTINGS, S.settings || {}, { whatsappConfig: normalizaWhatsappConfig(Object.assign({}, DEFAULT_SETTINGS.whatsappConfig, (S.settings || {}).whatsappConfig || {})), pagamento: normalizaPagamento(Object.assign({}, DEFAULT_SETTINGS.pagamento, (S.settings || {}).pagamento || {})), informacoes: normalizaInformacoes(Object.assign({}, DEFAULT_SETTINGS.informacoes, (S.settings || {}).informacoes || {})), termos: normalizaTermos(Object.assign({}, DEFAULT_SETTINGS.termos, (S.settings || {}).termos || {})) });
-  function saveSettings(novas) { S.settings = Object.assign({}, getSettings(), novas); persist(); paraNuvem({ k: 'sUp' }); }
+  function saveSettings(novas) {
+    S.settings = Object.assign({}, getSettings(), novas);
+    const snapshot = Object.assign({}, S.settings);
+    persist();
+    paraNuvem({ k: 'sUp', s: snapshot });
+    return snapshot;
+  }
 
   // aplica tudo nas listas globais que a loja usa (chamar antes de renderizar)
   function applyToShop() {

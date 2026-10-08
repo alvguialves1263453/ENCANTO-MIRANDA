@@ -337,7 +337,7 @@ details.mini-opt summary{cursor:pointer;font-size:13px;font-weight:700;color:#5A
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2"><\/script>')</script>
 <script src="../assets/js/supabase.js?v=2"></script>
-<script src="../assets/js/loja-db.js?v=9"></script>
+ <script src="../assets/js/loja-db.js?v=10"></script>
 <script src="../assets/js/main.js?v=7"></script>
 <script>
 const MENU = [
@@ -1736,7 +1736,7 @@ function rConfig() {
     <div style="display:flex;gap:8px;margin-top:8px"><input type="text" id="pgNova" placeholder="Ex: Dinheiro" maxlength="30" style="flex:1"><button class="btn-mini" type="button" onclick="addPagExtra()">+ Adicionar</button></div>
     <button class="btn btn-preto" style="margin-top:14px" onclick="salvarPag()">Salvar pagamento</button></div>
    <div class="card form"><h3 style="font-family:Georgia,serif;font-weight:400">Frete</h3>
-     <p class="chip-status">Defina o valor padrão e, se quiser, ofereça frete grátis a partir de um valor mínimo no carrinho.</p>
+      <p class="chip-status">Defina o valor padrão. Ao informar um valor mínimo, o frete grátis será ativado automaticamente; desmarque a opção se quiser deixá-lo desativado.</p>
      <label>Frete padrão</label><div style="display:flex;align-items:center;gap:8px"><span>R$</span><input type="number" id="fretePadrao" min="0" step="0.01" value="${Number(s.informacoes.fretePadrao || 0).toFixed(2)}" style="flex:1"></div>
      <label style="display:flex;gap:10px;align-items:center;font-size:15px;text-transform:none;letter-spacing:0;margin-top:14px"><input type="checkbox" id="freteAtivo" ${s.informacoes.freteGratisAtivo ? 'checked' : ''} style="width:20px;height:20px"> Frete grátis após atingir um valor?</label>
      <label id="freteLimiteWrap" style="margin-top:10px">Valor mínimo para frete grátis<div style="display:flex;align-items:center;gap:8px"><span>R$</span><input type="number" id="freteLimite" min="1" step="0.01" value="${Number(s.freteGratis || 0).toFixed(2)}" style="flex:1"></div></label>
@@ -1749,18 +1749,36 @@ function rConfig() {
     <p class="chip-status">Apaga TUDO que você mudou no painel e volta a loja ao original.</p>
     <button class="btn-mini perigo" onclick="resetTudo()">Voltar tudo ao original</button></div></div>`;
   desenharPagExtras();
-  const freteAtivo = document.getElementById('freteAtivo'), limiteWrap = document.getElementById('freteLimiteWrap');
-  if (freteAtivo && limiteWrap) freteAtivo.addEventListener('change', () => { limiteWrap.style.opacity = freteAtivo.checked ? '1' : '.5'; });
+   const freteAtivo = document.getElementById('freteAtivo'), freteLimite = document.getElementById('freteLimite'), limiteWrap = document.getElementById('freteLimiteWrap');
+   const atualizarEstadoFrete = () => { if (limiteWrap && freteAtivo) limiteWrap.style.opacity = freteAtivo.checked ? '1' : '.5'; };
+   if (freteAtivo && limiteWrap) freteAtivo.addEventListener('change', atualizarEstadoFrete);
+   if (freteLimite && freteAtivo) freteLimite.addEventListener('input', () => {
+     if (+freteLimite.value > 0) freteAtivo.checked = true;
+     atualizarEstadoFrete();
+   });
+   atualizarEstadoFrete();
   const nova = document.getElementById('pgNova');
   if (nova) nova.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addPagExtra(); } });
 }
-function salvarFrete() {
-  const s = DB.getSettings();
-  const ativo = !!document.getElementById('freteAtivo').checked;
-  s.freteGratis = Math.max(0, +document.getElementById('freteLimite').value || 0);
+ async function salvarFrete() {
+   const s = DB.getSettings();
+   const limite = Math.max(0, +document.getElementById('freteLimite').value || 0);
+   const ativo = !!document.getElementById('freteAtivo').checked;
+   s.freteGratis = limite;
   s.informacoes = Object.assign({}, s.informacoes, { freteGratisAtivo: ativo, fretePadrao: Math.max(0, +document.getElementById('fretePadrao').value || 0) });
   if (ativo && s.freteGratis <= 0) return toast('Informe o valor mínimo para frete grátis.');
-  DB.saveSettings(s); ocultarAvisoNaoSalvo(); toast('Frete atualizado!');
+   DB.saveSettings(s);
+   try {
+     await DB.sincronizar();
+     if (typeof DB.pendencias === 'function' && DB.pendencias() > 0) {
+       toast('Salvo neste aparelho, mas ainda não subiu para a nuvem.');
+       return;
+     }
+     ocultarAvisoNaoSalvo();
+     toast('Frete atualizado na nuvem!');
+   } catch {
+     toast('Salvo neste aparelho. Confira o login e a internet.');
+   }
 }
 function desenharPagExtras() {
   const box = document.getElementById('pgExtras'); if (!box) return;

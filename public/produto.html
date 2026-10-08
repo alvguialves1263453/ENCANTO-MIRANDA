@@ -53,7 +53,7 @@
 <div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-borda" style="flex:1" onclick="fecharEncomenda()">Voltar</button><button class="btn btn-rosa" style="flex:2" onclick="confirmaEncomenda()">Confirmar no WhatsApp →</button></div>
 </div></div>
 
-<script src="assets/js/data.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2"><\/script>')</script><script src="assets/js/supabase.js?v=2"></script><script src="assets/js/loja-db.js?v=9"></script><script src="assets/js/main.js?v=7"></script>
+<script src="assets/js/data.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2"><\/script>')</script><script src="assets/js/supabase.js?v=2"></script><script src="assets/js/loja-db.js?v=10"></script><script src="assets/js/main.js?v=7"></script>
 <script>
 function codigoProdutoCurto(id){const s=String(id==null?'':id);if(/^p\d+$/i.test(s))return 'P'+s.slice(1);let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return 'P'+(h%60466176).toString(36).toUpperCase().padStart(5,'0');}
 function bootProd(){
