@@ -10,6 +10,7 @@ function telefoneExibicao(valor){
 }
 const getCart = () => { try{return JSON.parse(localStorage.getItem('em_cart')||'[]')}catch{return[]} };
 const saveCart = c => { localStorage.setItem('em_cart', JSON.stringify(c)); updateCartBadge(); };
+function codigoBuscaProduto(id){const s=String(id==null?'':id);if(/^p\d+$/i.test(s))return 'P'+s.slice(1);let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return 'P'+(h%60466176).toString(36).toUpperCase().padStart(5,'0');}
 function descricaoSegura(valor){
   const s=String(valor==null?'':valor); if(!s.includes('<')) return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
   const box=document.createElement('div'); box.innerHTML=s; const ok=new Set(['B','STRONG','I','EM','U','BR','P','DIV','SPAN','FONT']);
@@ -224,7 +225,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
       const termo=String(input.value||'').trim().toLowerCase();
       if(!termo){ sugestoes.hidden=true; sugestoes.innerHTML=''; return; }
       const lista=(typeof DB!=='undefined'&&DB.listProducts?DB.listProducts(false):(typeof PRODUTOS!=='undefined'?PRODUTOS:[])).filter(p=>{
-        const busca=[p.nome,p.id,typeof codigoProduto==='function'?codigoProduto(p.id):''].join(' ').toLowerCase();
+        const busca=[p.nome,p.id,codigoBuscaProduto(p.id)].join(' ').toLowerCase();
         return busca.includes(termo);
       }).slice(0,8);
       sugestoes.innerHTML=lista.map(p=>`<a class="busca-sugestao" href="produto.html?id=${encodeURIComponent(p.id)}"><b>${escapar(p.nome)}</b><small>ID: ${escapar(p.id)}</small></a>`).join('')||'<div class="busca-sugestao" style="cursor:default">Nenhum produto encontrado.</div>';
