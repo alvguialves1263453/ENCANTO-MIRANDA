@@ -102,7 +102,7 @@ ${p.antigo?`<div class="preco-ant" style="font-size:15px;margin-top:8px">De ${BR
 ${comprarHtml}
 <div class="produto-duvidas"><a href="https://wa.me/${zapLoja}?text=Quero saber sobre ${encodeURIComponent(p.nome)}" target="_blank" style="color:#6B4A32;font-weight:700">Ficou com dúvidas? Fale conosco pelo WhatsApp →</a></div>
 <div class="tabs">
- <details open><summary>Descrição</summary><p class="texto" style="margin-top:8px"><b>${p.nome}.</b> ${typeof descricaoSegura==='function'?descricaoSegura(p.desc):p.desc}</p></details>
+ <details open><summary>Descrição</summary><div class="texto" style="margin-top:8px"><b>${p.nome}.</b> ${typeof descricaoSegura==='function'?descricaoSegura(p.desc):p.desc}</div></details>
  ${mostrarTrocas ? `<details><summary>Trocas</summary><p class="texto" style="margin-top:8px">${trocaTexto.replace(/</g,'&lt;').replace(/>/g,'&gt;')} <a href="trocas.html" style="color:#6B4A32">Ver política completa</a>.</p></details>` : ''}
 </div></div></div>`;
  window.renderGaleria=function(fotos){const lista=Array.isArray(fotos)&&fotos.length?fotos:gal;const thumbs=document.getElementById('thumbsLista'),principal=document.getElementById('fotoG');if(!thumbs||!principal)return;thumbs.innerHTML=lista.map((f,i)=>`<img class="${i===0?'ativo':''}" src="${f}" alt="${p.nome}" onclick="trocaFoto(this,'${f}')">`).join('');principal.src=lista[0]||imgProduto(p,1);};
