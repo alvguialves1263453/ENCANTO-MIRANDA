@@ -65,7 +65,11 @@ if(!p){document.getElementById('prodWrap').innerHTML='<p>Produto não encontrado
 document.title=p.nome+' — Encanto Miranda';
   let corSel=(p.cores||['Única'])[0], tamSel=(p.tams||['Único'])[0], qtd=1;
 const off=p.antigo?Math.round((1-p.preco/p.antigo)*100):0;
-  const zapLoja=(typeof DB!=='undefined'&&DB.getSettings)?DB.getSettings().whatsapp:'5511968422230';
+  const cfgLoja=(typeof DB!=='undefined'&&DB.getSettings)?DB.getSettings():{};
+  const zapLoja=cfgLoja.whatsapp||'5511968422230';
+  const infoLoja=cfgLoja.informacoes||{};
+  const trocaTexto=String(infoLoja.trocasPrazo||'').trim();
+  const mostrarTrocas=infoLoja.visiveis?.trocasPrazo!==false && !!trocaTexto;
   const gal=(typeof fotosDoProduto==='function'?fotosDoProduto(p):[imgProduto(p,1)]);
   const fotosPorCor=p.fotosPorCor&&typeof p.fotosPorCor==='object'?p.fotosPorCor:{};
   const galeriaDaCor=cor=>{const chave=Object.keys(fotosPorCor).find(k=>k.trim().toLowerCase()===String(cor||'').trim().toLowerCase());const fotos=chave&&Array.isArray(fotosPorCor[chave])?fotosPorCor[chave].filter(Boolean):[];return fotos.length?fotos:gal;};
@@ -98,8 +102,8 @@ ${p.antigo?`<div class="preco-ant" style="font-size:15px;margin-top:8px">De ${BR
 ${comprarHtml}
 <div class="produto-duvidas"><a href="https://wa.me/${zapLoja}?text=Quero saber sobre ${encodeURIComponent(p.nome)}" target="_blank" style="color:#6B4A32;font-weight:700">Ficou com dúvidas? Fale conosco pelo WhatsApp →</a></div>
 <div class="tabs">
-<details open><summary>Descrição</summary><p class="texto" style="margin-top:8px"><b>${p.nome}.</b> ${typeof descricaoSegura==='function'?descricaoSegura(p.desc):p.desc}<br><br><b>Tecido:</b> ${p.tecido}.</p></details>
-<details><summary>Trocas</summary><p class="texto" style="margin-top:8px">Trocas e devoluções em até 30 dias após o recebimento. Ver <a href="trocas.html" style="color:#6B4A32">política completa</a>.</p></details>
+ <details open><summary>Descrição</summary><p class="texto" style="margin-top:8px"><b>${p.nome}.</b> ${typeof descricaoSegura==='function'?descricaoSegura(p.desc):p.desc}</p></details>
+ ${mostrarTrocas ? `<details><summary>Trocas</summary><p class="texto" style="margin-top:8px">${trocaTexto.replace(/</g,'&lt;').replace(/>/g,'&gt;')} <a href="trocas.html" style="color:#6B4A32">Ver política completa</a>.</p></details>` : ''}
 </div></div></div>`;
  window.renderGaleria=function(fotos){const lista=Array.isArray(fotos)&&fotos.length?fotos:gal;const thumbs=document.getElementById('thumbsLista'),principal=document.getElementById('fotoG');if(!thumbs||!principal)return;thumbs.innerHTML=lista.map((f,i)=>`<img class="${i===0?'ativo':''}" src="${f}" alt="${p.nome}" onclick="trocaFoto(this,'${f}')">`).join('');principal.src=lista[0]||imgProduto(p,1);};
  window.trocaFoto=function(el,src){document.querySelectorAll('.thumbs img').forEach(i=>i.classList.remove('ativo'));el.classList.add('ativo');document.getElementById('fotoG').src=src;};
