@@ -2,6 +2,7 @@
 // PRODUTOS/CATEGORIAS são saídas para a interface, nunca fontes do cache.
 const DB = (() => {
   const KEY = 'em_db_v1';
+  const ORDERS_ABSENT_FROM_CLOUD = new Set(['CHECKOUT-TEST-1791374008945', '#EM1791374008946', '#EM0002']);
   const copiaSegura = valor => {
     try {
       if (valor == null) return [];
@@ -25,6 +26,10 @@ const DB = (() => {
   let S = load();
   if (S.orders.length > 7) { S.orders = keepLatestOrders(S.orders); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} }
   const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
+  if (S.orders.some(o => ORDERS_ABSENT_FROM_CLOUD.has(String(o.numero)))) {
+    S.orders = S.orders.filter(o => !ORDERS_ABSENT_FROM_CLOUD.has(String(o.numero)));
+    persist();
+  }
   // ZERAR CATEGORIAS (pedido do dono, uma única vez por aparelho):
   // limpa customs locais + fila pendente de categorias. Novas criações depois funcionam normal.
   try {
@@ -143,6 +148,11 @@ const DB = (() => {
     try { const q = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]'); return Array.isArray(q) ? q.filter(Boolean) : []; }
     catch { return []; }
   }
+  try {
+    const queue = readQueue();
+    const filtered = queue.filter(op => !((op.k === 'oNew' || op.k === 'oUpd') && op.o && ORDERS_ABSENT_FROM_CLOUD.has(String(op.o.numero))));
+    if (filtered.length !== queue.length) localStorage.setItem(QUEUE_KEY, JSON.stringify(filtered));
+  } catch {}
   function opKey(op) {
     if (op.k === 'pUp' && op.p) return 'p:' + String(op.p.id);
     if (op.k === 'pDel') return 'p:' + String(op.id);
@@ -552,6 +562,13 @@ const DB = (() => {
   }
   async function deleteOrder(numero) {
     if (!nuvemLigada() || !SB.rpc) throw new Error('Sem conexão com o Supabase.');
+    if (ORDERS_ABSENT_FROM_CLOUD.has(String(numero))) {
+      S.orders = S.orders.filter(o => String(o.numero) !== String(numero));
+      persist();
+      const filaSemPedido = readQueue().filter(op => !((op.k === 'oNew' || op.k === 'oUpd') && op.o && String(op.o.numero) === String(numero)));
+      localStorage.setItem(QUEUE_KEY, JSON.stringify(filaSemPedido));
+      return { numero, deleted: true, localOnly: true };
+    }
     const cloudNumero = legacyOrderMap()[String(numero)] || numero;
     const result = await SB.rpc('admin_excluir_pedido', { p_numero: cloudNumero });
     S.orders = S.orders.filter(o => o.numero !== numero && o.numero !== cloudNumero);

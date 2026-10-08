@@ -71,6 +71,19 @@ function boot({ storage = createStorage(), rows = [product()], offline = false, 
   };
 }
 
+test('remove do cache os três pedidos confirmados como ausentes do Supabase', () => {
+  const ids = ['CHECKOUT-TEST-1791374008945', '#EM1791374008946', '#EM0002'];
+  const keep = { numero: '#EM0001', status: 'Novo' };
+  const storage = createStorage({
+    em_db_v1: JSON.stringify({ orders: [...ids.map(numero => ({ numero, status: 'Novo' })), keep] }),
+    em_outbox: JSON.stringify(ids.map(numero => ({ k: 'oNew', o: { numero } })))
+  });
+  const app = boot({ storage });
+  assert.deepEqual(JSON.parse(storage.getItem('em_db_v1')).orders.map(o => o.numero), [keep.numero]);
+  assert.deepEqual(JSON.parse(storage.getItem('em_outbox')), []);
+  assert.deepEqual(JSON.parse(JSON.stringify(app.DB.listOrders().map(o => o.numero))), [keep.numero]);
+});
+
 test('um registro continua sendo um após renderizações e sincronizações repetidas', async () => {
   const app = boot();
   await app.DB.ready;
@@ -383,7 +396,7 @@ test('scripts reais da loja/admin compilam e todas as páginas usam o cache atua
     for (const match of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)) {
       if (!/\bsrc\s*=/.test(match[1])) new vm.Script(match[2], { filename: path.basename(file) + ':' + (++index) });
     }
-    if (html.includes('loja-db.js')) assert.ok(/loja-db\.js\?v=(10|11|12|13|14)/.test(html), file);
+    if (html.includes('loja-db.js')) assert.ok(/loja-db\.js\?v=(10|11|12|13|14|15)/.test(html), file);
     assert.ok(!html.includes('limparSoAqui('), 'não oferece exclusão por prefixo do ID');
     assert.ok(!html.includes('limparDuplicados('), 'não oferece exclusão por nome/preço');
   }

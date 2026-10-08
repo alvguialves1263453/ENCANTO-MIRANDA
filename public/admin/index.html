@@ -25,6 +25,10 @@ body{background:var(--adm-bg)}
 .adm-nav button i{font-style:normal;width:22px;text-align:center;font-size:16px}
 .adm-nav button:hover{background:color-mix(in srgb,var(--adm) 55%,white);color:#fff}
 .adm-nav button.ativo{background:var(--adm);color:#fff}
+.adm-nav button[data-tela="pedidos"]{position:relative}
+.adm-nav .pedido-novo-dot{position:absolute;top:7px;right:8px;width:9px;height:9px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 2px #2c2118}
+.vendas-page .venda-row{position:relative;cursor:pointer}
+.vendas-page .venda-row .pedido-novo-dot{position:absolute;z-index:2;top:10px;right:10px;width:10px;height:10px;border:2px solid #fffdfa;border-radius:50%;background:#ef4444;box-shadow:0 0 0 1px #ef4444}
 .adm-main{padding:28px clamp(16px,3vw,36px) 70px;max-width:1050px}
 .adm-main h2{font-family:Georgia,serif;font-weight:400;font-size:30px;color:var(--adm-dark);margin-bottom:4px}
 .adm-sub{font-size:13.5px;color:var(--adm-mut);margin-bottom:20px}
@@ -953,7 +957,7 @@ details.mini-opt summary{cursor:pointer;font-size:13px;font-weight:700;color:#5A
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2"><\/script>')</script>
  <script src="../assets/js/supabase.js?v=3"></script>
-  <script src="../assets/js/loja-db.js?v=14"></script>
+  <script src="../assets/js/loja-db.js?v=15"></script>
 <script src="../assets/js/main.js?v=7"></script>
 <script>
 const MENU = [
@@ -1126,7 +1130,7 @@ async function entrar() {
   aplicarCorAdmin(DB.getSettings().cor);
   $('#telaLogin').style.display = 'none';
   $('#app').style.display = 'block';
-  $('#admNav').innerHTML = MENU.map(m => `<button data-tela="${m.id}"><i>${m.icone}</i>${m.nome}</button>`).join('') +
+  $('#admNav').innerHTML = MENU.map(m => `<button data-tela="${m.id}"><i>${m.icone}</i>${m.nome}${m.id === 'pedidos' && pedidosNovos().length ? '<span class="pedido-novo-dot" title="Pedidos novos"></span>' : ''}</button>`).join('') +
     `<div style="border-top:1px solid #4A3525;margin:12px 0"></div>
      <button data-acao="verloja"><i>○</i>Ver minha loja</button>
      <button data-acao="sair"><i>×</i>Sair</button>`;
@@ -2149,6 +2153,10 @@ function dataIsoSP(valor){if(!valor)return '';const p=new Date(valor).toLocaleDa
 function dataIsoParaBR(valor){const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(valor||''));return m?`${m[3]}/${m[2]}/${m[1]}`:'';}
 function formatarDataFiltro(el){let d=String(el.value||'').replace(/\D/g,'').slice(0,8);if(d.length>4)d=d.slice(0,2)+'/'+d.slice(2,4)+'/'+d.slice(4);else if(d.length>2)d=d.slice(0,2)+'/'+d.slice(2);el.value=d;}
 function dataFiltroParaIso(valor){const m=/^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(valor||''));if(!m)return null;const d=+m[1],mes=+m[2],ano=+m[3],dt=new Date(Date.UTC(ano,mes-1,d));if(ano<1900||mes<1||mes>12||dt.getUTCDate()!==d||dt.getUTCMonth()!==mes-1)return null;return `${m[3]}-${m[2]}-${m[1]}`;}
+const CHAVE_PEDIDOS_LIDOS = 'em_pedidos_novos_lidos';
+function pedidosLidos() { try { const v = JSON.parse(localStorage.getItem(CHAVE_PEDIDOS_LIDOS) || '[]'); return new Set(Array.isArray(v) ? v.map(String) : []); } catch { return new Set(); } }
+function pedidosNovos() { const lidos = pedidosLidos(); return DB.listOrders().filter(o => o.status === 'Novo' && !lidos.has(String(o.numero))); }
+function marcarPedidoLido(numero) { const lidos = pedidosLidos(); lidos.add(String(numero)); try { localStorage.setItem(CHAVE_PEDIDOS_LIDOS, JSON.stringify([...lidos])); } catch {} }
 function rPedidos() {
   const todos = DB.listOrders();
   const hoje = new Date().toLocaleDateString('pt-BR',{timeZone:'America/Sao_Paulo'});
@@ -2157,10 +2165,23 @@ function rPedidos() {
   const pendentesHoje = todos.filter(o => doHoje(o) && o.status !== 'Cancelado' && (o.pagamentoStatus || 'Pendente') !== 'Pago');
   const entrouHoje = pagos.reduce((n, o) => n + (+o.total || 0), 0);
   const porPagamento = pagamentos => pagamentos.reduce((mapa, o) => { const chave = o.pag || 'Não informado'; mapa[chave] = (mapa[chave] || 0) + (+o.total || 0); return mapa; }, {});
-  const lista = todos.filter(o => (filtroPed ? o.status === filtroPed : o.status !== 'Arquivado') && (!buscaVenda || [o.numero,o.nome,o.fone,...(o.itens||[]).map(i=>i.nome)].join(' ').toLowerCase().includes(buscaVenda.toLowerCase())) && (!vendaDe || dataIsoSP(o.data) >= vendaDe) && (!vendaAte || dataIsoSP(o.data) <= vendaAte));
+  const instantePedido = valor => {
+    if (typeof valor === 'number' && Number.isFinite(valor)) return valor;
+    const texto = String(valor || '').trim();
+    if (!texto) return 0;
+    if (/^\d{10,13}$/.test(texto)) return Number(texto) * (texto.length === 10 ? 1000 : 1);
+    const br = texto.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+    if (br) return new Date(+br[3], +br[2] - 1, +br[1], +(br[4] || 0), +(br[5] || 0), +(br[6] || 0)).getTime();
+    const direto = Date.parse(texto);
+    return Number.isFinite(direto) ? direto : 0;
+  };
+  const lista = todos.filter(o => (filtroPed ? o.status === filtroPed : o.status !== 'Arquivado') && (!buscaVenda || [o.numero,o.nome,o.fone,...(o.itens||[]).map(i=>i.nome)].join(' ').toLowerCase().includes(buscaVenda.toLowerCase())) && (!vendaDe || dataIsoSP(o.data) >= vendaDe) && (!vendaAte || dataIsoSP(o.data) <= vendaAte)).sort((a,b) => instantePedido(b.data) - instantePedido(a.data));
+  const novos = new Set(pedidosNovos().map(o => String(o.numero)));
+  const botaoPedidos = document.querySelector('#admNav button[data-tela="pedidos"]');
+  if (botaoPedidos) { botaoPedidos.querySelector('.pedido-novo-dot')?.remove(); if (novos.size) botaoPedidos.insertAdjacentHTML('beforeend', '<span class="pedido-novo-dot" title="Pedidos novos"></span>'); }
   const aguardando = todos.filter(o => o.status === 'Novo' || o.status === 'Em preparação').length, faturado = todos.filter(o => o.status !== 'Cancelado').reduce((n, o) => n + (+o.total || 0), 0), escVenda = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const numeroPedidoFmt = valor => { const s = String(valor == null ? '' : valor); return s.startsWith('#') ? s : `#${s}`; };
-  const linha = o => { const id = String(o.numero).replace(/[^a-zA-Z0-9_-]/g, ''), pago = o.pagamentoStatus || 'Pendente', itensVenda = (o.itens || []).map(it => `<span><b>${escVenda(it.qtd || 1)}×</b> ${escVenda(it.nome || 'Produto')} <i>ID: ${escVenda(it.id ? codigoProduto(it.id) : '—')}</i></span>`).join(''); return `<tr class="venda-row"><td><b class="venda-num">${escVenda(numeroPedidoFmt(o.numero))}</b><small>${o.data ? dataFmt(o.data) : 'Sem data'}</small></td><td><b>${escVenda(o.nome || 'Cliente')}</b><small>${escVenda(o.fone || 'Sem telefone')}</small><div class="venda-itens"><label>PRODUTOS</label>${itensVenda || '<span>Sem produtos registrados</span>'}</div></td><td><span class="badge ${statusPed(o.status)}">${escVenda(o.status || 'Pendente')}</span><small class="venda-payment-status">${escVenda(pago)}</small></td><td><b class="venda-total">${BRL(o.total || 0)}</b><small>${escVenda(o.pag || 'Pagamento não informado')}</small></td><td><div class="venda-card-actions"><button class="venda-details-btn" onclick="gerenciarPedido('${escVenda(o.numero)}')">Gerenciar ↗</button>${o.status !== 'Arquivado' ? `<button class="venda-delete-btn" onclick="excluirPedido('${escVenda(o.numero)}')">Excluir</button>` : ''}</div></td></tr>`; };
+  const linha = o => { const id = String(o.numero).replace(/[^a-zA-Z0-9_-]/g, ''), pago = o.pagamentoStatus || 'Pendente', itensVenda = (o.itens || []).map(it => `<span><b>${escVenda(it.qtd || 1)}×</b> ${escVenda(it.nome || 'Produto')} <i>ID: ${escVenda(it.id ? codigoProduto(it.id) : '—')}</i></span>`).join(''); return `<tr class="venda-row" role="button" tabindex="0" onclick="if(!event.target.closest('button'))gerenciarPedido('${escVenda(o.numero)}')" onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();gerenciarPedido('${escVenda(o.numero)}')}"><td>${novos.has(String(o.numero)) ? '<span class="pedido-novo-dot" title="Novo pedido"></span>' : ''}<b class="venda-num">${escVenda(numeroPedidoFmt(o.numero))}</b><small>${o.data ? dataFmt(o.data) : 'Sem data'}</small></td><td><b>${escVenda(o.nome || 'Cliente')}</b><small>${escVenda(o.fone || 'Sem telefone')}</small><div class="venda-itens"><label>PRODUTOS</label>${itensVenda || '<span>Sem produtos registrados</span>'}</div></td><td><span class="badge ${statusPed(o.status)}">${escVenda(o.status || 'Pendente')}</span><small class="venda-payment-status">${escVenda(pago)}</small></td><td><b class="venda-total">${BRL(o.total || 0)}</b><small>${escVenda(o.pag || 'Pagamento não informado')}</small></td><td><div class="venda-card-actions"><button class="venda-details-btn" onclick="gerenciarPedido('${escVenda(o.numero)}')">Gerenciar ↗</button>${o.status !== 'Arquivado' ? `<button class="venda-delete-btn" onclick="excluirPedido('${escVenda(o.numero)}')">Excluir</button>` : ''}</div></td></tr>`; };
   $('#admMain').innerHTML = `<div class="secao on vendas-page"><div class="vendas-hero"><div><span class="vendas-eyebrow">OPERAÇÃO COMERCIAL</span><h2>Gestão de vendas</h2><p class="adm-sub">Acompanhe pedidos, recebimentos e movimentações do seu negócio.</p></div><div class="vendas-live"><span></span><div><b>Dados da loja</b><small>Supabase · atualização em tempo real</small></div></div></div><div id="caixaSessionControls" class="caixa-sessao-controles"><span>Consultando sessão de caixa…</span></div><div class="vendas-metrics"><div class="caixa-destaque"><span>MOVIMENTO LÍQUIDO HOJE</span><b id="caixaHojeTotal">Carregando…</b><small>Recebimentos e saídas do livro-caixa</small></div><div><span>FATURAMENTO HOJE</span><b id="caixaBrutoHoje">—</b><small>Vendas finalizadas</small></div><div><span>VENDAS HOJE</span><b id="caixaHojeVendas">—</b><small>Pedidos finalizados</small></div><div><span>PEDIDOS EM ABERTO</span><b id="caixaPendentesCount">${aguardando}</b><small>Precisam de atendimento</small></div><div><span>TICKET MÉDIO HOJE</span><b id="caixaTicketHoje">—</b><small>Por venda finalizada</small></div><div><span>CANCELADAS HOJE</span><b id="caixaCanceladasHoje">—</b><small>Preservadas no histórico</small></div></div><div class="vendas-toolbar"><div><span class="vendas-kicker">PEDIDOS EM ABERTO E HISTÓRICO</span><h3>Pedidos da loja</h3></div><div class="vendas-toolbar-actions"><input id="buscaVenda" type="search" placeholder="Pedido, cliente, telefone ou produto" value="${caixaEsc(buscaVenda)}"><input id="vendaDe" type="date" aria-label="Data inicial" value="${vendaDe}"><input id="vendaAte" type="date" aria-label="Data final" value="${vendaAte}"><select id="fped"><option value="">Todos os status</option>${STATUS_CAIXA.map(s => `<option ${filtroPed === s ? 'selected' : ''}>${s}</option>`).join('')}</select><button class="btn btn-borda btn-mini" onclick="exportarVendasCSV()">Exportar CSV</button><button class="btn btn-preto btn-mini" onclick="abrirNovaVenda()">+ Nova venda</button></div></div><div class="vendas-table-wrap"><table class="vendas-table"><thead><tr><th>Pedido</th><th>Cliente</th><th>Status</th><th>Total</th><th></th></tr></thead><tbody>${lista.map(linha).join('') || '<tr><td colspan="5"><div class="vazio">Nenhuma venda encontrada nesse filtro.</div></td></tr>'}</tbody></table></div></div>`;
   const metricasCaixa = document.querySelector('.vendas-metrics');
   const resumoCaixa = document.createElement('div'); resumoCaixa.id='caixaResumoDia'; resumoCaixa.className = 'caixa-resumo'; resumoCaixa.innerHTML = `<div><span class="vendas-kicker">FECHAMENTO DO DIA</span><h3>O que entrou hoje</h3><p>Resumo calculado pelas movimentações financeiras do Supabase.</p></div><div class="caixa-meios"><span><small>Consultando o caixa</small><b>…</b></span></div>`; const barraCaixa = document.querySelector('.vendas-toolbar'); if (barraCaixa) barraCaixa.parentNode.insertBefore(resumoCaixa, barraCaixa);
@@ -2248,6 +2269,12 @@ async function excluirPedido(numero) {
 }
 function gerenciarPedido(numero) {
   const o = DB.listOrders().find(p => p.numero === numero); if (!o) return;
+  if (o.status === 'Novo') {
+    marcarPedidoLido(numero);
+    const botaoPedidos = document.querySelector('#admNav button[data-tela="pedidos"]');
+    botaoPedidos?.querySelector('.pedido-novo-dot')?.remove();
+    if (botaoPedidos && pedidosNovos().length) botaoPedidos.insertAdjacentHTML('beforeend', '<span class="pedido-novo-dot" title="Pedidos novos"></span>');
+  }
   const fotoDoItem = it => { if (it.foto) return it.foto; const p = DB.getProduct(it.id); if (!p) return ''; const mapa = p.fotosPorCor && typeof p.fotosPorCor === 'object' ? p.fotosPorCor : {}; const chave = Object.keys(mapa).find(k => k.trim().toLowerCase() === String(it.cor || '').trim().toLowerCase()); const fotos = chave && Array.isArray(mapa[chave]) ? mapa[chave].filter(Boolean) : []; return fotos[0] || (typeof fotosDoProduto === 'function' ? fotosDoProduto(p)[0] : '') || p.foto || ''; };
   const esc = caixaEsc, itens = (o.itens || []).map(it => `<div class="gestao-item">${fotoDoItem(it) ? `<img src="${esc(fotoDoItem(it))}" alt="">` : ''}<div><b>${esc(it.nome)}</b><span class="gestao-item-id">ID: ${esc(it.id ? codigoProduto(it.id) : '—')}</span><small>${esc(it.cor || '')}${it.tam ? ' / ' + esc(it.tam) : ''} · ${it.qtd} × ${BRL(it.preco || 0)}</small></div><strong>${BRL((+it.qtd || 0) * (+it.preco || 0))}</strong></div>`).join('');
   const telefone = String(o.fone || '').replace(/\D/g, '');
