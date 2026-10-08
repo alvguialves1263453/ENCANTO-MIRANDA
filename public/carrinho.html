@@ -40,7 +40,7 @@
  <div class="linha" id="linhaFrete"><span>Frete</span><b id="freteT">R$0</b></div>
 <div class="linha" id="linhaDesc" style="display:none"><span>Desconto <b id="cupomNome"></b></span><b id="descT" style="color:#397a49">−R$0</b></div>
 <div class="linha total"><span>Total</span><span id="totalT" style="color:#6B4A32">R$0</span></div>
-<button class="btn btn-rosa" style="width:100%;margin-top:12px" onclick="finalizar()">FINALIZAR NO WHATSAPP →</button>
+ <button type="button" class="btn btn-rosa" style="width:100%;margin-top:12px" onclick="finalizar()">FINALIZAR NO WHATSAPP →</button>
 <a class="btn btn-borda" style="width:100%;margin-top:8px" href="categoria.html?cat=ver-tudo">CONTINUAR COMPRANDO</a>
 <p style="font-size:12px;color:#6b7280;margin-top:10px">Ao finalizar geramos o pedido e te chamamos no WhatsApp. As formas disponíveis aparecem na sacola.</p>
 </div></div></main>
@@ -228,7 +228,7 @@ async function finalizar(){
      const txt=encodeURIComponent(mensagemPedidoWhatsApp({nome:ped.nome,fone:ped.fone,endereco:ped.endereco,numero:ped.numero,itens:ped.itens,sub:ped.subtotal,desc:ped.desconto,frete:ped.frete,freteGratis:!ped.frete,pag:ped.pag,total:ped.total,cupom:ped.cupom||'',observacao:ped.observacao||''}));
      const st=(typeof DB!=='undefined')?DB.getSettings().whatsapp:'5511968422230';
      const destino=`https://wa.me/${st}?text=${txt}`;
-     if(janela) janela.location=destino; else window.open(destino,'_blank');
+      if(janela && !janela.closed) janela.location.replace(destino); else window.location.assign(destino);
      saveCart([]); cupomAplicado=null; try{sessionStorage.removeItem('em_cupom');sessionStorage.removeItem('em_checkout_idempotency');}catch{} renderCart();
      toast(`Pedido ${ped.numero} salvo. Abrindo WhatsApp…`);
    }catch(erro){ if(janela) try{janela.close();}catch{} toast(erro&&erro.message?erro.message:'Não foi possível salvar o pedido. Tente novamente.'); }
