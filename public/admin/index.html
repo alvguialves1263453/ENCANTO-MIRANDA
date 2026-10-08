@@ -958,7 +958,7 @@ details.mini-opt summary{cursor:pointer;font-size:13px;font-weight:700;color:#5A
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2"><\/script>')</script>
  <script src="../assets/js/supabase.js?v=3"></script>
-  <script src="../assets/js/loja-db.js?v=16"></script>
+   <script src="../assets/js/loja-db.js?v=17"></script>
 <script src="../assets/js/main.js?v=7"></script>
 <script>
 const MENU = [
@@ -1190,6 +1190,7 @@ async function sincAgora() {
 }
 // quando algo muda na nuvem (outro aparelho), atualiza sozinho — sem apagar o que está digitando
 function armaSyncAdmin() {
+  if (window.__pedidoPollTimer) clearInterval(window.__pedidoPollTimer);
   window.__syncRender = function () {
     try {
       const pedidosAtuais = DB.listOrders(), conhecidos = window.__adminKnownOrders || new Set();
@@ -1202,6 +1203,16 @@ function armaSyncAdmin() {
       if (!digitando && !modal) RENDER[TELA]();
     } catch {}
   };
+  // Fallback: se o projeto Supabase ainda não estiver com Realtime habilitado,
+  // a lista continua sendo conferida automaticamente sem depender de refresh.
+  window.__pedidoPollTimer = setInterval(async () => {
+    try {
+      if (typeof DB !== 'undefined' && DB.sincronizar) {
+        const mudou = await DB.sincronizar();
+        if (mudou && window.__syncRender) window.__syncRender();
+      }
+    } catch {}
+  }, 5000);
 }
 let alertaPedidoTimer = null, tituloPedidoTimer = null, tituloPedidoBase = document.title;
 function notificarPedidoNovo(pedidos) {

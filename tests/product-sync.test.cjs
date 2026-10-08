@@ -437,7 +437,7 @@ test('scripts reais da loja/admin compilam e todas as páginas usam o cache atua
     for (const match of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)) {
       if (!/\bsrc\s*=/.test(match[1])) new vm.Script(match[2], { filename: path.basename(file) + ':' + (++index) });
     }
-    if (html.includes('loja-db.js')) assert.ok(/loja-db\.js\?v=(10|11|12|13|14|15|16)\b/.test(html), file);
+    if (html.includes('loja-db.js')) assert.ok(/loja-db\.js\?v=(10|11|12|13|14|15|16|17)\b/.test(html), file);
     assert.ok(!html.includes('limparSoAqui('), 'não oferece exclusão por prefixo do ID');
     assert.ok(!html.includes('limparDuplicados('), 'não oferece exclusão por nome/preço');
   }
