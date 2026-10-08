@@ -694,6 +694,8 @@ footer{background:var(--brown-dark);color:var(--brown-light)}
 .instagram img{width:54px;height:54px;object-fit:contain;display:block}
 .instagram:hover{transform:translateY(-3px) scale(1.06);filter:brightness(1.05)}
 @media(max-width:600px){
+  .whats{right:14px;bottom:14px;width:46px!important;height:46px!important}
+  .whats img{width:44px!important;height:44px!important}
   .instagram{right:14px;bottom:78px;width:46px;height:46px}
   .instagram img{width:44px;height:44px}
 }
