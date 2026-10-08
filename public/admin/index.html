@@ -422,7 +422,7 @@ const GALERIA = [];
 const dataFmt = iso => { try { return new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); } catch { return ''; } };
 const statusPed = s => ({ 'Novo': 'lanc', 'Em preparação': 'baixo', 'Enviado': 'promo', 'Concluído': 'ok', 'Cancelado': 'zero' }[s] || '');
 
-// ---------- login (de verdade, na nuvem; com reserva local sem internet) ----------
+// ---------- login na nuvem ----------
 $('#formLogin').addEventListener('submit', async e => {
   e.preventDefault();
   const id = $('#loginUser').value.trim();
@@ -432,14 +432,13 @@ $('#formLogin').addEventListener('submit', async e => {
     try {
       const r = await SB.login(id, pw);
       if (!r.erro) { sessionStorage.setItem('em_admin', '1'); entrar(); return; }
-      if (r.erro !== 'Sem conexão com a nuvem.') { $('#loginErro').textContent = r.erro; $('#loginErro').style.display = 'block'; return; }
+      $('#loginErro').textContent = r.erro;
+      $('#loginErro').style.display = 'block';
+      return;
     } catch {}
   }
-  if ((id === 'admin' || id === 'admin@encantomiranda.com.br') && pw === (localStorage.getItem('em_admin_pass') || 'encanto123')) {
-    sessionStorage.setItem('em_admin', '1');
-    entrar();
-    toast('Sem internet: entrando neste aparelho.');
-  } else { $('#loginErro').textContent = 'E-mail ou senha errados. Tente de novo.'; $('#loginErro').style.display = 'block'; }
+  $('#loginErro').textContent = 'Login na nuvem indisponível. Verifique a conexão e tente novamente.';
+  $('#loginErro').style.display = 'block';
 });
 async function entrar() {
   await DB.ready;
@@ -456,7 +455,7 @@ async function entrar() {
     let nuvem = false;
     try { if (typeof SB !== 'undefined' && SB.ok() && await SB.session()) nuvem = true; } catch {}
     const el = document.querySelector('.adm-side small');
-     if (el) { el.textContent = nuvem ? '● NUVEM CONECTADA' : '● SÓ NESTE APARELHO'; el.style.color = nuvem ? '#9FD6A4' : '#E8B34B'; }
+     if (el) { el.textContent = nuvem ? '● NUVEM CONECTADA' : '● NUVEM DESCONECTADA'; el.style.color = nuvem ? '#9FD6A4' : '#E8B34B'; }
      iniciarPresenca();
    })();
   // ao entrar, manda a fila pendente e busca o novo da nuvem
@@ -642,7 +641,7 @@ function rProdutos() {
   </div>`).join('') || '<div class="vazio">Nenhum produto encontrado.</div>'}
   </div></div>`;
    $('#q').addEventListener('input', e => { buscaP = e.target.value.toLowerCase(); const v = e.target.selectionStart; rProdutos(); const nq = $('#q'); nq.focus(); nq.setSelectionRange(v, v); });
-   renderSugestoesAdmin();
+   if (typeof renderSugestoesAdmin === 'function') renderSugestoesAdmin();
   $('#fc').addEventListener('change', e => { filtroCatP = e.target.value; rProdutos(); });
   $('#fs').addEventListener('change', e => { filtroStatus = e.target.value; rProdutos(); });
   marcaOrigem();
@@ -1938,9 +1937,8 @@ async function trocarSenha() {
       return;
     }
   } catch {}
-  localStorage.setItem('em_admin_pass', a);
-  $('#ns1').value = $('#ns2').value = '';
-  toast('Senha trocada neste aparelho!');
+   $('#ns1').value = $('#ns2').value = '';
+   toast('É necessário estar conectado à nuvem para trocar a senha.');
 }
 async function resetTudo() {
   if (!await popupConfirm({ titulo: 'Voltar ao original?', texto: 'Apagar <b>TUDO</b> que você mudou no painel e voltar a loja ao original?', ok: 'Continuar', perigo: true })) return;
