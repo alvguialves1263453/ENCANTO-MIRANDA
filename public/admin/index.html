@@ -1847,7 +1847,21 @@ function atualizarPreviewWA() {
   if (!campo || !preview) return;
   let texto = campo.value;
   WA_PLACEHOLDERS.forEach(([chave]) => { texto = texto.split(chave).join(valorPreviewWA(chave)); });
-  preview.textContent = texto;
+   const seguro = texto.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+   preview.innerHTML = seguro.replace(/\*([^*\n]+)\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+}
+function alternarNegritoWA() {
+  const campo = document.getElementById('waMensagem'); if (!campo) return;
+  const inicio = campo.selectionStart, fim = campo.selectionEnd;
+  const trecho = campo.value.slice(inicio, fim);
+  if (trecho) {
+    campo.value = campo.value.slice(0, inicio) + '*' + trecho + '*' + campo.value.slice(fim);
+    campo.selectionStart = inicio + 1; campo.selectionEnd = fim + 1;
+  } else {
+    campo.value = campo.value.slice(0, inicio) + '**' + campo.value.slice(fim);
+    campo.selectionStart = campo.selectionEnd = inicio + 1;
+  }
+  campo.focus(); atualizarPreviewWA(); mostrarAvisoNaoSalvo();
 }
 function inserirPlaceholderWA(chave) {
   const campo = document.getElementById('waMensagem'); if (!campo) return;
@@ -1869,7 +1883,8 @@ function rWhatsapp() {
   $('#admMain').innerHTML = `<div class="secao on"><h2>WhatsApp</h2><p class="adm-sub">Personalize a mensagem enviada quando uma cliente finalizar um pedido.</p>
     <div class="card form"><div class="whatsapp-editor"><div><label>Mensagem padrão do pedido</label>
       <label style="margin-top:4px">Usar uma mensagem pronta</label><div class="wa-presets">${WA_PRESETS.map((p, i) => `<button type="button" class="wa-preset" onclick="aplicarPresetWA(${i})">${p.nome}</button>`).join('')}</div>
-      <textarea id="waMensagem" class="wa-msg" maxlength="2000" placeholder="Escreva a mensagem que será enviada...">${String(cfg.mensagemPedido || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+       <div style="display:flex;gap:6px;align-items:center;margin-top:8px"><button type="button" class="btn-mini" title="Aplicar negrito no texto selecionado" onclick="alternarNegritoWA()"><b>B</b></button><span class="chip-status">Selecione um trecho e clique em B. O WhatsApp usa *texto* para negrito.</span></div>
+       <textarea id="waMensagem" class="wa-msg" maxlength="2000" placeholder="Escreva a mensagem que será enviada...">${String(cfg.mensagemPedido || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
       <label style="margin-top:14px">Clique em uma placeholder para inserir</label><div class="wa-placeholders">${WA_PLACEHOLDERS.map(([chave, dica]) => `<button type="button" class="wa-placeholder" title="${dica}" onclick="inserirPlaceholderWA('${chave}')">${chave}</button>`).join('')}</div>
       <button class="btn btn-preto" style="margin-top:18px" onclick="salvarWhatsapp()">Salvar mensagem</button></div>
       <div><label>Prévia da mensagem</label><div class="wa-phone"><div class="wa-screen"><div class="wa-phone-head"><span style="font-size:13px">‹</span><span class="wa-phone-avatar"><img src="../assets/img/WhatsApp.png" alt=""></span><span>Encanto Miranda<small class="wa-phone-status">online</small></span></div><div id="waPreview" class="wa-chat"></div></div></div><p class="chip-status" style="margin-top:10px">Os dados da prévia são apenas exemplos. Na finalização, serão substituídos pelos dados reais.</p></div></div></div>
