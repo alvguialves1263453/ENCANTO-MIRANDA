@@ -51,6 +51,13 @@ const SB = (() => {
     if (error) throw error;
     return data || null;
   }
+  async function rpc(nome, parametros) {
+    const c = cli();
+    if (!c) throw new Error('offline');
+    const { data, error } = await c.rpc(nome, parametros || {});
+    if (error) throw error;
+    return data;
+  }
   async function gravar(tabela, linha, opcoes) {
     const c = cli();
     if (!c) throw new Error('offline');
@@ -125,5 +132,5 @@ const SB = (() => {
     return () => { try { c.removeChannel(canal); } catch {} };
   }
 
-  return { ok, login, logout, senha, session, ler, lerUm, gravar, apagar, foto, aoMudar, presencaAdmin, vivo };
+  return { ok, login, logout, senha, session, ler, lerUm, rpc, gravar, apagar, foto, aoMudar, presencaAdmin, vivo };
 })();

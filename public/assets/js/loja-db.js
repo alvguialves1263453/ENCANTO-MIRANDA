@@ -14,12 +14,16 @@ const DB = (() => {
   const baseProdutos = () => initialProducts;
   const baseCategorias = () => initialCategories;
   const blank = () => ({ products: {}, deleted: [], categories: {}, catDeleted: [], catOrder: null, orders: [], seq: 1, coupons: {}, settings: null, catalogSynced: false });
+  const keepLatestOrders = orders => (Array.isArray(orders) ? orders.slice() : [])
+    .sort((a, b) => String(b.data || '').localeCompare(String(a.data || '')) || String(b.numero || '').localeCompare(String(a.numero || '')))
+    .slice(0, 7);
 
   function load() {
     try { return Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || '{}')); }
     catch { return blank(); }
   }
   let S = load();
+  if (S.orders.length > 7) { S.orders = keepLatestOrders(S.orders); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} }
   const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
   // ZERAR CATEGORIAS (pedido do dono, uma única vez por aparelho):
   // limpa customs locais + fila pendente de categorias. Novas criações depois funcionam normal.
@@ -75,10 +79,10 @@ const DB = (() => {
   // A tabela atual de produtos não possui a coluna estoque_por_cor. O mapa
   // continua local para o painel, mas o payload precisa conter só colunas
   // existentes no Supabase para o upsert não retornar HTTP 400.
-  const pToRow = p => ({ id: String(p.id), nome: p.nome, descricao: p.desc || '', tecido: p.tecido || '', preco: +p.preco || 0, preco_antigo: p.antigo == null ? null : +p.antigo, categoria: p.cat || null, selo: p.selo || null, cores: p.cores || [], tamanhos: p.tams || [], estoque: p.estoque || 0, parcelas: Math.min(12, Math.max(1, Math.round(+p.parcelas || 6))), foto: fotoParaNuvem(p), rascunho: !!p.rascunho, destaque: !!p.destaque });
+  const pToRow = p => ({ id: String(p.id), nome: p.nome, descricao: p.desc || '', tecido: p.tecido || '', preco: +p.preco || 0, preco_antigo: p.antigo == null ? null : +p.antigo, categoria: p.cat || null, selo: p.selo || null, cores: p.cores || [], tamanhos: p.tams || [], estoque: p.estoque || 0, estoque_por_cor: estoqueCoresNormalizado(p.estoquePorCor), parcelas: Math.min(12, Math.max(1, Math.round(+p.parcelas || 6))), foto: fotoParaNuvem(p), rascunho: !!p.rascunho, destaque: !!p.destaque });
   const pFromRow = r => { const pacoteFotos = fotosDaNuvem(r.foto), fa = pacoteFotos.geral, estoquePorCor = estoqueCoresNormalizado(r.estoque_por_cor); return { id: r.id, nome: r.nome, desc: r.descricao || '', tecido: r.tecido || '', preco: +r.preco, antigo: r.preco_antigo == null ? null : +r.preco_antigo, cat: r.categoria, selo: r.selo, cores: r.cores || [], tams: r.tamanhos || [], estoque: r.estoque || 0, estoquePorCor, controlaEstoquePorCor: Object.keys(estoquePorCor).length > 0, parcelas: Math.min(12, Math.max(1, Math.round(+r.parcelas || 6))), foto: fa[0] || null, fotos: fa, fotosPorCor: pacoteFotos.porCor, rascunho: !!r.rascunho, destaque: !!r.destaque }; };
-  const oToRow = o => ({ numero: o.numero, data: o.data, cliente_nome: o.nome || '', cliente_fone: o.fone || '', cliente_endereco: o.endereco || '', itens: o.itens || [], subtotal: +o.subtotal || 0, desconto: +o.desconto || 0, total: +o.total || 0, pagamento: o.pag || '', cupom: o.cupom || '', status: o.status || 'Novo', estoque_baixado: !!o.baixado });
-  const oFromRow = r => ({ numero: r.numero, data: r.data, nome: r.cliente_nome, fone: r.cliente_fone, endereco: r.cliente_endereco || '', itens: r.itens || [], subtotal: +r.subtotal, desconto: +r.desconto, total: +r.total, pag: r.pagamento, cupom: r.cupom, status: r.status, baixado: !!r.estoque_baixado });
+  const oToRow = o => ({ numero: o.numero, data: o.data, cliente_nome: o.nome || '', cliente_fone: o.fone || '', cliente_endereco: o.endereco || '', itens: o.itens || [], subtotal: +o.subtotal || 0, desconto: +o.desconto || 0, frete: +o.frete || 0, total: +o.total || 0, pagamento: o.pag || '', pagamento_status: o.pagamentoStatus || 'Pendente', valor_recebido: +o.valorRecebido || 0, troco: +o.troco || 0, cupom: o.cupom || '', observacao: o.observacao || '', status: o.status || 'Novo', estoque_baixado: !!o.baixado, estoque_estornado: !!o.estornado, fechado_em: o.fechadoEm || null, atualizado_em: new Date().toISOString() });
+  const oFromRow = r => ({ numero: r.numero, data: r.data, nome: r.cliente_nome, fone: r.cliente_fone, endereco: r.cliente_endereco || '', itens: r.itens || [], subtotal: +r.subtotal || 0, desconto: +r.desconto || 0, frete: +r.frete || 0, total: +r.total || 0, pag: r.pagamento, pagamentoStatus: r.pagamento_status || 'Pendente', valorRecebido: +r.valor_recebido || 0, troco: +r.troco || 0, cupom: r.cupom, observacao: r.observacao || '', origem: r.origem || 'Site', motivoCancelamento: r.motivo_cancelamento || '', reembolsoStatus: r.reembolso_status || 'Não necessário', status: r.status, baixado: !!r.estoque_baixado, estornado: !!r.estoque_estornado, fechadoEm: r.fechado_em || null, atualizadoEm: r.atualizado_em || null });
   const sToRow = settings => { const s = settings || getSettings(); return { id: 1, nome_loja: s.nomeLoja, whatsapp: s.whatsapp, whatsapp_config: s.whatsappConfig, email: s.email, endereco: s.endereco, instagram: s.instagram, frete_gratis: s.freteGratis, cor: s.cor, banners: s.banners, pagamento: s.pagamento, informacoes: Object.assign({}, s.informacoes, { termos: s.termos }) }; };
   const limpaExtras = a => {
     if (!Array.isArray(a)) return [];
@@ -118,7 +122,7 @@ const DB = (() => {
       }
     };
   };
-  const normalizaWhatsappConfig = cfg => ({ mensagemPedido: String(cfg && cfg.mensagemPedido || 'Olá! Sou [nome], quero finalizar meu pedido [pedido] na [loja].\n\n[itens]\n\nSubtotal: [subtotal]\nDesconto: [desconto]\nCupom: [cupom]\nTotal: [valor total]\nPagamento: [pagamento]').slice(0, 2000) });
+  const normalizaWhatsappConfig = cfg => ({ mensagemPedido: String(cfg && cfg.mensagemPedido || 'Olá! Sou [nome], quero finalizar meu pedido [pedido] na [loja].\n\n[itens]\n\nSubtotal: [subtotal]\nDesconto: [desconto]\nCupom: [cupom]\nTotal: [valor total]\nPagamento: [pagamento]\nObservações: [observacoes]').slice(0, 2000) });
   const normalizaTermos = termos => {
     termos = (termos && typeof termos === 'object') ? termos : {};
     const texto = (v, padrao) => String(v == null || v === '' ? padrao : v).trim().slice(0, 2000);
@@ -155,6 +159,18 @@ const DB = (() => {
     queue.forEach((op, i) => last.set(opKey(op), i));
     return queue.filter((op, i) => last.get(opKey(op)) === i);
   }
+  function legacyOrderUuid(order) {
+    const text=JSON.stringify(order||{}),seeds=[2166136261,2246822519,3266489917,668265263];
+    const hex=seeds.map(seed=>{let h=seed>>>0;for(let i=0;i<text.length;i++)h=Math.imul(h^text.charCodeAt(i),16777619)>>>0;return h.toString(16).padStart(8,'0');}).join('').split('');
+    hex[12]='4';hex[16]=((parseInt(hex[16],16)&3)|8).toString(16);const s=hex.join('');return `${s.slice(0,8)}-${s.slice(8,12)}-${s.slice(12,16)}-${s.slice(16,20)}-${s.slice(20,32)}`;
+  }
+  function legacyOrderMap(){try{return JSON.parse(localStorage.getItem('em_order_id_map')||'{}');}catch{return{};}}
+  async function moveLegacyOrderToCloud(order){
+    const old=String(order.numero||''),map=legacyOrderMap();if(map[old])return map[old];
+    const created=await SB.rpc('site_criar_pedido',{p_chave:legacyOrderUuid(order),p_cliente:{nome:order.nome||'Cliente',fone:order.fone||'',endereco:order.endereco||'',cupom:order.cupom||'',observacao:order.observacao||''},p_itens:(order.itens||[]).map(it=>({id:String(it.id),cor:it.cor||'',tam:it.tam||'',qtd:Math.max(1,Math.round(+it.qtd||1))})),p_pagamento:order.pag||'',p_desconto:0,p_frete:0});
+    map[old]=created.numero;localStorage.setItem('em_order_id_map',JSON.stringify(map));
+    S.orders=S.orders.map(o=>o.numero===old?oFromRow(created):o);persist();return created.numero;
+  }
   function filaPush(item) {
     const op = Object.assign({}, item, { ts: Date.now(), _qid: Date.now().toString(36) + '-' + (++queueSequence) + '-' + Math.random().toString(36).slice(2) });
     localStorage.setItem(QUEUE_KEY, JSON.stringify(compactQueue(readQueue().concat(op))));
@@ -165,8 +181,18 @@ const DB = (() => {
       case 'pDel': await SB.apagar('produtos', 'id', op.id); break;
       case 'cUp': await SB.gravar('categorias', op.row); break;
       case 'cDel': await SB.apagar('categorias', 'slug', op.slug); break;
-      case 'oNew': await SB.gravar('pedidos', oToRow(op.o), { apenasInserir: true }); break;
-      case 'oUpd': await SB.gravar('pedidos', oToRow(op.o)); break;
+      case 'oNew': await moveLegacyOrderToCloud(op.o); break;
+      case 'oUpd': {
+        const numero=await moveLegacyOrderToCloud(op.o), status=op.o.status||'Pendente';
+        if(status==='Cancelado') await SB.rpc('admin_cancelar_venda',{p_numero:numero,p_motivo:'Cancelamento migrado de operação anterior',p_reembolso_status:'Não necessário'});
+        else {
+          await SB.rpc('admin_editar_pedido',{p_numero:numero,p_desconto:Math.max(0,+op.o.desconto||0),p_frete:Math.max(0,+op.o.frete||0),p_pagamento:op.o.pag||'',p_pagamento_status:'Pendente',p_observacao:op.o.observacao||''});
+          const safeStatus=status==='Concluído'?'Aguardando pagamento':status;
+          if(['Pendente','Em atendimento','Aguardando pagamento','Novo','Em preparação','Enviado','Arquivado'].includes(safeStatus)) await SB.rpc('admin_atualizar_status_pedido',{p_numero:numero,p_status:safeStatus,p_motivo:status==='Concluído'?'Fechamento legado aguardando confirmação do pagamento':'Migração de atualização pendente'});
+        }
+        break;
+      }
+      case 'oDel': { const numero=legacyOrderMap()[String(op.numero)]||String(op.numero); await SB.rpc('admin_excluir_pedido', { p_numero: numero }); break; }
       case 'kUp': await SB.gravar('cupons', op.row); break;
       case 'kDel': await SB.apagar('cupons', 'codigo', op.codigo); break;
       case 'sUp': await SB.gravar('configuracoes', sToRow(op.s)); break;
@@ -277,7 +303,7 @@ const DB = (() => {
         const locais = {};
         S.orders.forEach(o => locais[o.numero] = o);
         peds.forEach(r => { locais[r.numero] = oFromRow(r); });
-        S.orders = Object.values(locais).sort((a, b) => (b.data || '').localeCompare(a.data || ''));
+        S.orders = keepLatestOrders(Object.values(locais));
         const max = S.orders.reduce((m, o) => { const n = parseInt(String(o.numero).replace(/\D/g, ''), 10); return isNaN(n) ? m : Math.max(m, n); }, 0);
         S.seq = Math.max(S.seq, max + 1);
       }
@@ -293,10 +319,11 @@ const DB = (() => {
   function ligaTempoReal() {
     if (rtLigado || !nuvemLigada()) return;
     rtLigado = true;
-    SB.aoMudar(['produtos', 'categorias', 'cupons', 'configuracoes', 'pedidos'], () => {
+    SB.aoMudar(['produtos', 'categorias', 'cupons', 'configuracoes', 'pedidos', 'vendas', 'pagamentos', 'movimentacoes_caixa', 'sessoes_caixa', 'movimentacoes_estoque'], () => {
       clearTimeout(syncTimer);
       syncTimer = setTimeout(async () => {
-        if (await sincronizar()) avisaSync();
+        await sincronizar();
+        avisaSync();
       }, 900);
     });
   }
@@ -456,26 +483,115 @@ const DB = (() => {
   const countByCat = slug => listProducts(true).filter(p => p.cat === slug).length;
 
   function logOrder(o) {
-    const numero = 'EM' + String(S.seq).padStart(4, '0');
+    const numero = '#' + String(S.seq).padStart(6, '0');
     S.seq += 1;
     const pedido = Object.assign({ numero, data: new Date().toISOString(), status: 'Novo', baixado: false }, o);
     S.orders.unshift(pedido);
+    S.orders = keepLatestOrders(S.orders);
     persist();
     paraNuvem({ k: 'oNew', o: pedido });
+    return pedido;
+  }
+  async function createSiteOrder(data, idempotencyKey) {
+    if (!nuvemLigada() || !SB.rpc) throw new Error('Não foi possível conectar ao Supabase. Tente novamente.');
+    const row = await SB.rpc('site_criar_pedido', {
+      p_chave: idempotencyKey,
+      p_cliente: { nome: data.nome, fone: data.fone, endereco: data.endereco, cupom: data.cupom || '', observacao: data.observacao || '' },
+      p_itens: (data.itens || []).map(it => ({ id: String(it.id), cor: it.cor || '', tam: it.tam || '', qtd: Math.max(1, Math.round(+it.qtd || 1)) })),
+      p_pagamento: data.pag || '', p_desconto: Math.max(0, +data.desconto || 0), p_frete: Math.max(0, +data.frete || 0)
+    });
+    const pedido = oFromRow(row);
+    if (!pedido || !pedido.numero) throw new Error('O Supabase não confirmou o pedido. Tente novamente.');
+    const index = S.orders.findIndex(o => o.numero === pedido.numero);
+    if (index >= 0) S.orders[index] = pedido; else S.orders.unshift(pedido);
+    S.orders = keepLatestOrders(S.orders);
+    persist();
     return pedido;
   }
   const listOrders = () => S.orders;
   function setOrderStatus(numero, status) {
     const ped = S.orders.find(o => o.numero === numero);
-    if (!ped) return;
-    ped.status = status;
-    if ((status === 'Enviado' || status === 'Concluído') && !ped.baixado) {
-      (ped.itens || []).forEach(it => adjustStock(it.id, -(it.qtd || 0)));
+    if (!ped) return false;
+    if (status === 'Concluído' && !ped.baixado) {
+      const insuficiente = (ped.itens || []).find(it => {
+        const p = getProduct(it.id), mapa = p && estoqueCoresNormalizado(p.estoquePorCor);
+        if (!p) return true;
+        if (it.cor && Object.prototype.hasOwnProperty.call(mapa, it.cor)) return (mapa[it.cor] || 0) < (it.qtd || 0);
+        return p.estoque < 9999 && (p.estoque || 0) < (it.qtd || 0);
+      });
+      if (insuficiente) return false;
+      (ped.itens || []).forEach(it => adjustStock(it.id, -(it.qtd || 0), it.cor));
       ped.baixado = true;
+      ped.estornado = false;
+      ped.fechadoEm = new Date().toISOString();
+    } else if (status === 'Cancelado' && ped.baixado && !ped.estornado) {
+      (ped.itens || []).forEach(it => adjustStock(it.id, +(it.qtd || 0), it.cor));
+      ped.estornado = true;
+      ped.canceladoEm = new Date().toISOString();
+    } else if (status !== 'Cancelado' && ped.estornado) {
+      (ped.itens || []).forEach(it => adjustStock(it.id, -(it.qtd || 0), it.cor));
+      ped.estornado = false;
     }
+    ped.status = status;
     persist();
     paraNuvem({ k: 'oUpd', o: ped });
+    return true;
   }
+  function updateOrder(numero, patch) {
+    const ped = S.orders.find(o => o.numero === numero);
+    if (!ped) return null;
+    Object.assign(ped, patch || {});
+    ped.subtotal = Math.max(0, +ped.subtotal || 0);
+    ped.desconto = Math.max(0, +ped.desconto || 0);
+    ped.frete = Math.max(0, +ped.frete || 0);
+    ped.total = Math.max(0, Math.round((ped.subtotal - ped.desconto + ped.frete) * 100) / 100);
+    if (+ped.valorRecebido > 0) ped.troco = Math.max(0, Math.round((+ped.valorRecebido - ped.total) * 100) / 100);
+    persist();
+    paraNuvem({ k: 'oUpd', o: ped });
+    return ped;
+  }
+  async function deleteOrder(numero) {
+    if (!nuvemLigada() || !SB.rpc) throw new Error('Sem conexão com o Supabase.');
+    const cloudNumero = legacyOrderMap()[String(numero)] || numero;
+    const result = await SB.rpc('admin_excluir_pedido', { p_numero: cloudNumero });
+    S.orders = S.orders.filter(o => o.numero !== numero && o.numero !== cloudNumero);
+    persist();
+    await puxarNuvem();
+    return result;
+  }
+  async function finalizeOrder(numero, valorFinal, pagamentos, observacao) {
+    if (!nuvemLigada() || !SB.rpc) throw new Error('Sem conexão com o Supabase.');
+    const result = await SB.rpc('admin_finalizar_venda', { p_numero: numero, p_valor_final: +valorFinal, p_pagamentos: pagamentos, p_observacao: observacao || '' });
+    await puxarNuvem();
+    return result;
+  }
+  async function cancelOrder(numero, motivo, reembolsoStatus) {
+    if (!nuvemLigada() || !SB.rpc) throw new Error('Sem conexão com o Supabase.');
+    const result = await SB.rpc('admin_cancelar_venda', { p_numero: numero, p_motivo: motivo, p_reembolso_status: reembolsoStatus || 'Pendente' });
+    await puxarNuvem();
+    return result;
+  }
+  async function changeOrderStatus(numero, status, motivo) {
+    if (!nuvemLigada() || !SB.rpc) throw new Error('Sem conexão com o Supabase.');
+    const result = await SB.rpc('admin_atualizar_status_pedido', { p_numero: numero, p_status: status, p_motivo: motivo || '' });
+    await puxarNuvem();
+    return result;
+  }
+  async function editOrderFinancials(numero, patch) {
+    if (!nuvemLigada() || !SB.rpc) throw new Error('Sem conexão com o Supabase.');
+    const result = await SB.rpc('admin_editar_pedido', { p_numero: numero, p_desconto: +patch.desconto || 0, p_frete: +patch.frete || 0, p_pagamento: patch.pag || '', p_pagamento_status: patch.pagamentoStatus || 'Pendente', p_observacao: patch.observacao || '' });
+    await puxarNuvem();
+    return result;
+  }
+  async function editOrderItems(numero, items) {
+    if (!nuvemLigada()||!SB.rpc) throw new Error('Sem conexão com o Supabase.');
+    const result=await SB.rpc('admin_editar_itens_pedido',{p_numero:numero,p_itens:(items||[]).map(it=>({id:String(it.id),cor:it.cor||'',tam:it.tam||'',qtd:Math.max(1,Math.round(+it.qtd||1))}))});
+    await puxarNuvem();return result;
+  }
+  async function openCashSession(balance, notes) { if (!nuvemLigada()||!SB.rpc) throw new Error('Sem conexão com o Supabase.'); return SB.rpc('admin_abrir_caixa',{p_saldo_inicial:+balance||0,p_observacao:notes||''}); }
+  async function closeCashSession(id, balance, justification) { if (!nuvemLigada()||!SB.rpc) throw new Error('Sem conexão com o Supabase.'); return SB.rpc('admin_fechar_caixa',{p_sessao:id,p_saldo_contado:+balance||0,p_justificativa:justification||''}); }
+  async function registerCashMovement(type, amount, method, description) { if (!nuvemLigada()||!SB.rpc) throw new Error('Sem conexão com o Supabase.'); return SB.rpc('admin_movimento_caixa',{p_tipo:type,p_valor:+amount||0,p_forma:method,p_descricao:description||''}); }
+  async function registerRefund(numero) { if (!nuvemLigada()||!SB.rpc) throw new Error('Sem conexão com o Supabase.'); const result=await SB.rpc('admin_registrar_reembolso',{p_numero:numero});await puxarNuvem();return result; }
   function clients() {
     const mapa = {};
     S.orders.filter(o => o.status !== 'Cancelado').forEach(o => {
@@ -552,12 +668,37 @@ const DB = (() => {
     }
   }
 
-  function resetAll() { S = blank(); persist(); }
+  async function resetAll() {
+    S = blank();
+    persist();
+    try { localStorage.removeItem(QUEUE_KEY); } catch {}
+    if (!nuvemLigada()) return { local: true, cloud: false };
+    const session = await SB.session();
+    if (!session) return { local: true, cloud: false };
+    try {
+      const [cats, prods, cups, orders] = await Promise.all([
+        SB.ler('categorias', { col: 'ordem' }),
+        SB.ler('produtos'),
+        SB.ler('cupons'),
+        SB.ler('pedidos', { col: 'data', asc: false })
+      ]);
+      await Promise.all([
+        ...cats.map(row => SB.apagar('categorias', 'slug', row.slug)),
+        ...prods.map(row => SB.apagar('produtos', 'id', row.id)),
+        ...cups.map(row => SB.apagar('cupons', 'codigo', row.codigo)),
+        ...orders.map(row => SB.apagar('pedidos', 'numero', row.numero))
+      ]);
+      await SB.gravar('configuracoes', sToRow(getSettings()));
+      return { local: true, cloud: true };
+    } catch {
+      return { local: true, cloud: false, erro: true };
+    }
+  }
 
   const SEM_FOTO = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400"><rect width="300" height="400" fill="#EEE4D8"/><text x="150" y="195" font-family="Georgia,serif" font-size="22" fill="#9A8978" text-anchor="middle">Sem foto</text><text x="150" y="220" font-family="Arial" font-size="12" fill="#B8AFA4" text-anchor="middle">adicione uma foto no painel</text></svg>');
 
   const pendencias = () => { try { return JSON.parse(localStorage.getItem('em_outbox') || '[]').length; } catch { return 0; } };
 
-  return { listProducts, getProduct, saveProduct, aguardarUltimoEnvio, deleteProduct, adjustStock, setStock, listCategories, saveCategory, newCategory, deleteCategory, moveCategory, countByCat, logOrder, listOrders, setOrderStatus, clients, saveCoupon, deleteCoupon, listCoupons, validateCoupon, getSettings, saveSettings, applyToShop, resetAll, semFoto: SEM_FOTO, ready: pronto, puxarNuvem, sincronizar, nuvem: nuvemLigada, pendencias };
+  return { listProducts, getProduct, saveProduct, aguardarUltimoEnvio, deleteProduct, adjustStock, setStock, listCategories, saveCategory, newCategory, deleteCategory, moveCategory, countByCat, logOrder, createSiteOrder, listOrders, setOrderStatus, updateOrder, deleteOrder, finalizeOrder, cancelOrder, changeOrderStatus, editOrderFinancials, editOrderItems, openCashSession, closeCashSession, registerCashMovement, registerRefund, clients, saveCoupon, deleteCoupon, listCoupons, validateCoupon, getSettings, saveSettings, applyToShop, resetAll, semFoto: SEM_FOTO, ready: pronto, puxarNuvem, sincronizar, nuvem: nuvemLigada, pendencias };
 })();
 if (typeof DB !== 'undefined' && typeof PRODUTOS !== 'undefined') DB.applyToShop();

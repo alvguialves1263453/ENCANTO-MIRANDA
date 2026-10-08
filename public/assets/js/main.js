@@ -10,6 +10,15 @@ function telefoneExibicao(valor){
 }
 const getCart = () => { try{return JSON.parse(localStorage.getItem('em_cart')||'[]')}catch{return[]} };
 const saveCart = c => { localStorage.setItem('em_cart', JSON.stringify(c)); updateCartBadge(); };
+function estoqueDisponivelProduto(p, cor){
+  if(!p) return 0;
+  const mapa=p.estoquePorCor&&typeof p.estoquePorCor==='object'&&!Array.isArray(p.estoquePorCor)?p.estoquePorCor:{};
+  const cores=Object.keys(mapa);
+  if(!cores.length) return Math.max(0,+p.estoque||0);
+  if(cor==null||String(cor).trim()==='') return cores.reduce((s,k)=>s+Math.max(0,+mapa[k]||0),0);
+  const chave=cores.find(k=>k.trim().toLowerCase()===String(cor).trim().toLowerCase());
+  return chave==null?0:Math.max(0,+mapa[chave]||0);
+}
 function codigoBuscaProduto(id){const s=String(id==null?'':id);if(/^p\d+$/i.test(s))return 'P'+s.slice(1);let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return 'P'+(h%60466176).toString(36).toUpperCase().padStart(5,'0');}
 function descricaoSegura(valor){
   const s=String(valor==null?'':valor); if(!s.includes('<')) return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
@@ -26,22 +35,30 @@ function updateCartBadge(){
 function toast(msg){
   let t=document.querySelector('.toast');
   if(!t){ t=document.createElement('div'); t.className='toast'; document.body.appendChild(t); }
-  t.textContent=msg; t.classList.add('show');
+  t.textContent=msg;
+  t.dataset.kind=/salv|atualiz|sucesso|pronto|conclu/i.test(String(msg||''))?'success':'info';
+  t.classList.remove('show'); void t.offsetWidth; t.classList.add('show');
   clearTimeout(t._tm); t._tm=setTimeout(()=>t.classList.remove('show'),2200);
 }
 function addToCart(id, cor='', tam='', qtd=1){
   try {
     const p = (typeof prodById === 'function') ? prodById(id) : null;
-    if (p && !(+p.estoque > 0)) { toast('Produto esgotado'); return; }
+    if (p && estoqueDisponivelProduto(p,cor) <= 0) { toast(cor ? `A cor ${cor} está esgotada` : 'Produto esgotado'); return; }
+    if (p) qtd=Math.min(Math.max(1,Math.round(+qtd||1)),estoqueDisponivelProduto(p,cor));
   } catch {}
   const cart=getCart();
   const key=`${id}|${cor}|${tam}`;
   const ex=cart.find(i=>i.key===key);
-  if(ex) ex.qtd+=qtd; else cart.push({key,id: (typeof prodById === 'function' && prodById(id)) ? prodById(id).id : id,cor,tam,qtd});
+  if(ex) {
+    const p=typeof prodById === 'function' ? prodById(id) : null;
+    const limite=p?estoqueDisponivelProduto(p,cor):ex.qtd+qtd;
+    ex.qtd=Math.min(limite,ex.qtd+qtd);
+    if(ex.qtd<=0) return toast(cor ? `A cor ${cor} está esgotada` : 'Produto esgotado');
+  } else { const produto=typeof prodById === 'function' ? prodById(id) : null, mapa=produto&&produto.fotosPorCor&&typeof produto.fotosPorCor==='object'?produto.fotosPorCor:{}, chave=Object.keys(mapa).find(k=>k.trim().toLowerCase()===String(cor||'').trim().toLowerCase()), fotos=chave&&Array.isArray(mapa[chave])?mapa[chave].filter(Boolean):[], gal=typeof fotosDoProduto==='function'&&produto?fotosDoProduto(produto):[]; cart.push({key,id: produto?produto.id:id,cor,tam,qtd,foto:fotos[0]||gal[0]||produto&&produto.foto||''}); }
   saveCart(cart); toast('Adicionado à sacola');
 }
 function cardHTML(p){
-  const esgotado = !(+p.estoque > 0);
+  const esgotado = !(estoqueDisponivelProduto(p) > 0);
   const off = (!esgotado && p.antigo) ? Math.round((1-p.preco/p.antigo)*100) : 0;
   const selo = esgotado ? '<span class="selo selo-esgotado">Esgotado</span>' : p.selo==='lanc' ? '<span class="selo lanc">Novo</span>' : p.selo==='promo' ? '<span class="selo promo">Sale</span>' : (p.cat==='sale'||p.antigo?'<span class="selo sale">Sale</span>':'');
   // hover troca para a 2ª foto (quando o produto tem galeria)
@@ -80,11 +97,18 @@ function renderGrade(el, lista){
     return true;
   });
   el.innerHTML = unicos.length? unicos.map(cardHTML).join('') : '<p>Nenhum produto encontrado.</p>';
-  // cards entram com reveal em cascata ao rolar
-  el.querySelectorAll('.card').forEach((c,i)=>{
-    c.classList.add('reveal');
-    c.style.transitionDelay=Math.min(i*70,420)+'ms';
-  });
+   // A primeira montagem entra com reveal; filtros e buscas seguintes ficam estaveis.
+   const animarEntrada = !el.dataset.gradeRenderizada && !document.documentElement.classList.contains('busca-ativa');
+   el.querySelectorAll('.card').forEach((c,i)=>{
+     if(animarEntrada){
+       c.classList.add('reveal');
+       c.style.transitionDelay=Math.min(i*70,420)+'ms';
+     }else{
+       c.classList.add('reveal','visivel');
+       c.style.transitionDelay='';
+     }
+   });
+   el.dataset.gradeRenderizada='true';
   initReveals();
 }
 // Reveal on scroll: mostra elementos com .reveal ao entrar na tela

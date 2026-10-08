@@ -50,11 +50,12 @@
 <div class="campo" style="margin-top:10px"><label>Número</label><input id="encNumero" inputmode="numeric" pattern="[0-9]+" placeholder="Número da residência" required aria-required="true" oninput="this.value=this.value.replace(/\D/g,'')"></div>
  <div class="campo" style="margin-top:10px"><label>Rua</label><input id="encRua" placeholder="Digite sua rua" autocomplete="street-address" required aria-required="true"></div>
  <div class="campo" style="margin-top:10px"><label>Bairro</label><input id="encBairro" placeholder="Digite seu bairro" required aria-required="true"></div>
-<div class="campo" style="margin-top:10px"><label>Pagamento</label><select id="encPag" required aria-required="true"></select></div>
+ <div class="campo" style="margin-top:10px"><label>Pagamento</label><select id="encPag" required aria-required="true"></select></div>
+ <div class="campo" style="margin-top:10px"><label>Observações (opcional)</label><textarea id="encObs" maxlength="1000" placeholder="Instruções para a loja"></textarea></div>
 <div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-borda" style="flex:1" onclick="fecharEncomenda()">Voltar</button><button class="btn btn-rosa" style="flex:2" onclick="confirmaEncomenda()">Confirmar no WhatsApp →</button></div>
 </div></div>
 
-<script src="assets/js/data.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2"><\/script>')</script><script src="assets/js/supabase.js?v=2"></script><script src="assets/js/loja-db.js?v=10"></script><script src="assets/js/main.js?v=7"></script>
+<script src="assets/js/data.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2"><\/script>')</script><script src="assets/js/supabase.js?v=2"></script><script src="assets/js/loja-db.js?v=14"></script><script src="assets/js/main.js?v=7"></script>
 <script>
 function codigoProdutoCurto(id){const s=String(id==null?'':id);if(/^p\d+$/i.test(s))return 'P'+s.slice(1);let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return 'P'+(h%60466176).toString(36).toUpperCase().padStart(5,'0');}
 function bootProd(){
@@ -63,7 +64,8 @@ const id=new URLSearchParams(location.search).get('id')||1;
 const p=prodById(id)||PRODUTOS[0];
 if(!p){document.getElementById('prodWrap').innerHTML='<p>Produto não encontrado na nuvem.</p>';return;}
 document.title=p.nome+' — Encanto Miranda';
-  let corSel=(p.cores||['Única'])[0], tamSel=(p.tams||['Único'])[0], qtd=1;
+  const corComEstoque=c=>typeof estoqueDisponivelProduto==='function'?estoqueDisponivelProduto(p,c):(+p.estoque||0);
+  let corSel=((p.cores||['Única']).find(c=>corComEstoque(c)>0)||(p.cores||['Única'])[0]), tamSel=(p.tams||['Único'])[0], qtd=1;
 const off=p.antigo?Math.round((1-p.preco/p.antigo)*100):0;
   const cfgLoja=(typeof DB!=='undefined'&&DB.getSettings)?DB.getSettings():{};
   const zapLoja=cfgLoja.whatsapp||'5511968422230';
@@ -75,7 +77,7 @@ const off=p.antigo?Math.round((1-p.preco/p.antigo)*100):0;
   const galeriaDaCor=cor=>{const chave=Object.keys(fotosPorCor).find(k=>k.trim().toLowerCase()===String(cor||'').trim().toLowerCase());const fotos=chave&&Array.isArray(fotosPorCor[chave])?fotosPorCor[chave].filter(Boolean):[];return fotos.length?fotos:gal;};
   const galInicial=galeriaDaCor(corSel);
   const galHtml=galInicial.map((f,i)=>`<img class="${i===0?'ativo':''}" src="${f}" onclick="trocaFoto(this,'${f}')">`).join('');
-const esgotado = !(+p.estoque > 0);
+ const esgotado = !(typeof estoqueDisponivelProduto==='function'?estoqueDisponivelProduto(p):(+p.estoque||0));
 const comprarHtml = esgotado
 ? `<div class="prod-esgotado-aviso">Esgotado — avise-me quando voltar</div><div class="comprar-row"><span class="btn btn-whats-off" aria-disabled="true" style="flex:1">Esgotado</span></div>`
 : `<div class="comprar-row">
@@ -95,7 +97,7 @@ ${p.antigo?`<div class="preco-ant" style="font-size:15px;margin-top:8px">De ${BR
 <div class="prod-preco">${BRL(p.preco)}</div>
 <div class="parcelas">${(typeof parcelasDoProduto==='function' && parcelasDoProduto(p) <= 1) ? textoParcela(p) : ('ou ' + ((typeof textoParcela==='function') ? textoParcela(p) : ('6x de ' + BRL(p.preco*1.09/6))) + ' com juros')}</div>
 <div class="opcao-titulo">√ Cor: <span id="corLbl">${corSel}</span></div>
-<div class="cores">${(p.cores||[]).map((c,i)=>`<button class="cor ${i===0?'ativo':''}" ${esgotado ? 'disabled style="opacity:.5;cursor:not-allowed"' : `onclick="selCor(this,'${c}')"`}>${c}</button>`).join('')}</div>
+ <div class="cores">${(p.cores||[]).map((c,i)=>{const semCor=corComEstoque(c)<=0;return `<button class="cor ${c===corSel?'ativo':''}" ${esgotado||semCor ? 'disabled style="opacity:.5;cursor:not-allowed"' : `onclick="selCor(this,'${c}')"`}>${c}${semCor?' · esgotada':''}</button>`}).join('')}</div>
 <div class="opcao-titulo">√ Tamanho: <span id="tamLbl">${tamSel}</span></div>
 <div class="tams">${(p.tams||[]).map((t,i)=>`<button class="tam ${i===0?'ativo':''}" ${esgotado ? 'disabled style="opacity:.5;cursor:not-allowed"' : `onclick="selTam(this,'${t}')"`}>${t}</button>`).join('')}</div>
 
@@ -108,11 +110,11 @@ ${comprarHtml}
  window.renderGaleria=function(fotos){const lista=Array.isArray(fotos)&&fotos.length?fotos:gal;const thumbs=document.getElementById('thumbsLista'),principal=document.getElementById('fotoG');if(!thumbs||!principal)return;thumbs.innerHTML=lista.map((f,i)=>`<img class="${i===0?'ativo':''}" src="${f}" alt="${p.nome}" onclick="trocaFoto(this,'${f}')">`).join('');principal.src=lista[0]||imgProduto(p,1);};
  window.trocaFoto=function(el,src){document.querySelectorAll('.thumbs img').forEach(i=>i.classList.remove('ativo'));el.classList.add('ativo');document.getElementById('fotoG').src=src;};
 window.rolarThumbs=function(d){const box=document.getElementById('thumbsLista');if(box)box.scrollBy({top:d*190,behavior:'smooth'});};
- window.selCor=function(el,c){if(!( +p.estoque > 0)) return;corSel=c;document.getElementById('corLbl').textContent=c;document.querySelectorAll('.cor').forEach(b=>b.classList.remove('ativo'));el.classList.add('ativo');window.renderGaleria(galeriaDaCor(c));};
-window.selTam=function(el,t){if(!( +p.estoque > 0)) return;tamSel=t;document.getElementById('tamLbl').textContent=t;document.querySelectorAll('.tam').forEach(b=>b.classList.remove('ativo'));el.classList.add('ativo');};
-window.mQtd=function(d){if(!( +p.estoque > 0)) return;qtd=Math.max(1,Math.min(p.estoque||1,qtd+d));document.getElementById('qtdLbl').textContent=qtd;};
+  window.selCor=function(el,c){if(corComEstoque(c)<=0) return;corSel=c;qtd=Math.min(qtd,corComEstoque(c));document.getElementById('corLbl').textContent=c;document.querySelectorAll('.cor').forEach(b=>b.classList.remove('ativo'));el.classList.add('ativo');window.renderGaleria(galeriaDaCor(c));};
+ window.selTam=function(el,t){if(corComEstoque(corSel)<=0) return;tamSel=t;document.getElementById('tamLbl').textContent=t;document.querySelectorAll('.tam').forEach(b=>b.classList.remove('ativo'));el.classList.add('ativo');};
+ window.mQtd=function(d){const limite=corComEstoque(corSel);if(limite<=0)return;qtd=Math.max(1,Math.min(limite,qtd+d));document.getElementById('qtdLbl').textContent=qtd;};
 window.abrirEncomenda=function(){
-  if(!( +p.estoque > 0)) { toast('Produto esgotado'); return; }
+   if(corComEstoque(corSel)<=0) { toast(`A cor ${corSel} está esgotada`); return; }
    const stCfg=(typeof DB!=='undefined')?DB.getSettings():{}; const infCfg=stCfg.informacoes||{}; const limiteCfg=+stCfg.freteGratis||0; const freteGratisCfg=infCfg.freteGratisAtivo===true && limiteCfg>0 && p.preco*qtd>=limiteCfg; const freteCfg=freteGratisCfg?0:Math.max(0,+infCfg.fretePadrao||0); const total=BRL(p.preco*qtd+freteCfg);
   const gal2=(typeof fotosDoProduto==='function'?fotosDoProduto(p):[imgProduto(p,1)]);
     document.getElementById('encResumo').innerHTML=`<div class="enc-prod"><img src="${gal2[0]}" alt=""><div style="flex:1"><b style="font-size:13.5px">${p.nome}</b><div style="font-size:12.5px;color:#6b7280">ID ${codigoProdutoCurto(p.id)} · ${corSel} • Tam ${tamSel} • ${qtd}x ${BRL(p.preco)}</div></div></div><div style="font-size:13px;margin-top:10px;color:${freteGratisCfg?'#397a49':'#6b7280'}">${freteGratisCfg?'Frete grátis! Valor acima de '+BRL(limiteCfg):'Frete: '+BRL(freteCfg)}</div><div class="enc-total"><span>Total</span><span>${total}</span></div>`;
@@ -148,7 +150,7 @@ window.formatarCepProduto=function(el){
   if(cep.length===8) window.buscarCepProduto();
    else { el.dataset.cepConsultado=''; }
 };
-window.confirmaEncomenda=function(){
+window.confirmaEncomenda=async function(){
   const nome=document.getElementById('encNome').value.trim().replace(/\s+/g,' ');
    const fone=document.getElementById('encFone').value.trim();
     const cep=document.getElementById('encCep').value.replace(/\D/g,'');
@@ -165,20 +167,31 @@ window.confirmaEncomenda=function(){
     if(!/^\d+$/.test(numeroResidencia)) { toast('Digite apenas números no campo Número.'); return; }
     const pagEl=document.getElementById('encPag');
     if(!pagEl.value) { toast('Selecione a forma de pagamento.'); return; }
-   const stCfg=(typeof DB!=='undefined')?DB.getSettings():{}; const infCfg=stCfg.informacoes||{}; const limiteCfg=+stCfg.freteGratis||0; const freteGratisCfg=infCfg.freteGratisAtivo===true && limiteCfg>0 && p.preco*qtd>=limiteCfg; const freteCfg=freteGratisCfg?0:Math.max(0,+infCfg.fretePadrao||0); const total=BRL(p.preco*qtd+freteCfg);
-    const pag=pagEl.value||'Não informado'; let numero='—';
-   const item={id:p.id,nome:p.nome,cor:corSel,tam:tamSel,qtd,preco:p.preco};
-    try{ if(typeof DB!=='undefined'){ const ped=DB.logOrder({nome,fone,endereco,itens:[item],subtotal:p.preco*qtd,desconto:0,frete:freteCfg,total:p.preco*qtd+freteCfg,pag, cupom:''}); numero=ped.numero; } }catch{}
+    if(typeof DB==='undefined'||!DB.createSiteOrder){toast('Sistema de pedidos indisponível. Tente novamente.');return;}
+    const modalBtn=document.querySelector('#encModal .btn-rosa'); if(modalBtn){if(modalBtn.disabled)return;modalBtn.disabled=true;modalBtn.textContent='REGISTRANDO…';}
+    let janela=null;
+    try{
+    janela=window.open('about:blank','_blank');
+    let chave=sessionStorage.getItem('em_product_checkout_key');
+    if(!chave){chave=crypto.randomUUID?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&3|8)).toString(16)});sessionStorage.setItem('em_product_checkout_key',chave);}
+    const pag=pagEl.value||'Não informado';
+    const observacao=(document.getElementById('encObs')||{}).value||'';
+     const ped=await DB.createSiteOrder({nome,fone,endereco,itens:[{id:p.id,nome:p.nome,cor:corSel,tam:tamSel,qtd,preco:p.preco,foto:document.getElementById('fotoG')?.src||galeriaDaCor(corSel)[0]||''}],pag,observacao},chave);
+    const freteGratisCfg=ped.frete===0; const total=BRL(ped.total); const freteCfg=ped.frete||0; const numero=ped.numero;
    const cfg=(typeof DB!=='undefined'&&DB.getSettings().whatsappConfig)||{};
    let texto=String(cfg.mensagemPedido||'Olá! Sou [nome], quero finalizar meu pedido [pedido] na [loja].\n\n[itens]\n\nTotal: [valor total]\nPagamento: [pagamento]');
-    const vals={'[nome]':nome,'[cliente]':nome,'[telefone]':fone,'[endereco]':endereco,'[pedido]':numero,'[produto]':`${p.nome} (ID: ${codigoProdutoCurto(p.id)})`,'[id produto]':codigoProdutoCurto(p.id),'[itens]':`• ${qtd}x ${p.nome} (ID: ${codigoProdutoCurto(p.id)}) (${corSel}/${tamSel})`,'[valor]':BRL(p.preco),'[subtotal]':BRL(p.preco*qtd),'[desconto]':'R$ 0,00','[frete]':freteGratisCfg?'Frete grátis':BRL(freteCfg),'[valor total]':total,'[cupom]':'Nenhum','[pagamento]':pag,'[loja]':DB.getSettings().nomeLoja};
+    const itemSalvo=ped.itens[0]||{}; const vals={'[nome]':ped.nome,'[cliente]':ped.nome,'[telefone]':ped.fone,'[endereco]':ped.endereco,'[pedido]':numero,'[produto]':`${itemSalvo.nome||p.nome} (ID: ${codigoProdutoCurto(itemSalvo.id||p.id)})`,'[id produto]':codigoProdutoCurto(itemSalvo.id||p.id),'[itens]':`• ${itemSalvo.qtd||qtd}x ${itemSalvo.nome||p.nome} (ID: ${codigoProdutoCurto(itemSalvo.id||p.id)}) (${itemSalvo.cor||''}/${itemSalvo.tam||''})`,'[valor]':BRL(itemSalvo.preco||p.preco),'[subtotal]':BRL(ped.subtotal),'[desconto]':BRL(ped.desconto),'[frete]':ped.frete?BRL(ped.frete):'Frete grátis','[valor total]':BRL(ped.total),'[cupom]':ped.cupom||'Nenhum','[pagamento]':ped.pag||pag,'[observacoes]':ped.observacao||'Nenhuma','[loja]':DB.getSettings().nomeLoja};
    Object.keys(vals).forEach(k=>{texto=texto.split(k).join(vals[k]);});
-  let zap='5566981151694';
-  try{ if(typeof DB!=='undefined') zap=DB.getSettings().whatsapp||zap; }catch{}
-   window.open(`https://wa.me/${zap}?text=${encodeURIComponent(texto)}`,'_blank');
-  toast('Abrindo WhatsApp...');
-  window.fecharEncomenda();
-};
+    let zap='5566981151694';
+   try{ if(typeof DB!=='undefined') zap=DB.getSettings().whatsapp||zap; }catch{}
+    const destino=`https://wa.me/${zap}?text=${encodeURIComponent(texto)}`;
+    if(janela)janela.location=destino;else window.open(destino,'_blank');
+   try{sessionStorage.removeItem('em_product_checkout_key');}catch{}
+   toast(`Pedido ${numero} salvo. Abrindo WhatsApp…`);
+   window.fecharEncomenda();
+   }catch(erro){if(janela)try{janela.close();}catch{}toast(erro&&erro.message?erro.message:'Falha ao registrar pedido. Tente novamente.');}
+   finally{if(modalBtn){modalBtn.disabled=false;modalBtn.textContent='Confirmar no WhatsApp →';}}
+ };
 renderGrade(document.getElementById('rel'), PRODUTOS.filter(x=>x.cat===p.cat&&String(x.id)!==String(p.id)).concat(PRODUTOS.filter(x=>x.cat!==p.cat&&String(x.id)!==String(p.id))).slice(0,4));
 } // fim bootProd
 if(typeof DB!=='undefined'&&DB.ready&&typeof DB.ready.then==='function'){

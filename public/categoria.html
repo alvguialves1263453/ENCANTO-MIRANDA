@@ -67,6 +67,7 @@ aplicar();
 }
 const qs=new URLSearchParams(location.search);
 let cat=qs.get('cat')||'ver-tudo', busca=(qs.get('busca')||'').toLowerCase();
+if(busca) document.documentElement.classList.add('busca-ativa');
 if(qs.get('filtro')==='lanc') document.getElementById('fLanc').checked=true;
 document.getElementById('q').value=qs.get('busca')||'';
 function aplicar(){

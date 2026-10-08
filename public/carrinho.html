@@ -33,7 +33,8 @@
 <div class="campo"><label>Número</label><input id="cliNumero" inputmode="numeric" pattern="[0-9]+" placeholder="Número da residência" required aria-required="true" oninput="this.value=this.value.replace(/\D/g,'')"></div>
  <div class="campo"><label>Rua</label><input id="cliRua" placeholder="Digite sua rua" autocomplete="street-address" required aria-required="true"></div>
  <div class="campo"><label>Bairro</label><input id="cliBairro" placeholder="Digite seu bairro" required aria-required="true"></div>
-<div class="campo" id="cartPagWrap"><label>Pagamento</label><select id="pag" required aria-required="true"></select></div>
+ <div class="campo" id="cartPagWrap"><label>Pagamento</label><select id="pag" required aria-required="true"></select></div>
+ <div class="campo"><label>Observações do pedido (opcional)</label><textarea id="cliObs" maxlength="1000" placeholder="Preferências ou instruções para a loja"></textarea></div>
 <div class="campo"><label>Cupom de desconto (se tiver)</label><div style="display:flex;gap:8px"><input id="cupom" placeholder="CÓDIGO" style="flex:1;text-transform:uppercase"><button class="btn btn-borda" type="button" onclick="aplicarCupom()">OK</button></div></div>
  <div class="linha"><span>Subtotal (<span id="qtdT">0</span> peças)</span><b id="subT">R$0</b></div>
  <div class="linha" id="linhaFrete"><span>Frete</span><b id="freteT">R$0</b></div>
@@ -51,7 +52,7 @@
 <div id="cartPagInfo"><h4>PAGAMENTO</h4><p style="font-size:13px" data-pag-lista>Pix • Boleto • Cartão</p></div>
 </div><div class="copy">© 2026 Encanto Miranda — Todos os direitos reservados</div></footer>
 
-<script src="assets/js/data.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2"><\/script>')</script><script src="assets/js/supabase.js?v=2"></script><script src="assets/js/loja-db.js?v=10"></script><script src="assets/js/main.js?v=7"></script>
+<script src="assets/js/data.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>window.supabase||document.write('<script src="https://unpkg.com/@supabase/supabase-js@2"><\/script>')</script><script src="assets/js/supabase.js?v=2"></script><script src="assets/js/loja-db.js?v=14"></script><script src="assets/js/main.js?v=7"></script>
 <script>
 let cupomAplicado=null;
 function carrinhoValido(){
@@ -61,13 +62,14 @@ function carrinhoValido(){
   cart.forEach(it=>{
     try {
       const p=prodById(it.id);
-      if(p && (+p.estoque > 0)) it.qtd=Math.max(1,Math.min(it.qtd||1,+p.estoque));
+      const disponivel=typeof estoqueDisponivelProduto==='function'?estoqueDisponivelProduto(p,it.cor):(+p.estoque||0);
+      if(p && disponivel > 0) it.qtd=Math.max(1,Math.min(it.qtd||1,disponivel));
     } catch {}
   });
   if(JSON.stringify(cart)!==antes) saveCart(cart);
   return cart;
 }
-const itemEsgotado = it => { try { const p=prodById(it.id); return !(p && (+p.estoque > 0)); } catch { return true; } };
+const itemEsgotado = it => { try { const p=prodById(it.id); const disponivel=typeof estoqueDisponivelProduto==='function'?estoqueDisponivelProduto(p,it.cor):(+p.estoque||0); return !(p && disponivel > 0); } catch { return true; } };
 function renderCart(){
   const cart=carrinhoValido(); const box=document.getElementById('lista');
   const ok=cart.filter(it=>!itemEsgotado(it));
@@ -89,8 +91,9 @@ function altQtd(i,d){
   const c=getCart();
   try {
     const p=prodById(c[i].id);
-    if(!(p && (+p.estoque > 0))) { toast('Produto esgotado'); return; }
-    c[i].qtd=Math.max(1,Math.min((+p.estoque),c[i].qtd+d)); saveCart(c); renderCart();
+    const disponivel=typeof estoqueDisponivelProduto==='function'?estoqueDisponivelProduto(p,c[i].cor):(+p.estoque||0);
+    if(!(p && disponivel > 0)) { toast(c[i].cor ? `A cor ${c[i].cor} está esgotada` : 'Produto esgotado'); return; }
+    c[i].qtd=Math.max(1,Math.min(disponivel,c[i].qtd+d)); saveCart(c); renderCart();
   } catch { c[i].qtd=Math.max(1,c[i].qtd+d); saveCart(c); renderCart(); }
 }
 function remItem(i){ const c=getCart(); c.splice(i,1); saveCart(c); renderCart(); }
@@ -159,7 +162,7 @@ function calcTotal(){
   }
   const st=(typeof DB!=='undefined')?DB.getSettings():{};
   const info=st.informacoes||{};
-  const limite=+st.freteGratis||0, gratis=info.freteGratisAtivo===true && limite>0 && sub>=limite;
+  const limite=+st.freteGratis||0, gratis=info.freteGratisAtivo===true && limite>0 && sub-desc>=limite;
   const frete=gratis ? 0 : Math.max(0,+info.fretePadrao||0);
   const linhaFrete=document.getElementById('linhaFrete');
   if(linhaFrete) linhaFrete.innerHTML=gratis ? `<span style="color:#397a49;font-weight:800">Frete grátis!</span><b style="color:#397a49">Acima de ${BRL(limite)}</b>` : `<span>Frete</span><b id="freteT">${BRL(frete)}</b>`;
@@ -184,13 +187,15 @@ function mensagemPedidoWhatsApp(dados){
     '[produto]':primeiro.nome ? `${primeiro.nome} (ID: ${codigoProduto(primeiro.id)})` : '', '[id produto]':codigoProduto(primeiro.id),
     '[itens]':dados.itens.map(i=>`• ${i.qtd}x ${i.nome} (ID: ${codigoProduto(i.id)}) (${i.cor||''}/${i.tam||''})`).join('\n'),
     '[valor]':BRL(primeiro.preco||0),'[subtotal]':BRL(dados.sub),'[desconto]':BRL(dados.desc),
-     '[valor total]':BRL(dados.total),'[frete]':dados.freteGratis?'Frete grátis':BRL(dados.frete||0),'[cupom]':dados.cupom||'Nenhum','[pagamento]':dados.pag||'Não informado',
+     '[valor total]':BRL(dados.total),'[frete]':dados.freteGratis?'Frete grátis':BRL(dados.frete||0),'[cupom]':dados.cupom||'Nenhum','[pagamento]':dados.pag||'Não informado','[observacoes]':dados.observacao||'Nenhuma',
     '[loja]':(typeof DB!=='undefined'?DB.getSettings().nomeLoja:'Encanto Miranda')
   };
   Object.keys(valores).forEach(chave=>{ texto=texto.split(chave).join(valores[chave]); });
   return texto;
 }
-function finalizar(){
+let finalizandoPedido = false;
+async function finalizar(){
+  if (finalizandoPedido) return;
   let cart=carrinhoValido().filter(it=>!itemEsgotado(it));
   const removidos=carrinhoValido().length-cart.length;
   if(removidos>0){ saveCart(cart); renderCart(); toast('Itens esgotados foram removidos.'); }
@@ -209,21 +214,25 @@ function finalizar(){
    const pag=document.getElementById('pag');
    if(document.getElementById('cartPagWrap').style.display!=='none' && !pag.value) return toast('Selecione a forma de pagamento.');
    const {sub, desc, frete, freteGratis, total}=calcTotal();
-  const itens=cart.map(i=>{const p=prodById(i.id);return {id:p.id, nome:p.nome, cor:i.cor, tam:i.tam, qtd:i.qtd, preco:p.preco};});
+   const itens=cart.map(i=>{const p=prodById(i.id), mapa=p&&p.fotosPorCor&&typeof p.fotosPorCor==='object'?p.fotosPorCor:{}, chave=Object.keys(mapa).find(k=>k.trim().toLowerCase()===String(i.cor||'').trim().toLowerCase()), fotos=chave&&Array.isArray(mapa[chave])?mapa[chave].filter(Boolean):[], gal=typeof fotosDoProduto==='function'?fotosDoProduto(p):[];return {id:p.id, nome:p.nome, cor:i.cor, tam:i.tam, qtd:i.qtd, preco:p.preco, foto:i.foto||fotos[0]||gal[0]||p.foto||''};});
    const pagTxt=pag.options[pag.selectedIndex]?pag.options[pag.selectedIndex].text:'';
-  let numero='—';
-  try{
-    if(typeof DB!=='undefined'){
-       const ped=DB.logOrder({nome, fone, endereco, itens, subtotal:sub, desconto:desc, frete, total, pag:pagTxt, cupom:cupomAplicado?cupomAplicado.codigo:''});
-      numero=ped.numero;
-    }
-  }catch{}
-   const txt=encodeURIComponent(mensagemPedidoWhatsApp({nome,fone,endereco,numero,itens,sub,desc,frete,freteGratis,total,pag:pagTxt,cupom:cupomAplicado?cupomAplicado.codigo:''}));
-  saveCart([]); cupomAplicado=null;
-  try{ sessionStorage.removeItem('em_cupom'); }catch{}
-  renderCart();
-  const st=(typeof DB!=='undefined')?DB.getSettings().whatsapp:'5511968422230';
-  window.open(`https://wa.me/${st}?text=${txt}`,'_blank');
+   if(typeof DB==='undefined' || !DB.createSiteOrder) return toast('Não foi possível conectar ao sistema de pedidos. Tente novamente.');
+   const botao=document.querySelector('button[onclick="finalizar()"]');
+   finalizandoPedido=true; if(botao){botao.disabled=true;botao.textContent='REGISTRANDO PEDIDO…';}
+   let janela=null;
+   try{
+     try{janela=window.open('about:blank','_blank');}catch{}
+     let chave=sessionStorage.getItem('em_checkout_idempotency');
+     if(!chave){chave=crypto.randomUUID?crypto.randomUUID():('xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&3|8)).toString(16)}));sessionStorage.setItem('em_checkout_idempotency',chave);}
+     const ped=await DB.createSiteOrder({nome,fone,endereco,itens,sub,desc,frete,total,pag:pagTxt,cupom:cupomAplicado?cupomAplicado.codigo:'',observacao:(document.getElementById('cliObs')||{}).value||''},chave);
+     const txt=encodeURIComponent(mensagemPedidoWhatsApp({nome:ped.nome,fone:ped.fone,endereco:ped.endereco,numero:ped.numero,itens:ped.itens,sub:ped.subtotal,desc:ped.desconto,frete:ped.frete,freteGratis:!ped.frete,pag:ped.pag,total:ped.total,cupom:ped.cupom||'',observacao:ped.observacao||''}));
+     const st=(typeof DB!=='undefined')?DB.getSettings().whatsapp:'5511968422230';
+     const destino=`https://wa.me/${st}?text=${txt}`;
+     if(janela) janela.location=destino; else window.open(destino,'_blank');
+     saveCart([]); cupomAplicado=null; try{sessionStorage.removeItem('em_cupom');sessionStorage.removeItem('em_checkout_idempotency');}catch{} renderCart();
+     toast(`Pedido ${ped.numero} salvo. Abrindo WhatsApp…`);
+   }catch(erro){ if(janela) try{janela.close();}catch{} toast(erro&&erro.message?erro.message:'Não foi possível salvar o pedido. Tente novamente.'); }
+   finally{finalizandoPedido=false;if(botao){botao.disabled=false;botao.textContent='FINALIZAR NO WHATSAPP →';}}
 }
 montarPagamento();
 try{ const salvo=sessionStorage.getItem('em_cupom'); if(salvo){ document.getElementById('cupom').value=salvo; const r=DB.validateCoupon(salvo, subtotal()); if(!r.erro) cupomAplicado=r.cupom; } }catch{}

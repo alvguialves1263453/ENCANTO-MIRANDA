@@ -552,6 +552,18 @@ input:focus,select:focus,textarea:focus{border-color:var(--brown);box-shadow:0 0
 }
 /* Barra superior removida do layout */
 .topbar{display:none!important}
+/* Toast de feedback: confirmacao curta, central e impossivel de confundir com um aviso generico. */
+.toast{z-index:500;display:flex;align-items:center;gap:11px;min-width:286px;max-width:min(440px,calc(100vw - 32px));box-sizing:border-box;padding:14px 18px 14px 14px;border:1px solid rgba(255,239,220,.2);border-radius:16px;background:linear-gradient(135deg,#2b1d17,#513525 72%,#745039);color:#fff8f0;font-size:13px;font-weight:700;line-height:1.35;letter-spacing:.005em;box-shadow:0 22px 55px -21px rgba(32,16,8,.72),0 0 0 1px rgba(255,255,255,.06) inset;overflow:hidden}
+.toast:before{content:'✓';display:grid;place-items:center;flex:0 0 30px;width:30px;height:30px;border:1px solid rgba(255,237,213,.42);border-radius:10px;background:linear-gradient(145deg,#d99860,#a65c38);color:#fff;font-family:Georgia,serif;font-size:17px;box-shadow:0 7px 16px -10px #120a06}
+.toast:after{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,#e0a06c,#ffe0ae,#e0a06c);transform:scaleX(1);transform-origin:left;animation:toastTempo 2.2s linear both}
+.toast[data-kind="success"]{background:linear-gradient(135deg,#193d2b,#2b6849 72%,#3e8f64);border-color:rgba(202,255,218,.22)}
+.toast[data-kind="success"]:before{background:linear-gradient(145deg,#72d39a,#31905e);border-color:rgba(207,255,220,.5);animation:toastCheck .58s cubic-bezier(.23,1,.32,1) both}
+.toast[data-kind="success"]:after{background:linear-gradient(90deg,#83dda3,#d7ffe1,#83dda3)}
+.toast.show{animation:toastEntrar .55s cubic-bezier(.23,1,.32,1) both}
+@keyframes toastEntrar{from{opacity:0;transform:translateX(-50%) translateY(28px) scale(.88);filter:blur(6px)}60%{opacity:1;transform:translateX(-50%) translateY(-3px) scale(1.02);filter:blur(0)}to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+@keyframes toastTempo{from{transform:scaleX(1);opacity:1}to{transform:scaleX(0);opacity:.45}}
+@keyframes toastCheck{0%{opacity:0;transform:scale(.35) rotate(-24deg)}70%{opacity:1;transform:scale(1.16) rotate(7deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
+@media(max-width:520px){.toast{bottom:14px;min-width:0;width:calc(100vw - 24px);max-width:none;justify-content:flex-start;padding:13px 15px}}
 
 /* ===== ANIMAÇÕES — sidebar, scroll reveal e vida geral ===== */
 /* Sidebar: deslize macio + itens em cascata */
