@@ -626,6 +626,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--brown);box-shadow:0 0
 .preco-ant,.parc,.breadcrumb{color:var(--muted)}
 .card-body .btn{background:var(--surface)!important;color:var(--brown)!important;border-color:var(--accent)!important}
 .card-body .btn:hover{background:var(--brown)!important;border-color:var(--brown)!important;color:#fff}
+.card-body .btn.btn-rosa:hover,.card-body .btn.btn-preto:hover{color:#fff!important}
 .selo.promo,.off{background:var(--brown);border-color:var(--brown);color:#fff}
 .cat{background:var(--surface);border-color:var(--line);color:var(--ink)}
 .cat:hover{background:var(--brown)!important;border-color:var(--brown)!important;color:#fff}
