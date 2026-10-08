@@ -50,6 +50,9 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13px}
 .btn-mini.perigo{color:#8F2B2B;border-color:#E5AAAA}
 .toolbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
 .toolbar input,.toolbar select{padding:12px 14px;border:1px solid #DCCDBB;border-radius:8px;font-size:13px;background:#fff;flex:1;min-width:180px}
+.adm-sugestoes{position:absolute;z-index:50;top:calc(100% + 5px);left:0;right:0;background:#fff;border:1px solid var(--adm-line);border-radius:8px;box-shadow:0 10px 24px #2d1b1026;overflow:hidden}
+.adm-sugestao{display:block;width:100%;padding:10px 12px;border:0;border-bottom:1px solid var(--adm-line);background:#fff;color:var(--adm-dark);text-align:left;cursor:pointer;font:inherit}
+.adm-sugestao:last-child{border-bottom:0}.adm-sugestao:hover{background:var(--adm-bg)}.adm-sugestao small{display:block;color:#8c7b6b;font-size:11px;margin-top:2px}
 .form label{display:block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--adm-mut);margin:14px 0 6px}
 .form input[type=text],.form input[type=number],.form input[type=date],.form select,.form textarea{width:100%;padding:12px 14px;border:1px solid #DCCDBB;border-radius:8px;font-size:14px;background:#fff;font-family:inherit}
 .form textarea{min-height:80px;resize:vertical}
@@ -623,7 +626,7 @@ function rProdutos() {
   $('#admMain').innerHTML = `<div class="secao on"><h2>Produtos</h2><p class="adm-sub">Tudo que sua loja vende está aqui.</p>
    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px"><button class="btn btn-preto btn-grande" onclick="novoProduto()">+ Adicionar produto</button><button class="btn btn-borda" onclick="abrirDestaquesMassa()">★ Gerenciar destaques</button>
   </div>
-  <div class="toolbar"><input id="q" placeholder="🔍 Procurar pelo nome..." value="${buscaP.replace(/"/g, '')}">
+   <div class="toolbar"><div style="position:relative;flex:1;min-width:220px"><input id="q" style="width:100%" placeholder="🔍 Procurar por nome ou ID..." value="${buscaP.replace(/"/g, '')}"><div id="produtoSugestoes" class="adm-sugestoes" hidden></div></div>
   <select id="fc"><option value="">Todas as categorias</option>${catsP.map(c => `<option value="${c.slug}" ${fcP === c.slug ? 'selected' : ''}>${c.nome}</option>`).join('')}</select>
   <select id="fs"><option value="">Tudo</option><option value="pub" ${filtroStatus === 'pub' ? 'selected' : ''}>Publicados</option><option value="rascunho" ${filtroStatus === 'rascunho' ? 'selected' : ''}>Rascunhos</option></select></div>
   <div class="pgrid">
@@ -636,10 +639,21 @@ function rProdutos() {
     </div>
   </div>`).join('') || '<div class="vazio">Nenhum produto encontrado.</div>'}
   </div></div>`;
-  $('#q').addEventListener('input', e => { buscaP = e.target.value.toLowerCase(); const v = e.target.selectionStart; rProdutos(); const nq = $('#q'); nq.focus(); nq.setSelectionRange(v, v); });
+   $('#q').addEventListener('input', e => { buscaP = e.target.value.toLowerCase(); const v = e.target.selectionStart; rProdutos(); const nq = $('#q'); nq.focus(); nq.setSelectionRange(v, v); });
+   renderSugestoesAdmin();
   $('#fc').addEventListener('change', e => { filtroCatP = e.target.value; rProdutos(); });
   $('#fs').addEventListener('change', e => { filtroStatus = e.target.value; rProdutos(); });
   marcaOrigem();
+}
+function renderSugestoesAdmin() {
+  const box = document.getElementById('produtoSugestoes'); if (!box) return;
+  const termo = String(buscaP || '').trim();
+  if (!termo) { box.hidden = true; box.innerHTML = ''; return; }
+  const codigo = id => { const s=String(id==null?'':id); if(/^p\d+$/i.test(s)) return 'P'+s.slice(1); let h=0; for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0; return 'P'+(h%60466176).toString(36).toUpperCase().padStart(5,'0'); };
+  const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const lista = DB.listProducts(true).filter(p => [p.nome,p.id,codigo(p.id)].join(' ').toLowerCase().includes(termo)).slice(0,8);
+  box.innerHTML = lista.map(p => `<button type="button" class="adm-sugestao" onclick="editarProduto('${String(p.id).replace(/'/g,'\\&#39;')}')"><b>${esc(p.nome)}</b><small>ID: ${esc(codigo(p.id))} · ${esc(p.id)}</small></button>`).join('') || '<div class="adm-sugestao" style="cursor:default">Nenhum produto encontrado.</div>';
+  box.hidden = false;
 }
 // mostra em cada card se já está na nuvem ou só neste aparelho
 async function marcaOrigem() {

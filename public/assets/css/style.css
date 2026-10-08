@@ -22,7 +22,12 @@ img{max-width:100%;display:block}
 .header-main{display:flex;align-items:center;gap:28px;padding:12px 0}
 .logo{display:flex;align-items:center}
 .logo img{height:56px;width:auto}
-.busca{flex:1;display:flex;border-bottom:1px solid var(--ink);max-width:420px;margin-left:auto}
+.busca{flex:1;display:flex;position:relative;border-bottom:1px solid var(--ink);max-width:420px;margin-left:auto}
+.busca-sugestoes{position:absolute;z-index:80;top:calc(100% + 6px);left:0;right:0;background:var(--surface,#fff);border:1px solid var(--line,#ddd);border-radius:8px;box-shadow:0 10px 24px rgba(40,25,15,.16);overflow:hidden;text-align:left}
+.busca-sugestao{display:block;width:100%;padding:10px 12px;background:transparent;border:0;border-bottom:1px solid var(--line,#eee);color:var(--ink);text-align:left;cursor:pointer;font:inherit}
+.busca-sugestao:last-child{border-bottom:0}
+.busca-sugestao:hover{background:var(--brown-light,#f5eee7)}
+.busca-sugestao small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
 .busca input{flex:1;border:0;background:transparent;padding:10px 4px;outline:none;font-size:14px;font-family:var(--sans)}
 .busca input::placeholder{color:var(--muted)}
 .busca button{border:0;background:none;padding:0 8px;cursor:pointer;font-size:15px;color:var(--ink)}

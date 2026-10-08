@@ -217,11 +217,27 @@ document.addEventListener('DOMContentLoaded', ()=>{
   window.__aplicaConfig();
   const fBusca=document.querySelectorAll('.busca');
   fBusca.forEach(f=>{
+    const input=f.querySelector('input');
+    const sugestoes=document.createElement('div'); sugestoes.className='busca-sugestoes'; sugestoes.hidden=true; f.appendChild(sugestoes);
+    const escapar=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const atualizarSugestoes=()=>{
+      const termo=String(input.value||'').trim().toLowerCase();
+      if(!termo){ sugestoes.hidden=true; sugestoes.innerHTML=''; return; }
+      const lista=(typeof DB!=='undefined'&&DB.listProducts?DB.listProducts(false):(typeof PRODUTOS!=='undefined'?PRODUTOS:[])).filter(p=>{
+        const busca=[p.nome,p.id,typeof codigoProduto==='function'?codigoProduto(p.id):''].join(' ').toLowerCase();
+        return busca.includes(termo);
+      }).slice(0,8);
+      sugestoes.innerHTML=lista.map(p=>`<a class="busca-sugestao" href="produto.html?id=${encodeURIComponent(p.id)}"><b>${escapar(p.nome)}</b><small>ID: ${escapar(p.id)}</small></a>`).join('')||'<div class="busca-sugestao" style="cursor:default">Nenhum produto encontrado.</div>';
+      sugestoes.hidden=false;
+    };
+    input.addEventListener('input',atualizarSugestoes);
+    input.addEventListener('focus',atualizarSugestoes);
     f.addEventListener('submit', e=>{
       e.preventDefault();
-      const v=f.querySelector('input').value.trim();
+      const v=input.value.trim();
       location.href='categoria.html?busca='+encodeURIComponent(v);
     });
+    document.addEventListener('click',e=>{if(!f.contains(e.target)) sugestoes.hidden=true;});
   });
   // anima blocos ao rolar: hero, títulos, vitrines, benefícios, painéis
   document.querySelectorAll('main section, .sec-titulo, .benefits, .cats, .filtros, .sidebar, .form-card, .resumo, .prod-grid, .texto, .info-contato, .layout-2, .cart-layout').forEach(el=>el.classList.add('reveal'));
