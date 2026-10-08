@@ -31,7 +31,8 @@
 <div class="campo"><label>Seu WhatsApp</label><input id="cliFone" inputmode="tel" placeholder="(11) 99999-9999" required aria-required="true"></div>
 <div class="campo"><label>CEP</label><input id="cliCep" inputmode="numeric" maxlength="9" placeholder="00000-000" required aria-required="true" oninput="formatarCepCarrinho(this)" onblur="buscarCepCarrinho()"><small id="cliCepStatus" style="color:#6b7280">Digite o CEP para buscar o endereço.</small></div>
 <div class="campo"><label>Número</label><input id="cliNumero" inputmode="numeric" pattern="[0-9]+" placeholder="Número da residência" required aria-required="true" oninput="this.value=this.value.replace(/\D/g,'')"></div>
-<div class="campo"><label>Endereço encontrado</label><input id="cliEndereco" placeholder="Preencha o CEP" readonly required aria-required="true"></div>
+ <div class="campo"><label>Rua</label><input id="cliRua" placeholder="Preenchida pelo CEP" autocomplete="street-address" readonly required aria-required="true"></div>
+ <div class="campo"><label>Bairro</label><input id="cliBairro" placeholder="Preenchido pelo CEP" readonly required aria-required="true"></div>
 <div class="campo" id="cartPagWrap"><label>Pagamento</label><select id="pag" required aria-required="true"></select></div>
 <div class="campo"><label>Cupom de desconto (se tiver)</label><div style="display:flex;gap:8px"><input id="cupom" placeholder="CÓDIGO" style="flex:1;text-transform:uppercase"><button class="btn btn-borda" type="button" onclick="aplicarCupom()">OK</button></div></div>
  <div class="linha"><span>Subtotal (<span id="qtdT">0</span> peças)</span><b id="subT">R$0</b></div>
@@ -123,30 +124,30 @@ function aplicarCupom(){
   try{ sessionStorage.setItem('em_cupom', cupomAplicado?cupomAplicado.codigo:''); }catch{}
   calcTotal();
 }
-function animarEnderecoCarrinho(endereco, texto, status){
-  clearInterval(endereco._animacaoCep);
-  endereco.value=''; let i=0; status.textContent='Preenchendo endereço...';
-  endereco._animacaoCep=setInterval(()=>{ endereco.value=texto.slice(0,++i); if(i>=texto.length){ clearInterval(endereco._animacaoCep); status.textContent='Endereço encontrado. Informe apenas o número.'; } },18);
-}
-async function buscarCepCarrinho(){
-  const cepEl=document.getElementById('cliCep'), status=document.getElementById('cliCepStatus'), endereco=document.getElementById('cliEndereco');
+ function animarEnderecoCarrinho(rua, bairro, status){
+   rua.value=''; bairro.value=''; status.textContent='Preenchendo endereço...';
+   rua.value=rua.dataset.valorCep||''; bairro.value=bairro.dataset.valorCep||'';
+   status.textContent='Endereço encontrado. Informe apenas o número.';
+ }
+ async function buscarCepCarrinho(){
+   const cepEl=document.getElementById('cliCep'), status=document.getElementById('cliCepStatus'), rua=document.getElementById('cliRua'), bairro=document.getElementById('cliBairro');
   const cep=cepEl.value.replace(/\D/g,'');
   cepEl.value=cep.length>5?cep.slice(0,5)+'-'+cep.slice(5):cep;
-  if(cep.length!==8){ clearInterval(endereco._animacaoCep); endereco.value=''; status.textContent='Digite um CEP válido com 8 números.'; return; }
-  if(cepEl.dataset.cepConsultado===cep && endereco.value) return;
+   if(cep.length!==8){ rua.value=''; bairro.value=''; status.textContent='Digite um CEP válido com 8 números.'; return; }
+   if(cepEl.dataset.cepConsultado===cep && rua.value && bairro.value) return;
   cepEl.dataset.cepConsultado=cep;
   status.textContent='Buscando endereço...';
   try{
     const r=await fetch('https://viacep.com.br/ws/'+cep+'/json/'); const d=await r.json();
     if(d.erro) throw new Error('CEP não encontrado');
-    animarEnderecoCarrinho(endereco,[d.logradouro,d.bairro,d.localidade&&d.uf?d.localidade+' - '+d.uf:''].filter(Boolean).join(', '),status);
-  }catch{ endereco.value=''; status.textContent='Não encontrei esse CEP. Confira os números.'; toast('Não foi possível localizar o CEP.'); }
+     rua.value=d.logradouro||''; bairro.value=d.bairro||''; status.textContent='Endereço encontrado. Informe apenas o número.';
+   }catch{ rua.value=''; bairro.value=''; status.textContent='Não encontrei esse CEP. Confira os números.'; toast('Não foi possível localizar o CEP.'); }
 }
 function formatarCepCarrinho(el){
   const cep=el.value.replace(/\D/g,'').slice(0,8);
   el.value=cep.length>5?cep.slice(0,5)+'-'+cep.slice(5):cep;
   if(cep.length===8) buscarCepCarrinho();
-  else { el.dataset.cepConsultado=''; const endereco=document.getElementById('cliEndereco'); clearInterval(endereco._animacaoCep); endereco.value=''; }
+   else { el.dataset.cepConsultado=''; document.getElementById('cliRua').value=''; document.getElementById('cliBairro').value=''; }
 }
 function calcTotal(){
   const sub=subtotal();
@@ -198,8 +199,9 @@ function finalizar(){
    const fone=document.getElementById('cliFone').value.trim();
    const cep=document.getElementById('cliCep').value.replace(/\D/g,'');
    const numeroResidencia=document.getElementById('cliNumero').value.trim();
-   const baseEndereco=document.getElementById('cliEndereco').value.trim();
-   const endereco=baseEndereco && numeroResidencia ? `${baseEndereco}, nº ${numeroResidencia} - CEP ${cep}` : '';
+    const rua=document.getElementById('cliRua').value.trim();
+    const bairro=document.getElementById('cliBairro').value.trim();
+    const endereco=rua && bairro && numeroResidencia ? `${rua}, nº ${numeroResidencia} - ${bairro} - CEP ${cep}` : '';
   if(!nome) return toast('Diga seu nome para finalizar.');
   if(fone.replace(/\D/g,'').length<10) return toast('Digite seu WhatsApp com DDD.');
    if(!endereco) return toast('Digite seu endereço para entrega.');
