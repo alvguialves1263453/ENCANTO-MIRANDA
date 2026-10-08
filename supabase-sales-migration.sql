@@ -306,7 +306,7 @@ revoke all on function public.purge_old_orders(integer) from public, anon, authe
 create or replace function public.site_criar_pedido(
   p_chave uuid, p_cliente jsonb, p_itens jsonb, p_pagamento text, p_desconto numeric default 0, p_frete numeric default 0
 ) returns jsonb language plpgsql security definer set search_path = public, extensions as $$
-declare v_numero text; v_itens jsonb := '[]'::jsonb; v_item jsonb; v_prod public.produtos%rowtype; v_qtd int; v_need int; v_cor text; v_sub numeric(12,2) := 0; v_desc numeric(12,2):=0; v_frete numeric(12,2):=0; v_pedido public.pedidos%rowtype; v_stock int; v_coupon record; v_settings jsonb; v_codigo text; v_image text;
+ declare v_numero text; v_itens jsonb := '[]'::jsonb; v_item jsonb; v_prod public.produtos%rowtype; v_qtd int; v_need int; v_cor text; v_tam text; v_sub numeric(12,2) := 0; v_desc numeric(12,2):=0; v_frete numeric(12,2):=0; v_pedido public.pedidos%rowtype; v_stock int; v_coupon record; v_settings jsonb; v_codigo text; v_image text;
 begin
   if p_chave is null then raise exception 'idempotency_key_required'; end if;
   -- Serializa novas encomendas para que duas criações concorrentes também respeitem o limite.
@@ -323,13 +323,18 @@ begin
     v_image:=v_prod.foto::text;
     if left(btrim(coalesce(v_image,'')),1)='[' then v_image:=coalesce((v_image::jsonb->>0),v_image);
     elsif left(btrim(coalesce(v_image,'')),1)='{' then v_image:=coalesce((v_image::jsonb->'geral'->>0),v_image); end if;
-    v_cor := btrim(coalesce(v_item->>'cor',''));
+     v_cor := btrim(coalesce(v_item->>'cor',''));
+     v_tam := btrim(coalesce(v_item->>'tam',''));
     select coalesce(sum(greatest(1, least(99, coalesce((x.value->>'qtd')::int, 0)))), 0)::int
       into v_need
       from jsonb_array_elements(p_itens) x(value)
      where x.value->>'id' = v_item->>'id'
-       and btrim(coalesce(x.value->>'cor','')) = v_cor;
-    if coalesce(v_prod.estoque_por_cor,'{}'::jsonb) <> '{}'::jsonb then
+        and btrim(coalesce(x.value->>'cor','')) = v_cor
+        and btrim(coalesce(x.value->>'tam','')) = v_tam;
+     if coalesce(v_prod.estoque_por_variante,'{}'::jsonb) <> '{}'::jsonb then
+       if v_cor = '' or v_tam = '' then raise exception 'invalid_product_variant:%', v_prod.nome; end if;
+       v_stock := coalesce((v_prod.estoque_por_variante->>(lower(v_tam)||'|'||lower(v_cor)))::int,0);
+     elsif coalesce(v_prod.estoque_por_cor,'{}'::jsonb) <> '{}'::jsonb then
       if v_cor = '' or not (v_prod.estoque_por_cor ? v_cor) then raise exception 'invalid_product_color:%', v_prod.nome; end if;
       v_stock := coalesce((v_prod.estoque_por_cor->>v_cor)::int,0);
     else v_stock := coalesce(v_prod.estoque,0); end if;

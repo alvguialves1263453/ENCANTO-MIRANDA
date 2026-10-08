@@ -1129,6 +1129,7 @@ $('#formLogin').addEventListener('submit', async e => {
 });
 async function entrar() {
   await DB.ready;
+  window.__adminKnownOrders = new Set(DB.listOrders().map(o => String(o.numero)));
   aplicarCorAdmin(DB.getSettings().cor);
   $('#telaLogin').style.display = 'none';
   $('#app').style.display = 'block';
@@ -1191,6 +1192,10 @@ async function sincAgora() {
 function armaSyncAdmin() {
   window.__syncRender = function () {
     try {
+      const pedidosAtuais = DB.listOrders(), conhecidos = window.__adminKnownOrders || new Set();
+      const novosPedidos = pedidosAtuais.filter(o => o.status === 'Novo' && !conhecidos.has(String(o.numero)));
+      window.__adminKnownOrders = new Set(pedidosAtuais.map(o => String(o.numero)));
+      if (novosPedidos.length) notificarPedidoNovo(novosPedidos);
       const el = document.activeElement;
       const digitando = el && /INPUT|TEXTAREA|SELECT/.test(el.tagName);
       const modal = document.getElementById('modalFundo').classList.contains('aberto');
@@ -1198,6 +1203,17 @@ function armaSyncAdmin() {
     } catch {}
   };
 }
+let alertaPedidoTimer = null, tituloPedidoTimer = null, tituloPedidoBase = document.title;
+function notificarPedidoNovo(pedidos) {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtx) { const ctx = new AudioCtx(), agora = ctx.currentTime; [0, .16, .32].forEach((at, i) => { const osc=ctx.createOscillator(), ganho=ctx.createGain(); osc.type='sine'; osc.frequency.value=i===1?880:660; ganho.gain.setValueAtTime(.0001,agora+at); ganho.gain.exponentialRampToValueAtTime(.18,agora+at+.02); ganho.gain.exponentialRampToValueAtTime(.0001,agora+at+.14); osc.connect(ganho); ganho.connect(ctx.destination); osc.start(agora+at); osc.stop(agora+at+.16); }); setTimeout(()=>ctx.close().catch(()=>{}),1000); }
+  } catch {}
+  if (tituloPedidoTimer) clearInterval(tituloPedidoTimer); let aceso=false; tituloPedidoTimer=setInterval(()=>{aceso=!aceso;document.title=aceso?'🔴 PEDIDO NOVO!':tituloPedidoBase;},700); document.title='🔴 PEDIDO NOVO!';
+  let aviso=document.getElementById('alertaPedidoNovo'); if(!aviso){aviso=document.createElement('button');aviso.id='alertaPedidoNovo';aviso.type='button';aviso.style.cssText='position:fixed;z-index:10000;top:18px;right:22px;display:flex;align-items:center;gap:11px;padding:13px 17px;border:1px solid #f1b1aa;border-radius:13px;background:linear-gradient(110deg,#fff7f5,#fff);color:#8e3029;box-shadow:0 14px 35px -15px rgba(130,45,35,.45);font:800 12px Arial;cursor:pointer;animation:pulsePedidoNovo 1.2s ease-in-out infinite'; aviso.onclick=()=>{limparAlertaPedido();ir('pedidos');}; document.body.appendChild(aviso); } aviso.innerHTML=`<span style="font-size:19px">🔔</span><span>${pedidos.length===1?'Novo pedido recebido':pedidos.length+' novos pedidos'}<small style="display:block;margin-top:3px;font-size:10px;font-weight:500">Clique para abrir as vendas</small></span>`; if(alertaPedidoTimer)clearTimeout(alertaPedidoTimer); alertaPedidoTimer=setTimeout(()=>limparAlertaPedido(),15000);
+  if(!document.getElementById('estiloAlertaPedidoNovo')){const style=document.createElement('style');style.id='estiloAlertaPedidoNovo';style.textContent='@keyframes pulsePedidoNovo{0%,100%{transform:translateY(0);box-shadow:0 14px 35px -15px rgba(130,45,35,.45)}50%{transform:translateY(-3px);box-shadow:0 18px 38px -12px rgba(130,45,35,.65)}}';document.head.appendChild(style);}
+}
+function limparAlertaPedido() { const aviso=document.getElementById('alertaPedidoNovo');if(aviso)aviso.remove();if(alertaPedidoTimer)clearTimeout(alertaPedidoTimer);if(tituloPedidoTimer)clearInterval(tituloPedidoTimer);tituloPedidoTimer=null;document.title=tituloPedidoBase; }
 document.addEventListener('click', e => {
   const b = e.target.closest('#admNav button');
   if (!b) return;
@@ -2275,6 +2291,7 @@ async function excluirPedido(numero) {
 }
 function gerenciarPedido(numero) {
   const o = DB.listOrders().find(p => p.numero === numero); if (!o) return;
+  limparAlertaPedido();
   if (o.status === 'Novo') {
     marcarPedidoLido(numero);
     const botaoPedidos = document.querySelector('#admNav button[data-tela="pedidos"]');
