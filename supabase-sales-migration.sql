@@ -61,6 +61,7 @@ alter table public.pedidos
   add column if not exists reembolso_status text not null default 'Não necessário';
 
 alter table public.produtos add column if not exists estoque_por_cor jsonb not null default '{}'::jsonb;
+alter table public.produtos add column if not exists estoque_por_variante jsonb not null default '{}'::jsonb;
 create unique index if not exists pedidos_chave_idempotencia_uidx on public.pedidos(chave_idempotencia) where chave_idempotencia is not null;
 create index if not exists pedidos_data_idx on public.pedidos(data desc);
 create index if not exists pedidos_status_idx on public.pedidos(status);

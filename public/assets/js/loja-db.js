@@ -81,11 +81,18 @@ const DB = (() => {
     return saida;
   };
   const totalEstoqueCores = mapa => Object.values(mapa).reduce((s, n) => s + (+n || 0), 0);
+  const chaveVariante = (tam, cor) => `${String(tam == null ? '' : tam).trim().toLowerCase()}|${String(cor == null ? '' : cor).trim().toLowerCase()}`;
+  const estoqueVariantesNormalizado = valor => {
+    const entrada = valor && typeof valor === 'object' && !Array.isArray(valor) ? valor : {}, saida = {};
+    Object.keys(entrada).forEach(k => { const nome = String(k).trim(); if (nome) saida[nome] = Math.max(0, Math.round(+entrada[k] || 0)); });
+    return saida;
+  };
+  const totalEstoqueVariantes = mapa => Object.values(mapa).reduce((s, n) => s + (+n || 0), 0);
   // A tabela atual de produtos não possui a coluna estoque_por_cor. O mapa
   // continua local para o painel, mas o payload precisa conter só colunas
   // existentes no Supabase para o upsert não retornar HTTP 400.
-  const pToRow = p => ({ id: String(p.id), nome: p.nome, descricao: p.desc || '', tecido: p.tecido || '', preco: +p.preco || 0, preco_antigo: p.antigo == null ? null : +p.antigo, categoria: p.cat || null, selo: p.selo || null, cores: p.cores || [], tamanhos: p.tams || [], estoque: p.estoque || 0, estoque_por_cor: estoqueCoresNormalizado(p.estoquePorCor), parcelas: Math.min(12, Math.max(1, Math.round(+p.parcelas || 6))), foto: fotoParaNuvem(p), rascunho: !!p.rascunho, destaque: !!p.destaque });
-  const pFromRow = r => { const pacoteFotos = fotosDaNuvem(r.foto), fa = pacoteFotos.geral, estoquePorCor = estoqueCoresNormalizado(r.estoque_por_cor); return { id: r.id, nome: r.nome, desc: r.descricao || '', tecido: r.tecido || '', preco: +r.preco, antigo: r.preco_antigo == null ? null : +r.preco_antigo, cat: r.categoria, selo: r.selo, cores: r.cores || [], tams: r.tamanhos || [], estoque: r.estoque || 0, estoquePorCor, controlaEstoquePorCor: Object.keys(estoquePorCor).length > 0, parcelas: Math.min(12, Math.max(1, Math.round(+r.parcelas || 6))), foto: fa[0] || null, fotos: fa, fotosPorCor: pacoteFotos.porCor, rascunho: !!r.rascunho, destaque: !!r.destaque }; };
+  const pToRow = p => ({ id: String(p.id), nome: p.nome, descricao: p.desc || '', tecido: p.tecido || '', preco: +p.preco || 0, preco_antigo: p.antigo == null ? null : +p.antigo, categoria: p.cat || null, selo: p.selo || null, cores: p.cores || [], tamanhos: p.tams || [], estoque: p.estoque || 0, estoque_por_cor: estoqueCoresNormalizado(p.estoquePorCor), estoque_por_variante: estoqueVariantesNormalizado(p.estoquePorVariante), parcelas: Math.min(12, Math.max(1, Math.round(+p.parcelas || 6))), foto: fotoParaNuvem(p), rascunho: !!p.rascunho, destaque: !!p.destaque });
+  const pFromRow = r => { const pacoteFotos = fotosDaNuvem(r.foto), fa = pacoteFotos.geral, estoquePorCor = estoqueCoresNormalizado(r.estoque_por_cor), estoquePorVariante = estoqueVariantesNormalizado(r.estoque_por_variante); return { id: r.id, nome: r.nome, desc: r.descricao || '', tecido: r.tecido || '', preco: +r.preco, antigo: r.preco_antigo == null ? null : +r.preco_antigo, cat: r.categoria, selo: r.selo, cores: r.cores || [], tams: r.tamanhos || [], estoque: r.estoque || 0, estoquePorCor, estoquePorVariante, controlaEstoquePorCor: Object.keys(estoquePorCor).length > 0 || Object.keys(estoquePorVariante).length > 0, parcelas: Math.min(12, Math.max(1, Math.round(+r.parcelas || 6))), foto: fa[0] || null, fotos: fa, fotosPorCor: pacoteFotos.porCor, rascunho: !!r.rascunho, destaque: !!r.destaque }; };
   const oToRow = o => ({ numero: o.numero, data: o.data, cliente_nome: o.nome || '', cliente_fone: o.fone || '', cliente_endereco: o.endereco || '', itens: o.itens || [], subtotal: +o.subtotal || 0, desconto: +o.desconto || 0, frete: +o.frete || 0, total: +o.total || 0, pagamento: o.pag || '', pagamento_status: o.pagamentoStatus || 'Pendente', valor_recebido: +o.valorRecebido || 0, troco: +o.troco || 0, cupom: o.cupom || '', observacao: o.observacao || '', status: o.status || 'Novo', estoque_baixado: !!o.baixado, estoque_estornado: !!o.estornado, fechado_em: o.fechadoEm || null, atualizado_em: new Date().toISOString() });
   const oFromRow = r => ({ numero: r.numero, data: r.data, nome: r.cliente_nome, fone: r.cliente_fone, endereco: r.cliente_endereco || '', itens: r.itens || [], subtotal: +r.subtotal || 0, desconto: +r.desconto || 0, frete: +r.frete || 0, total: +r.total || 0, pag: r.pagamento, pagamentoStatus: r.pagamento_status || 'Pendente', valorRecebido: +r.valor_recebido || 0, troco: +r.troco || 0, cupom: r.cupom, observacao: r.observacao || '', origem: r.origem || 'Site', motivoCancelamento: r.motivo_cancelamento || '', reembolsoStatus: r.reembolso_status || 'Não necessário', status: r.status, baixado: !!r.estoque_baixado, estornado: !!r.estoque_estornado, fechadoEm: r.fechado_em || null, atualizadoEm: r.atualizado_em || null });
   const sToRow = settings => { const s = settings || getSettings(); return { id: 1, nome_loja: s.nomeLoja, whatsapp: s.whatsapp, whatsapp_config: s.whatsappConfig, email: s.email, endereco: s.endereco, instagram: s.instagram, frete_gratis: s.freteGratis, cor: s.cor, banners: s.banners, pagamento: s.pagamento, informacoes: Object.assign({}, s.informacoes, { termos: s.termos }) }; };
@@ -393,9 +400,9 @@ const DB = (() => {
     const capa = fa[0] || p.foto || null;
     const isBase = baseProdutos().some(b => String(b.id) === id);
     if (isBase) {
-       S.products[id] = Object.assign({}, S.products[id], { nome: p.nome, desc: p.desc, tecido: p.tecido, preco: +p.preco, antigo: p.antigo === '' || p.antigo == null ? null : +p.antigo, cat: p.cat, selo: p.selo || null, cores: p.cores || [], tams: p.tams || [], estoque: Math.max(0, Math.round(+p.estoque || 0)), estoquePorCor: estoqueCoresNormalizado(p.estoquePorCor), controlaEstoquePorCor: !!p.controlaEstoquePorCor, parcelas: Math.min(12, Math.max(1, Math.round(+p.parcelas || (S.products[id] || {}).parcelas || 6))), foto: capa, fotos: fa, rascunho: !!p.rascunho, destaque: !!p.destaque });
+       S.products[id] = Object.assign({}, S.products[id], { nome: p.nome, desc: p.desc, tecido: p.tecido, preco: +p.preco, antigo: p.antigo === '' || p.antigo == null ? null : +p.antigo, cat: p.cat, selo: p.selo || null, cores: p.cores || [], tams: p.tams || [], estoque: Math.max(0, Math.round(+p.estoque || 0)), estoquePorCor: estoqueCoresNormalizado(p.estoquePorCor), estoquePorVariante: estoqueVariantesNormalizado(p.estoquePorVariante), controlaEstoquePorCor: !!p.controlaEstoquePorCor, parcelas: Math.min(12, Math.max(1, Math.round(+p.parcelas || (S.products[id] || {}).parcelas || 6))), foto: capa, fotos: fa, rascunho: !!p.rascunho, destaque: !!p.destaque });
     } else {
-       S.products[id] = Object.assign({}, p, { preco: +p.preco, antigo: p.antigo === '' || p.antigo == null ? null : +p.antigo, estoque: Math.max(0, Math.round(+p.estoque || 0)), estoquePorCor: estoqueCoresNormalizado(p.estoquePorCor), controlaEstoquePorCor: !!p.controlaEstoquePorCor, parcelas: Math.min(12, Math.max(1, Math.round(+p.parcelas || 6))), foto: capa, fotos: fa });
+       S.products[id] = Object.assign({}, p, { preco: +p.preco, antigo: p.antigo === '' || p.antigo == null ? null : +p.antigo, estoque: Math.max(0, Math.round(+p.estoque || 0)), estoquePorCor: estoqueCoresNormalizado(p.estoquePorCor), estoquePorVariante: estoqueVariantesNormalizado(p.estoquePorVariante), controlaEstoquePorCor: !!p.controlaEstoquePorCor, parcelas: Math.min(12, Math.max(1, Math.round(+p.parcelas || 6))), foto: capa, fotos: fa });
      }
      persist();
      // Mantém a promessa para o painel confirmar se o produto chegou à nuvem.
@@ -416,9 +423,11 @@ const DB = (() => {
     persist();
     paraNuvem({ k: 'pDel', id });
   }
-  function adjustStock(id, delta, cor) {
+  function adjustStock(id, delta, cor, tam) {
     const p = getProduct(id);
     if (!p) return 0;
+    const variantes = estoqueVariantesNormalizado(p.estoquePorVariante), vk = chaveVariante(tam, cor);
+    if (tam != null && cor != null && Object.prototype.hasOwnProperty.call(variantes, vk)) { variantes[vk] = Math.max(0, variantes[vk] + delta); const sid = String(id), alteracao = { estoque: totalEstoqueVariantes(variantes), estoquePorVariante: variantes }; if (baseProdutos().some(b => String(b.id) === sid)) S.products[sid] = Object.assign({}, S.products[sid], alteracao); else if (S.products[sid]) Object.assign(S.products[sid], alteracao); persist(); paraNuvem({ k: 'pUp', p: getProduct(sid) }); return variantes[vk]; }
     const mapa = estoqueCoresNormalizado(p.estoquePorCor);
     const usaCor = cor && Object.prototype.hasOwnProperty.call(mapa, cor);
     const novoCor = usaCor ? Math.max(0, (mapa[cor] || 0) + delta) : null;
@@ -432,9 +441,10 @@ const DB = (() => {
     paraNuvem({ k: 'pUp', p: getProduct(sid) });
     return novo;
   }
-  const setStock = (id, qty, cor) => {
+  const setStock = (id, qty, cor, tam) => {
     const p = getProduct(id);
     if (!p) return 0;
+    const variantes = estoqueVariantesNormalizado(p.estoquePorVariante), vk = chaveVariante(tam, cor); if (tam != null && cor != null && Object.prototype.hasOwnProperty.call(variantes, vk)) { variantes[vk] = Math.max(0, Math.round(+qty || 0)); const sid=String(id), alteracao={estoque:totalEstoqueVariantes(variantes),estoquePorVariante:variantes}; if(baseProdutos().some(b=>String(b.id)===sid)) S.products[sid]=Object.assign({},S.products[sid],alteracao); else if(S.products[sid]) Object.assign(S.products[sid],alteracao); persist(); paraNuvem({k: 'pUp',p:getProduct(sid)}); return variantes[vk]; }
     const mapa = estoqueCoresNormalizado(p.estoquePorCor);
     if (cor && Object.prototype.hasOwnProperty.call(mapa, cor)) {
       mapa[cor] = Math.max(0, Math.round(+qty || 0));

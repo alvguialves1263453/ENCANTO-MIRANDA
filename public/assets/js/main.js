@@ -11,7 +11,15 @@ function telefoneExibicao(valor){
 const getCart = () => { try{return JSON.parse(localStorage.getItem('em_cart')||'[]')}catch{return[]} };
 const saveCart = c => { localStorage.setItem('em_cart', JSON.stringify(c)); updateCartBadge(); };
 function estoqueDisponivelProduto(p, cor){
+  const tam=arguments[2];
   if(!p) return 0;
+  const variantes=p.estoquePorVariante&&typeof p.estoquePorVariante==='object'&&!Array.isArray(p.estoquePorVariante)?p.estoquePorVariante:{};
+  if(cor!=null&&tam!=null&&Object.keys(variantes).length){const chave=`${String(tam).trim().toLowerCase()}|${String(cor).trim().toLowerCase()}`,k=Object.keys(variantes).find(x=>x.toLowerCase()===chave);return k==null?0:Math.max(0,+variantes[k]||0);}
+  if(Object.keys(variantes).length){
+    const valores=Object.values(variantes);
+    if(tam!=null){const prefixo=String(tam).trim().toLowerCase()+'|';return valores.reduce((s,v,i)=>s+(Object.keys(variantes)[i].toLowerCase().startsWith(prefixo)?Math.max(0,+v||0):0),0);}
+    return valores.reduce((s,v)=>s+Math.max(0,+v||0),0);
+  }
   const mapa=p.estoquePorCor&&typeof p.estoquePorCor==='object'&&!Array.isArray(p.estoquePorCor)?p.estoquePorCor:{};
   const cores=Object.keys(mapa);
   if(!cores.length) return Math.max(0,+p.estoque||0);
@@ -43,15 +51,15 @@ function toast(msg){
 function addToCart(id, cor='', tam='', qtd=1){
   try {
     const p = (typeof prodById === 'function') ? prodById(id) : null;
-    if (p && estoqueDisponivelProduto(p,cor) <= 0) { toast(cor ? `A cor ${cor} está esgotada` : 'Produto esgotado'); return; }
-    if (p) qtd=Math.min(Math.max(1,Math.round(+qtd||1)),estoqueDisponivelProduto(p,cor));
+    if (p && estoqueDisponivelProduto(p,cor,tam) <= 0) { toast('Combinação indisponível'); return; }
+    if (p) qtd=Math.min(Math.max(1,Math.round(+qtd||1)),estoqueDisponivelProduto(p,cor,tam));
   } catch {}
   const cart=getCart();
   const key=`${id}|${cor}|${tam}`;
   const ex=cart.find(i=>i.key===key);
   if(ex) {
     const p=typeof prodById === 'function' ? prodById(id) : null;
-    const limite=p?estoqueDisponivelProduto(p,cor):ex.qtd+qtd;
+    const limite=p?estoqueDisponivelProduto(p,cor,tam):ex.qtd+qtd;
     ex.qtd=Math.min(limite,ex.qtd+qtd);
     if(ex.qtd<=0) return toast(cor ? `A cor ${cor} está esgotada` : 'Produto esgotado');
   } else { const produto=typeof prodById === 'function' ? prodById(id) : null, mapa=produto&&produto.fotosPorCor&&typeof produto.fotosPorCor==='object'?produto.fotosPorCor:{}, chave=Object.keys(mapa).find(k=>k.trim().toLowerCase()===String(cor||'').trim().toLowerCase()), fotos=chave&&Array.isArray(mapa[chave])?mapa[chave].filter(Boolean):[], gal=typeof fotosDoProduto==='function'&&produto?fotosDoProduto(produto):[]; cart.push({key,id: produto?produto.id:id,cor,tam,qtd,foto:fotos[0]||gal[0]||produto&&produto.foto||''}); }

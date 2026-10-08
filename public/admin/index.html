@@ -1381,7 +1381,7 @@ function normalizarMapaFotos(mapa) {
   });
   return out;
 }
-function novoProduto() { WIZ = { id: null, nome: '', preco: '', parcelas: '6', cat: (DB.listCategories()[0] || {}).slug || '', foto: '', fotos: [], fotosPorCor: {}, estoque: '10', semEstoque: false, variasCores: false, controlaEstoquePorCor: false, estoquePorCor: {}, destaque: false, tamsTxt: 'P, M, G', coresTxt: '', desc: '', antigo: '' }; desenharWizard('Adicionar produto'); }
+function novoProduto() { WIZ = { id: null, nome: '', preco: '', parcelas: '6', cat: (DB.listCategories()[0] || {}).slug || '', foto: '', fotos: [], fotosPorCor: {}, estoque: '10', semEstoque: false, variasCores: false, controlaEstoquePorCor: false, estoquePorCor: {}, estoquePorVariante: {}, destaque: false, tamsTxt: 'P, M, G', coresTxt: '', desc: '', antigo: '' }; desenharWizard('Adicionar produto'); }
 function editarProduto(id) {
   const p = DB.getProduct(id);
   if (!p) return;
@@ -1390,7 +1390,7 @@ function editarProduto(id) {
   else if (p && typeof p.foto === 'string' && p.foto.trim().startsWith('[')) { try { const a = JSON.parse(p.foto); if (Array.isArray(a)) arr = a.filter(Boolean); } catch {} }
   else if (p.foto) arr = [p.foto];
   arr = arr.map(f => (typeof f === 'string' && !f.startsWith('data:') && !f.startsWith('http') && !f.startsWith('../') && !f.startsWith('assets/')) ? '../' + f : f);
-  WIZ = { id, nome: p.nome, preco: p.preco, parcelas: p.parcelas ?? 6, cat: p.cat, foto: arr[0] || '', fotos: arr, fotosPorCor: normalizarMapaFotos(p.fotosPorCor), estoque: p.estoque, semEstoque: (p.estoque || 0) >= 9999, variasCores: p.cores && p.cores.length > 1, controlaEstoquePorCor: !!p.controlaEstoquePorCor, estoquePorCor: Object.assign({}, p.estoquePorCor || {}), destaque: p.destaque === true, tamsTxt: (p.tams || []).join(', '), coresTxt: (p.cores || []).join(', '), desc: p.desc || '', antigo: p.antigo ?? '' };
+  WIZ = { id, nome: p.nome, preco: p.preco, parcelas: p.parcelas ?? 6, cat: p.cat, foto: arr[0] || '', fotos: arr, fotosPorCor: normalizarMapaFotos(p.fotosPorCor), estoque: p.estoque, semEstoque: (p.estoque || 0) >= 9999, variasCores: p.cores && p.cores.length > 1, controlaEstoquePorCor: !!p.controlaEstoquePorCor, estoquePorCor: Object.assign({}, p.estoquePorCor || {}), estoquePorVariante: Object.assign({}, p.estoquePorVariante || {}), destaque: p.destaque === true, tamsTxt: (p.tams || []).join(', '), coresTxt: (p.cores || []).join(', '), desc: p.desc || '', antigo: p.antigo ?? '' };
   if (WIZ.foto && !WIZ.foto.startsWith('data:') && !WIZ.foto.startsWith('http') && !WIZ.foto.startsWith('../')) WIZ.foto = '../' + WIZ.foto;
   desenharWizard('Editar produto');
 }
@@ -1644,9 +1644,10 @@ function renderFotosPorCorWizard() {
 function renderEstoqueCores() {
   const box = document.getElementById('wEstCores'); if (!box || !WIZ) return;
   const cores = coresDoWiz();
-  const mapa = WIZ.estoquePorCor || {};
-  box.innerHTML = cores.length ? cores.map(c => `<div class="w-cor-row" style="display:flex;align-items:center;gap:7px;margin-top:6px"><span style="flex:1;font-weight:600">${escWiz(c)}</span><input class="w-cor-qtd" data-cor="${escWiz(c)}" type="number" min="0" step="1" value="${Math.max(0, Math.round(+mapa[c] || 0))}" style="width:92px" placeholder="Quantidade"></div>`).join('') : '<span class="hint">Adicione as cores acima para informar o estoque de cada uma.</span>';
+  const mapa = WIZ.estoquePorCor || {}, variantes = WIZ.estoquePorVariante || {}, tams = (WIZ.tamsTxt || '').split(',').map(s => s.trim()).filter(Boolean);
+  box.innerHTML = cores.length && tams.length ? `<div class="hint">Estoque por combinação: tamanho × cor</div><div style="overflow-x:auto;margin-top:8px;padding-bottom:4px"><div style="display:grid;grid-template-columns:120px repeat(${cores.length},minmax(110px,1fr));min-width:${120 + cores.length * 110}px;gap:6px"><b>Tamanho</b>${cores.map(c=>`<b style="white-space:nowrap">${escWiz(c)}</b>`).join('')}${tams.map(t=>`<b>${escWiz(t)}</b>${cores.map(c=>{const k=t.trim().toLowerCase()+'|'+c.trim().toLowerCase();return `<input class="w-var-qtd" data-tam="${escWiz(t)}" data-cor="${escWiz(c)}" type="number" min="0" step="1" value="${Math.max(0,Math.round(+variantes[k]||0))}" placeholder="0">`;}).join('')}`).join('')}</div></div>` : cores.length ? cores.map(c => `<div class="w-cor-row" style="display:flex;align-items:center;gap:7px;margin-top:6px"><span style="flex:1;font-weight:600">${escWiz(c)}</span><input class="w-cor-qtd" data-cor="${escWiz(c)}" type="number" min="0" step="1" value="${Math.max(0, Math.round(+mapa[c] || 0))}" style="width:92px" placeholder="Quantidade"></div>`).join('') : '<span class="hint">Adicione as cores acima para informar o estoque de cada uma.</span>';
   box.querySelectorAll('.w-cor-qtd').forEach(el => el.addEventListener('input', () => { WIZ.estoquePorCor[el.dataset.cor] = Math.max(0, Math.round(+el.value || 0)); atualizaPrev(); }));
+  box.querySelectorAll('.w-var-qtd').forEach(el => el.addEventListener('input', () => { WIZ.estoquePorVariante[el.dataset.tam.trim().toLowerCase()+'|'+el.dataset.cor.trim().toLowerCase()] = Math.max(0, Math.round(+el.value || 0)); atualizaPrev(); }));
 }
 function alternarVariasCores(v) {
   WIZ.variasCores = !!v;
@@ -1702,7 +1703,7 @@ function desenharWizard(titulo) {
   + `<div class="hint">Quantidade de peças disponíveis.</div></div>`
    + `<label class="switch-row"><input type="checkbox" id="wSemEst" ${WIZ.semEstoque ? 'checked' : ''} style="width:16px;height:16px"> Não controlar estoque (sempre disponível)</label>`
    + `<label class="switch-row" style="margin-top:8px"><input type="checkbox" id="wVariasCores" ${WIZ.variasCores ? 'checked' : ''} style="width:16px;height:16px"> Este produto tem várias cores</label>`
-   + `<div id="wCorEstWrap" style="display:${WIZ.variasCores ? '' : 'none'};margin-top:8px;padding:9px;border:1px solid #E6DCCF;border-radius:8px;background:#FCFAF7"><label class="switch-row"><input type="checkbox" id="wControlaCor" ${WIZ.controlaEstoquePorCor ? 'checked' : ''} style="width:16px;height:16px"> Controlar estoque de cada cor</label><div id="wEstCorQtdWrap" style="display:${WIZ.controlaEstoquePorCor ? '' : 'none'};margin-top:6px"><div class="hint">Defina a quantidade disponível em cada cor na seção “Tamanhos e cores”.</div><div id="wEstCores"></div></div></div></div>`
+   + `<div id="wCorEstWrap" style="display:${WIZ.variasCores || coresDoWiz().length ? '' : 'none'};margin-top:8px;padding:9px;border:1px solid #E6DCCF;border-radius:8px;background:#FCFAF7"><label class="switch-row"><input type="checkbox" id="wControlaCor" ${WIZ.controlaEstoquePorCor ? 'checked' : ''} style="width:16px;height:16px"> Controlar estoque por tamanho + cor</label><div id="wEstCorQtdWrap" style="display:${WIZ.controlaEstoquePorCor ? '' : 'none'};margin-top:6px"><div class="hint">Informe a quantidade de cada combinação tamanho × cor.</div><div id="wEstCores"></div></div></div></div>`
   + `<div class="wiz-sec"><h3><span class="n">4</span> Fotos</h3>`
    + `<div class="foto-drop"><label class="btn-mini" style="cursor:pointer;margin:0">+ Adicionar fotos<input type="file" id="wUp" accept="image/*" multiple style="display:none"></label>`
    + `<button class="btn-mini" type="button" onclick="removerFoto()" style="margin:0">Limpar tudo</button>`
@@ -1727,7 +1728,7 @@ function desenharWizard(titulo) {
    document.getElementById('wControlaCor')?.addEventListener('change', e => alternarEstoquePorCor(e.target.checked));
   ['wNome', 'wPreco', 'wParc', 'wAntigo', 'wEst', 'wCat', 'wDesc', 'wTams', 'wCores'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) { el.addEventListener('input', () => { atualizaPrev(); if (id === 'wTams') desenharChipsTam(); if (id === 'wCores') { desenharChipsCor(); renderEstoqueCores(); renderFotosPorCorWizard(); } }); el.addEventListener('change', atualizaPrev); }
+     if (el) { el.addEventListener('input', () => { atualizaPrev(); if (id === 'wTams') desenharChipsTam(); if (id === 'wCores') { desenharChipsCor(); const wrap=document.getElementById('wCorEstWrap'); if(wrap) wrap.style.display=coresDoWiz().length?'':'none'; renderEstoqueCores(); renderFotosPorCorWizard(); } }); el.addEventListener('change', atualizaPrev); }
   });
   const destEl = document.getElementById('wDestaque');
   if (destEl) destEl.addEventListener('change', () => { WIZ.destaque = destEl.checked; mostrarAvisoNaoSalvo(); atualizaPrev(); });
@@ -1858,12 +1859,13 @@ async function salvarWizard(rascunho) {
   } catch {}
   const tams = (WIZ.tamsTxt || '').split(',').map(s => s.trim()).filter(Boolean);
   const cores = (WIZ.coresTxt || '').split(',').map(s => s.trim()).filter(Boolean);
-   const estoquePorCor = WIZ.controlaEstoquePorCor ? Object.fromEntries(cores.map(c => [c, Math.max(0, Math.round(+((WIZ.estoquePorCor || {})[c]) || 0))])) : {};
-   const estoqueFinal = WIZ.semEstoque ? 9999 : (WIZ.controlaEstoquePorCor ? Object.values(estoquePorCor).reduce((s, n) => s + n, 0) : (+WIZ.estoque || 0));
+    const estoquePorCor = WIZ.controlaEstoquePorCor ? Object.fromEntries(cores.map(c => [c, Math.max(0, Math.round(+((WIZ.estoquePorCor || {})[c]) || 0))])) : {};
+    const estoquePorVariante = WIZ.controlaEstoquePorCor ? Object.fromEntries(Object.entries(WIZ.estoquePorVariante || {}).filter(([k]) => k)) : {};
+    const estoqueFinal = WIZ.semEstoque ? 9999 : (Object.keys(estoquePorVariante).length ? Object.values(estoquePorVariante).reduce((s, n) => s + n, 0) : (WIZ.controlaEstoquePorCor ? Object.values(estoquePorCor).reduce((s, n) => s + n, 0) : (+WIZ.estoque || 0)));
   const parcFinal = Math.min(12, Math.max(1, Math.round(+WIZ.parcelas || 6)));
   fotoNormalizada();
    const fotosPorCor = Object.fromEntries(Object.entries(normalizarMapaFotos(WIZ.fotosPorCor)).filter(([cor, fotos]) => cores.includes(cor) && fotos.some(f => WIZ.fotos.includes(f))));
-   const id = DB.saveProduct({ id: WIZ.id, nome: WIZ.nome, desc: WIZ.desc, tecido: (WIZ.desc || '').slice(0, 60) || WIZ.nome, preco: +WIZ.preco, antigo: WIZ.antigo === '' ? null : +WIZ.antigo, cat: WIZ.cat, selo: (WIZ.antigo !== '' && +WIZ.antigo > +WIZ.preco) ? 'promo' : (WIZ.id ? (DB.getProduct(WIZ.id) || {}).selo : 'lanc'), cores: cores.length ? cores : ['Única'], tams: tams.length ? tams : ['Único'], estoque: estoqueFinal, estoquePorCor, controlaEstoquePorCor: !!WIZ.controlaEstoquePorCor, parcelas: parcFinal, foto: WIZ.foto, fotos: WIZ.fotos, fotosPorCor, destaque: !!WIZ.destaque, rascunho });
+    const id = DB.saveProduct({ id: WIZ.id, nome: WIZ.nome, desc: WIZ.desc, tecido: (WIZ.desc || '').slice(0, 60) || WIZ.nome, preco: +WIZ.preco, antigo: WIZ.antigo === '' ? null : +WIZ.antigo, cat: WIZ.cat, selo: (WIZ.antigo !== '' && +WIZ.antigo > +WIZ.preco) ? 'promo' : (WIZ.id ? (DB.getProduct(WIZ.id) || {}).selo : 'lanc'), cores: cores.length ? cores : ['Única'], tams: tams.length ? tams : ['Único'], estoque: estoqueFinal, estoquePorCor, estoquePorVariante, controlaEstoquePorCor: !!WIZ.controlaEstoquePorCor, parcelas: parcFinal, foto: WIZ.foto, fotos: WIZ.fotos, fotosPorCor, destaque: !!WIZ.destaque, rascunho });
    const sincronizado = await DB.aguardarUltimoEnvio();
    WIZ.id = id; // se clicar de novo, edita o mesmo em vez de criar outro
    fecharModal();
@@ -1885,7 +1887,7 @@ async function duplicarProduto(id) {
   else if (p && typeof p.foto === 'string' && p.foto.trim().startsWith('[')) { try { const a = JSON.parse(p.foto); if (Array.isArray(a)) arr = a.filter(Boolean); } catch {} }
   else if (p.foto) arr = [p.foto];
   arr = arr.map(f => (typeof f === 'string' && !f.startsWith('data:') && !f.startsWith('http') && !f.startsWith('../') && !f.startsWith('assets/')) ? '../' + f : f);
-  WIZ = { id: null, nome: (p.nome || '') + ' (cópia)', preco: p.preco, parcelas: p.parcelas ?? 6, cat: p.cat, foto: arr[0] || '', fotos: arr, fotosPorCor: normalizarMapaFotos(p.fotosPorCor), estoque: (+p.estoque >= 9999 ? 10 : p.estoque), semEstoque: (+p.estoque || 0) >= 9999, variasCores: p.cores && p.cores.length > 1, controlaEstoquePorCor: !!p.controlaEstoquePorCor, estoquePorCor: Object.assign({}, p.estoquePorCor || {}), destaque: p.destaque === true, tamsTxt: (p.tams || []).join(', '), coresTxt: (p.cores || []).join(', '), desc: p.desc || '', antigo: p.antigo ?? '' };
+  WIZ = { id: null, nome: (p.nome || '') + ' (cópia)', preco: p.preco, parcelas: p.parcelas ?? 6, cat: p.cat, foto: arr[0] || '', fotos: arr, fotosPorCor: normalizarMapaFotos(p.fotosPorCor), estoque: (+p.estoque >= 9999 ? 10 : p.estoque), semEstoque: (+p.estoque || 0) >= 9999, variasCores: p.cores && p.cores.length > 1, controlaEstoquePorCor: !!p.controlaEstoquePorCor, estoquePorCor: Object.assign({}, p.estoquePorCor || {}), estoquePorVariante: Object.assign({}, p.estoquePorVariante || {}), destaque: p.destaque === true, tamsTxt: (p.tams || []).join(', '), coresTxt: (p.cores || []).join(', '), desc: p.desc || '', antigo: p.antigo ?? '' };
   desenharWizard('Duplicar produto');
 }
 function alternarTodosDestaques(marcar) {
