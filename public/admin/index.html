@@ -915,8 +915,9 @@ details.mini-opt summary{cursor:pointer;font-size:13px;font-weight:700;color:#5A
 .pedido-modal .gestao-item-id{display:inline-flex!important;align-items:center;width:max-content;margin-top:4px;padding:4px 8px;border:1px solid #d6b99d;border-radius:6px;background:#fff4e8;color:#6f482f;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:14px!important;font-weight:900;letter-spacing:.06em;line-height:1.1}
 .pedido-modal .gestao-item>div small{display:block;margin-top:5px;color:#927d6d;font-size:10px}
 @media(max-width:580px){.vendas-page .vendas-table:has(.venda-row)>tbody{grid-template-columns:1fr}.vendas-page .vendas-table:has(.venda-row) .venda-row{padding:14px}}
-</style>
-</head>
+ .forn-page{max-width:1180px;margin:0 auto;padding:28px 30px 60px}.forn-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:26px}.forn-kicker{display:block;color:#B8875E;font-size:10px;font-weight:900;letter-spacing:.16em;margin-bottom:8px}.forn-head h2{margin:0;color:#34231B;font:400 34px Georgia,serif}.forn-head p{margin:8px 0 0;color:#8D7A6A;font-size:13px}.forn-primary{border:0;border-radius:9px;background:#34231B;color:#fff;padding:13px 18px;font-weight:800;cursor:pointer;box-shadow:0 8px 18px -12px #34231B}.forn-form{background:#fffdf9;border:1px solid #E7D9CA;border-radius:16px;padding:24px;box-shadow:0 14px 32px -26px rgba(52,35,27,.65);margin-bottom:24px}.forn-form h3{margin:0 0 18px;color:#34231B;font:400 23px Georgia,serif}.forn-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.forn-field{display:grid;gap:7px}.forn-field.full{grid-column:1/-1}.forn-field label{color:#6F5949;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}.forn-field input,.forn-field textarea{width:100%;box-sizing:border-box;border:1px solid #DCCBBB;border-radius:8px;background:#fff;padding:12px 13px;color:#34231B;font:inherit;outline:none}.forn-field input:focus,.forn-field textarea:focus{border-color:#B8875E;box-shadow:0 0 0 3px rgba(184,135,94,.13)}.forn-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:20px}.forn-cancel{border:1px solid #DCCBBB;border-radius:8px;background:#fff;color:#6F5949;padding:11px 16px;font-weight:800;cursor:pointer}.forn-save{border:0;border-radius:8px;background:#34231B;color:#fff;padding:11px 18px;font-weight:800;cursor:pointer}.forn-empty{padding:42px;text-align:center;border:1px dashed #DCCBBB;border-radius:14px;color:#947F6D;background:#fffdf9}.forn-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.forn-card{background:#fff;border:1px solid #E7D9CA;border-radius:14px;padding:18px;box-shadow:0 10px 24px -25px #34231B}.forn-card-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.forn-card h3{margin:0;color:#34231B;font-size:17px}.forn-card small{display:block;margin-top:5px;color:#9A8776}.forn-card-info{display:grid;gap:5px;margin-top:16px;color:#6F5949;font-size:13px}.forn-card-info strong{color:#34231B}.forn-card-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:17px;padding-top:13px;border-top:1px solid #F0E7DE}.forn-edit,.forn-delete{border:1px solid #E0D1C0;border-radius:7px;background:#fff;padding:8px 11px;font-size:11px;font-weight:800;cursor:pointer;color:#6F5949}.forn-delete{color:#9B4038}.forn-edit:hover,.forn-delete:hover{background:#FCF5EE}@media(max-width:700px){.forn-page{padding:20px 14px 40px}.forn-head{align-items:flex-start;flex-direction:column}.forn-grid,.forn-list{grid-template-columns:1fr}.forn-primary{width:100%}}
+ </style>
+ </head>
 <body>
 
 <div class="login-card" id="telaLogin">
@@ -966,6 +967,7 @@ const MENU = [
   { id: 'produtos', nome: 'Produtos', icone: '◈' },
   { id: 'categorias', nome: 'Categorias', icone: '▤' },
   { id: 'estoque', nome: 'Estoque', icone: '▦' },
+  { id: 'fornecedores', nome: 'Fornecedores', icone: '♙' },
   { id: 'personalizar', nome: 'Personalizar site', icone: '✎' },
   { id: 'whatsapp', nome: 'WhatsApp', icone: '◉' },
   { id: 'promocoes', nome: 'Promoções', icone: '%' },
@@ -1381,7 +1383,7 @@ function normalizarMapaFotos(mapa) {
   });
   return out;
 }
-function novoProduto() { WIZ = { id: null, nome: '', preco: '', parcelas: '6', cat: (DB.listCategories()[0] || {}).slug || '', foto: '', fotos: [], fotosPorCor: {}, estoque: '10', semEstoque: false, variasCores: false, controlaEstoquePorCor: false, estoquePorCor: {}, estoquePorVariante: {}, destaque: false, tamsTxt: 'P, M, G', coresTxt: '', desc: '', antigo: '' }; desenharWizard('Adicionar produto'); }
+function novoProduto() { WIZ = { id: null, nome: '', preco: '', parcelas: '6', cat: (DB.listCategories()[0] || {}).slug || '', fornecedorId: '', foto: '', fotos: [], fotosPorCor: {}, estoque: '10', semEstoque: false, variasCores: false, controlaEstoquePorCor: false, estoquePorCor: {}, estoquePorVariante: {}, destaque: false, tamsTxt: 'P, M, G', coresTxt: '', desc: '', antigo: '' }; desenharWizard('Adicionar produto'); }
 function editarProduto(id) {
   const p = DB.getProduct(id);
   if (!p) return;
@@ -1390,7 +1392,7 @@ function editarProduto(id) {
   else if (p && typeof p.foto === 'string' && p.foto.trim().startsWith('[')) { try { const a = JSON.parse(p.foto); if (Array.isArray(a)) arr = a.filter(Boolean); } catch {} }
   else if (p.foto) arr = [p.foto];
   arr = arr.map(f => (typeof f === 'string' && !f.startsWith('data:') && !f.startsWith('http') && !f.startsWith('../') && !f.startsWith('assets/')) ? '../' + f : f);
-  WIZ = { id, nome: p.nome, preco: p.preco, parcelas: p.parcelas ?? 6, cat: p.cat, foto: arr[0] || '', fotos: arr, fotosPorCor: normalizarMapaFotos(p.fotosPorCor), estoque: p.estoque, semEstoque: (p.estoque || 0) >= 9999, variasCores: p.cores && p.cores.length > 1, controlaEstoquePorCor: !!p.controlaEstoquePorCor, estoquePorCor: Object.assign({}, p.estoquePorCor || {}), estoquePorVariante: Object.assign({}, p.estoquePorVariante || {}), destaque: p.destaque === true, tamsTxt: (p.tams || []).join(', '), coresTxt: (p.cores || []).join(', '), desc: p.desc || '', antigo: p.antigo ?? '' };
+  WIZ = { id, nome: p.nome, preco: p.preco, parcelas: p.parcelas ?? 6, cat: p.cat, fornecedorId: p.fornecedorId || '', foto: arr[0] || '', fotos: arr, fotosPorCor: normalizarMapaFotos(p.fotosPorCor), estoque: p.estoque, semEstoque: (p.estoque || 0) >= 9999, variasCores: p.cores && p.cores.length > 1, controlaEstoquePorCor: !!p.controlaEstoquePorCor, estoquePorCor: Object.assign({}, p.estoquePorCor || {}), estoquePorVariante: Object.assign({}, p.estoquePorVariante || {}), destaque: p.destaque === true, tamsTxt: (p.tams || []).join(', '), coresTxt: (p.cores || []).join(', '), desc: p.desc || '', antigo: p.antigo ?? '' };
   if (WIZ.foto && !WIZ.foto.startsWith('data:') && !WIZ.foto.startsWith('http') && !WIZ.foto.startsWith('../')) WIZ.foto = '../' + WIZ.foto;
   desenharWizard('Editar produto');
 }
@@ -1683,6 +1685,7 @@ function animarDetalhesWizard(root) {
 }
 function desenharWizard(titulo) {
   const cats = DB.listCategories().map(c => `<option value="${c.slug}" ${WIZ.cat === c.slug ? 'selected' : ''}>${c.nome}</option>`).join('') || '<option value="">Sem categorias</option>';
+  const fornecedores = listaFornecedores().map(f => `<option value="${escWiz(f.id)}" ${String(WIZ.fornecedorId || '') === String(f.id) ? 'selected' : ''}>${escWiz(f.nome)}</option>`).join('');
   const editando = !!WIZ.id;
   abrirModal(`<div class="modal-mini" style="max-width:100%">`
    + `<div class="wiz-head"><div class="wiz-headbar"><div class="wiz-heading"><span class="wiz-eyebrow">EDITOR DE COLEÇÃO</span><div class="wiz-title-row"><h2>${titulo}</h2>${editando ? '<span class="badge">Editando</span>' : '<span class="badge lanc">Novo</span>'}</div><p class="chip-status">Dê forma ao produto com calma. Cada detalhe aparece na prévia em tempo real.</p></div><button type="button" class="wiz-close" onclick="fecharModal()" aria-label="Fechar">×</button></div></div>`
@@ -1691,7 +1694,7 @@ function desenharWizard(titulo) {
    + `<label>Nome <span class="fld-req">*</span></label><input type="text" id="wNome" maxlength="80" value="${escWiz(WIZ.nome)}" placeholder="Ex: Vestido floral midi">`
     + `<label style="margin-top:8px">ID do produto</label><input type="text" value="${WIZ.id ? codigoProdutoAdmin(WIZ.id) : 'Será gerado ao salvar'}" readonly style="background:#f1f1f1;color:#777;cursor:not-allowed">`
   + `<div class="mini-row" style="margin-top:8px"><div><label>Categoria</label><select id="wCat">${cats}</select></div>`
-  + `<div><label>Parcelas</label><select id="wParc">${Array.from({ length: 12 }, (_, i) => `<option value="${i + 1}" ${(+(WIZ.parcelas || 6)) === i + 1 ? 'selected' : ''}>${i + 1}x</option>`).join('')}</select></div></div>`
+   + `<div><label>Parcelas</label><select id="wParc">${Array.from({ length: 12 }, (_, i) => `<option value="${i + 1}" ${(+(WIZ.parcelas || 6)) === i + 1 ? 'selected' : ''}>${i + 1}x</option>`).join('')}</select></div></div><label style="margin-top:8px">Fornecedor</label><select id="wFornecedor"><option value="">Sem fornecedor definido</option>${fornecedores}</select>`
     + `<label style="margin-top:8px">Descrição do produto</label><div class="desc-editor"><div class="desc-toolbar"><button type="button" title="Negrito" onmousedown="event.preventDefault()" onclick="formatarDescricao('bold')"><b>B</b></button><button type="button" title="Itálico" onmousedown="event.preventDefault()" onclick="formatarDescricao('italic')"><i>I</i></button><button type="button" title="Sublinhado" onmousedown="event.preventDefault()" onclick="formatarDescricao('underline')"><u>U</u></button><button type="button" title="Lista" onmousedown="event.preventDefault()" onclick="formatarDescricao('insertUnorderedList')">☷</button><select class="desc-family" title="Fonte" onchange="fonteDescricao(this.value)"><option value="Arial">Arial</option><option value="Georgia">Georgia</option><option value="Verdana">Verdana</option><option value="Tahoma">Tahoma</option><option value="Courier New">Courier New</option><option value="Times New Roman">Times New Roman</option></select><input class="desc-font-number" type="number" min="8" max="72" value="14" title="Tamanho em pixels" onchange="tamanhoDescricao(this.value)"><input type="color" title="Cor do texto" value="#38271D" onchange="colorirDescricao(this.value)"></div><div id="wDesc" class="desc-editable" contenteditable="true" data-placeholder="Escreva a descrição, cole um texto formatado ou use a barra acima...">${descricaoInicial(WIZ.desc)}</div></div>`
    + `<label class="switch-row" style="margin-top:10px"><input type="checkbox" id="wDestaque" ${WIZ.destaque ? 'checked' : ''} style="width:16px;height:16px"> ★ Produto em destaque</label></div>`
   + `<div class="wiz-sec"><h3><span class="n">2</span> Preço</h3>`
@@ -1827,7 +1830,8 @@ function lerPasso() {
   if ((x = v('#wPreco')) !== null) WIZ.preco = x;
   if ((x = v('#wParc')) !== null) WIZ.parcelas = x;
   if ((x = v('#wAntigo')) !== null) WIZ.antigo = x;
-  if ((x = v('#wCat')) !== null) WIZ.cat = x;
+   if ((x = v('#wCat')) !== null) WIZ.cat = x;
+   if ((x = v('#wFornecedor')) !== null) WIZ.fornecedorId = x;
   if ((x = v('#wTams')) !== null) WIZ.tamsTxt = x.trim();
   if ((x = v('#wCores')) !== null) WIZ.coresTxt = x.trim();
   if ((x = v('#wEst')) !== null) WIZ.estoque = x;
@@ -1865,7 +1869,7 @@ async function salvarWizard(rascunho) {
   const parcFinal = Math.min(12, Math.max(1, Math.round(+WIZ.parcelas || 6)));
   fotoNormalizada();
    const fotosPorCor = Object.fromEntries(Object.entries(normalizarMapaFotos(WIZ.fotosPorCor)).filter(([cor, fotos]) => cores.includes(cor) && fotos.some(f => WIZ.fotos.includes(f))));
-    const id = DB.saveProduct({ id: WIZ.id, nome: WIZ.nome, desc: WIZ.desc, tecido: (WIZ.desc || '').slice(0, 60) || WIZ.nome, preco: +WIZ.preco, antigo: WIZ.antigo === '' ? null : +WIZ.antigo, cat: WIZ.cat, selo: (WIZ.antigo !== '' && +WIZ.antigo > +WIZ.preco) ? 'promo' : (WIZ.id ? (DB.getProduct(WIZ.id) || {}).selo : 'lanc'), cores: cores.length ? cores : ['Única'], tams: tams.length ? tams : ['Único'], estoque: estoqueFinal, estoquePorCor, estoquePorVariante, controlaEstoquePorCor: !!WIZ.controlaEstoquePorCor, parcelas: parcFinal, foto: WIZ.foto, fotos: WIZ.fotos, fotosPorCor, destaque: !!WIZ.destaque, rascunho });
+    const id = DB.saveProduct({ id: WIZ.id, nome: WIZ.nome, desc: WIZ.desc, tecido: (WIZ.desc || '').slice(0, 60) || WIZ.nome, preco: +WIZ.preco, antigo: WIZ.antigo === '' ? null : +WIZ.antigo, cat: WIZ.cat, fornecedorId: WIZ.fornecedorId || '', selo: (WIZ.antigo !== '' && +WIZ.antigo > +WIZ.preco) ? 'promo' : (WIZ.id ? (DB.getProduct(WIZ.id) || {}).selo : 'lanc'), cores: cores.length ? cores : ['Única'], tams: tams.length ? tams : ['Único'], estoque: estoqueFinal, estoquePorCor, estoquePorVariante, controlaEstoquePorCor: !!WIZ.controlaEstoquePorCor, parcelas: parcFinal, foto: WIZ.foto, fotos: WIZ.fotos, fotosPorCor, destaque: !!WIZ.destaque, rascunho });
    const sincronizado = await DB.aguardarUltimoEnvio();
    WIZ.id = id; // se clicar de novo, edita o mesmo em vez de criar outro
    fecharModal();
@@ -1887,7 +1891,7 @@ async function duplicarProduto(id) {
   else if (p && typeof p.foto === 'string' && p.foto.trim().startsWith('[')) { try { const a = JSON.parse(p.foto); if (Array.isArray(a)) arr = a.filter(Boolean); } catch {} }
   else if (p.foto) arr = [p.foto];
   arr = arr.map(f => (typeof f === 'string' && !f.startsWith('data:') && !f.startsWith('http') && !f.startsWith('../') && !f.startsWith('assets/')) ? '../' + f : f);
-  WIZ = { id: null, nome: (p.nome || '') + ' (cópia)', preco: p.preco, parcelas: p.parcelas ?? 6, cat: p.cat, foto: arr[0] || '', fotos: arr, fotosPorCor: normalizarMapaFotos(p.fotosPorCor), estoque: (+p.estoque >= 9999 ? 10 : p.estoque), semEstoque: (+p.estoque || 0) >= 9999, variasCores: p.cores && p.cores.length > 1, controlaEstoquePorCor: !!p.controlaEstoquePorCor, estoquePorCor: Object.assign({}, p.estoquePorCor || {}), estoquePorVariante: Object.assign({}, p.estoquePorVariante || {}), destaque: p.destaque === true, tamsTxt: (p.tams || []).join(', '), coresTxt: (p.cores || []).join(', '), desc: p.desc || '', antigo: p.antigo ?? '' };
+  WIZ = { id: null, nome: (p.nome || '') + ' (cópia)', preco: p.preco, parcelas: p.parcelas ?? 6, cat: p.cat, fornecedorId: p.fornecedorId || '', foto: arr[0] || '', fotos: arr, fotosPorCor: normalizarMapaFotos(p.fotosPorCor), estoque: (+p.estoque >= 9999 ? 10 : p.estoque), semEstoque: (+p.estoque || 0) >= 9999, variasCores: p.cores && p.cores.length > 1, controlaEstoquePorCor: !!p.controlaEstoquePorCor, estoquePorCor: Object.assign({}, p.estoquePorCor || {}), estoquePorVariante: Object.assign({}, p.estoquePorVariante || {}), destaque: p.destaque === true, tamsTxt: (p.tams || []).join(', '), coresTxt: (p.cores || []).join(', '), desc: p.desc || '', antigo: p.antigo ?? '' };
   desenharWizard('Duplicar produto');
 }
 function alternarTodosDestaques(marcar) {
@@ -3316,7 +3320,40 @@ async function testarImagekit() {
   } finally { $('#btnIK').disabled = false; }
 }
 
-const RENDER = { inicio: rInicio, produtos: rProdutos, categorias: rCategorias, estoque: rEstoque, pedidos: rPedidos, clientes: rClientes, personalizar: rPersonalizar, termos: rTermos, whatsapp: rWhatsapp, promocoes: rPromocoes, config: rConfig, testes: rTestes, ajuda: rAjuda };
+function listaFornecedores() {
+  try { const valor = JSON.parse(localStorage.getItem('em_fornecedores') || '[]'); return Array.isArray(valor) ? valor : []; } catch { return []; }
+}
+function salvarListaFornecedores(lista) { try { localStorage.setItem('em_fornecedores', JSON.stringify(lista)); } catch {} }
+function rFornecedores() {
+  const esc = valor => String(valor == null ? '' : valor).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  const lista = listaFornecedores();
+  $('#admMain').innerHTML = `<div class="forn-page"><div class="forn-head"><div><span class="forn-kicker">GESTÃO DE COMPRAS</span><h2>Fornecedores</h2><p>Organize contatos, condições e parceiros que abastecem sua loja.</p></div><button class="forn-primary" onclick="abrirFormFornecedor()">+ Novo fornecedor</button></div><div id="fornecedorForm"></div><div class="forn-list">${lista.map((f, i) => { const total=DB.listProducts(true).filter(p=>String(p.fornecedorId||'')===String(f.id||'')).length; return `<article class="forn-card"><div class="forn-card-top"><div><h3>${esc(f.nome)}</h3><small>${esc(f.email || 'Fornecedor cadastrado')}</small></div><span style="color:#6C9A75;font-size:10px;font-weight:800">ATIVO</span></div><div class="forn-card-info"><span><strong>${total}</strong> produto(s) assimilado(s)</span>${f.contato ? `<span><strong>Contato:</strong> ${esc(f.contato)}</span>` : ''}${f.telefone ? `<span><strong>Telefone:</strong> ${esc(f.telefone)}</span>` : ''}${f.observacao ? `<span><strong>Nota:</strong> ${esc(f.observacao)}</span>` : ''}</div><div class="forn-card-foot"><button class="forn-edit" onclick="abrirAssociarProdutos(${i})">Assimilar produtos</button><button class="forn-edit" onclick="editarFornecedor(${i})">Editar</button><button class="forn-delete" onclick="excluirFornecedor(${i})">Excluir</button></div></article>`; }).join('') || '<div class="forn-empty">Nenhum fornecedor cadastrado.<br><small>Adicione seu primeiro parceiro comercial.</small></div>'}</div></div>`;
+}
+function abrirFormFornecedor(indice) {
+  const f = indice == null ? {} : (listaFornecedores()[indice] || {}), box = document.getElementById('fornecedorForm');
+  if (!box) return;
+  box.innerHTML = `<div class="forn-form"><h3>${indice == null ? 'Novo fornecedor' : 'Editar fornecedor'}</h3><div class="forn-grid"><div class="forn-field"><label>Nome da empresa *</label><input id="fornNome" value="${escWiz(f.nome || '')}" placeholder="Ex: Atacado Moda Bela"></div><div class="forn-field"><label>Contato responsável</label><input id="fornContato" value="${escWiz(f.contato || '')}" placeholder="Pessoa responsável"></div><div class="forn-field"><label>Telefone / WhatsApp</label><input id="fornTelefone" value="${escWiz(f.telefone || '')}" placeholder="(11) 99999-9999"></div><div class="forn-field"><label>E-mail</label><input id="fornEmail" type="email" value="${escWiz(f.email || '')}" placeholder="contato@fornecedor.com"></div><div class="forn-field full"><label>Observações</label><textarea id="fornObs" rows="3" placeholder="Prazo, condições de pagamento, produtos...">${escWiz(f.observacao || '')}</textarea></div></div><div class="forn-actions"><button class="forn-cancel" onclick="rFornecedores()">Cancelar</button><button class="forn-save" onclick="salvarFornecedor(${indice == null ? 'null' : indice})">Salvar fornecedor</button></div></div>`;
+  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function salvarFornecedor(indice) {
+  const nome = (document.getElementById('fornNome') || {}).value.trim();
+  if (!nome) { toast('Informe o nome do fornecedor.'); return; }
+  const lista = listaFornecedores(), anterior = indice == null ? {} : (lista[indice] || {}), fornecedor = { id: anterior.id || 'f' + Date.now().toString(36), nome, contato: (document.getElementById('fornContato') || {}).value.trim(), telefone: (document.getElementById('fornTelefone') || {}).value.trim(), email: (document.getElementById('fornEmail') || {}).value.trim(), observacao: (document.getElementById('fornObs') || {}).value.trim() };
+  if (indice == null) lista.unshift(fornecedor); else lista[indice] = fornecedor;
+  salvarListaFornecedores(lista); rFornecedores(); toast('Fornecedor salvo.');
+}
+function editarFornecedor(indice) { abrirFormFornecedor(indice); }
+function abrirAssociarProdutos(indice) {
+  const fornecedor = listaFornecedores()[indice]; if (!fornecedor) return;
+  const selecionados = new Set(DB.listProducts(true).filter(p => String(p.fornecedorId || '') === String(fornecedor.id)).map(p => String(p.id))); window.__assimSelecionados = selecionados;
+  const esc = valor => String(valor == null ? '' : valor).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  abrirModal(`<div class="forn-assimilar"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:15px"><div><span class="forn-kicker">CATÁLOGO DO FORNECEDOR</span><h2 style="margin:0;color:#34231B;font:400 27px Georgia,serif">Assimilar produtos</h2><p style="margin:7px 0 0;color:#927D6D;font-size:12px">Selecione os produtos fornecidos por <b>${esc(fornecedor.nome)}</b>.</p></div><button class="wiz-close" onclick="fecharModal()">×</button></div><input id="buscaAssimilar" placeholder="Buscar por nome ou ID..." style="width:100%;box-sizing:border-box;margin:20px 0 13px;padding:12px;border:1px solid #DCCBBB;border-radius:8px"><div id="gridAssimilar"></div><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:18px;padding-top:15px;border-top:1px solid #E7D9CA"><span id="contadorAssimilar" style="color:#927D6D;font-size:12px"></span><button class="forn-primary" onclick="salvarAssimilacao('${String(fornecedor.id).replace(/'/g, '')}')">Assimilar produtos selecionados</button></div></div>`);
+  const render = () => { const termo=(document.getElementById('buscaAssimilar')||{}).value.toLowerCase(); const produtos=DB.listProducts(true).filter(p=>`${p.nome} ${codigoProduto(p.id)}`.toLowerCase().includes(termo)); const grid=document.getElementById('gridAssimilar'); if(!grid)return; grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;max-height:52vh;overflow:auto;padding:3px'; grid.innerHTML=produtos.map(p=>{const id=String(p.id),on=selecionados.has(id);return `<button type="button" data-assimilar-id="${esc(id)}" style="text-align:left;padding:0;border:2px solid ${on?'#6C9A75':'#E7D9CA'};border-radius:11px;background:${on?'#F2F8F2':'#fff'};overflow:hidden;cursor:pointer"><img src="${fotoSrc(p)}" style="width:100%;height:145px;object-fit:cover;display:block"><span style="display:block;padding:9px"><b style="display:block;color:#34231B;font-size:12px;line-height:1.25">${esc(p.nome)}</b><small style="display:block;margin-top:5px;color:#927D6D">ID ${esc(codigoProduto(p.id))}</small><strong style="display:block;margin-top:7px;color:${on?'#4D8B5B':'#AA907C'};font-size:10px">${on?'✓ SELECIONADO':'SELECIONAR'}</strong></span></button>`;}).join('')||'<div class="forn-empty">Nenhum produto encontrado.</div>'; grid.querySelectorAll('[data-assimilar-id]').forEach(btn=>btn.onclick=()=>{const id=btn.dataset.assimilarId;selecionados.has(id)?selecionados.delete(id):selecionados.add(id);render();}); const count=document.getElementById('contadorAssimilar');if(count)count.textContent=`${selecionados.size} produto(s) selecionado(s)`; };
+  document.getElementById('buscaAssimilar').addEventListener('input',render); render();
+}
+async function salvarAssimilacao(fornecedorId) { const fornecedor=listaFornecedores().find(f=>String(f.id)===String(fornecedorId)); if(!fornecedor)return; const selecionados=window.__assimSelecionados||new Set(); const produtos=DB.listProducts(true); produtos.filter(p=>String(p.fornecedorId||'')===String(fornecedorId)||selecionados.has(String(p.id))).forEach(p=>DB.saveProduct(Object.assign({},p,{fornecedorId:selecionados.has(String(p.id))?fornecedorId:''}))); window.__assimSelecionados=null; fecharModal(); rFornecedores(); toast('Produtos assimilados ao fornecedor.'); }
+async function excluirFornecedor(indice) { if (!await popupConfirm({ titulo: 'Excluir fornecedor?', texto: 'Esse contato será removido do painel.', ok: 'Excluir', perigo: true })) return; const lista = listaFornecedores(); lista.splice(indice, 1); salvarListaFornecedores(lista); rFornecedores(); toast('Fornecedor excluído.'); }
+const RENDER = { inicio: rInicio, produtos: rProdutos, categorias: rCategorias, estoque: rEstoque, fornecedores: rFornecedores, pedidos: rPedidos, clientes: rClientes, personalizar: rPersonalizar, termos: rTermos, whatsapp: rWhatsapp, promocoes: rPromocoes, config: rConfig, testes: rTestes, ajuda: rAjuda };
 (async () => {
   try {
     if (typeof SB !== 'undefined' && SB.ok() && await SB.session()) { sessionStorage.setItem('em_admin', '1'); entrar(); return; }
