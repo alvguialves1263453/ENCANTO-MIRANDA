@@ -79,7 +79,7 @@ function cardHTML(p){
   const tam0 = (p.tams && p.tams[0] || '').replace(/'/g, '');
   const btn = esgotado
     ? `<button class="btn btn-esgotado" disabled>Esgotado</button>`
-    : `<button class="btn btn-rosa" onclick="addToCart('${idAttr}','${cor0}','${tam0}',1)">Adicionar</button>`;
+    : `<a class="btn btn-rosa" href="produto.html?id=${encodeURIComponent(p.id)}">Visualizar</a>`;
   return `<div class="card${esgotado ? ' esgotado' : ''}">
     <a class="card-img" href="produto.html?id=${encodeURIComponent(p.id)}" ${esgotado ? 'aria-disabled="true"' : ''}>
       ${selo}${off?`<span class="off">-${off}%</span>`:''}

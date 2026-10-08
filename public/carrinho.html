@@ -69,14 +69,14 @@ function carrinhoValido(){
   if(JSON.stringify(cart)!==antes) saveCart(cart);
   return cart;
 }
-const itemEsgotado = it => { try { const p=prodById(it.id); const disponivel=typeof estoqueDisponivelProduto==='function'?estoqueDisponivelProduto(p,it.cor):(+p.estoque||0); return !(p && disponivel > 0); } catch { return true; } };
+const itemEsgotado = it => { try { const p=prodById(it.id); const disponivel=typeof estoqueDisponivelProduto==='function'?estoqueDisponivelProduto(p,it.cor,it.tam):(+p.estoque||0); return !(p && disponivel > 0); } catch { return true; } };
 function renderCart(){
   const cart=carrinhoValido(); const box=document.getElementById('lista');
   const ok=cart.filter(it=>!itemEsgotado(it));
   const off=cart.filter(it=>itemEsgotado(it));
   if(!cart.length){ box.innerHTML=`<div class="form-card" style="text-align:center;padding:50px"><h2>Sua sacola está vazia</h2><p style="color:#6b7280">Veja as novidades e monte seu look.</p><br><a class="btn btn-rosa" href="categoria.html?cat=ver-tudo">COMEÇAR A COMPRAR</a></div>`; }
-  else box.innerHTML=cart.map((it,i)=>{ const p=prodById(it.id); const esg=itemEsgotado(it); return `<div class="cart-item"${esg ? ' style="opacity:.85"' : ''}>
-    <a href="produto.html?id=${encodeURIComponent(p.id)}"><img src="${imgProduto(p,1)}"${esg ? ' style="filter:grayscale(1)"' : ''}></a>
+   else box.innerHTML=cart.map((it,i)=>{ const p=prodById(it.id); const mapa=p&&p.fotosPorCor&&typeof p.fotosPorCor==='object'?p.fotosPorCor:{}, chave=Object.keys(mapa).find(k=>k.trim().toLowerCase()===String(it.cor||'').trim().toLowerCase()), fotos=chave&&Array.isArray(mapa[chave])?mapa[chave].filter(Boolean):[], foto=it.foto||fotos[0]||imgProduto(p,1), esg=itemEsgotado(it); return `<div class="cart-item"${esg ? ' style="opacity:.85"' : ''}>
+     <a href="produto.html?id=${encodeURIComponent(p.id)}"><img src="${foto}"${esg ? ' style="filter:grayscale(1)"' : ''}></a>
     <div><b style="font-size:13.5px">${p.nome}</b> ${esg ? '<span class="selo selo-esgotado" style="margin-left:6px">Esgotado</span>' : ''}<div style="font-size:12.5px;color:#6b7280">${it.cor} • Tam ${it.tam} • ${BRL(p.preco)} un.</div>
     ${esg ? '<div style="font-size:12px;color:#8F2B2B;font-weight:700;margin-top:8px">Sem estoque — não dá para finalizar.</div>' : `<div class="qtd" style="margin-top:8px"><button onclick="altQtd(${i},-1)">−</button><span>${it.qtd}</span><button onclick="altQtd(${i},1)">+</button></div>`}</div>
     <div style="text-align:right"><b>${esg ? '—' : BRL(p.preco*it.qtd)}</b><br><button onclick="remItem(${i})" style="border:0;background:none;color:#6B4A32;cursor:pointer;font-size:12px;font-weight:800">remover</button></div></div>`; }).join('')
@@ -91,7 +91,7 @@ function altQtd(i,d){
   const c=getCart();
   try {
     const p=prodById(c[i].id);
-    const disponivel=typeof estoqueDisponivelProduto==='function'?estoqueDisponivelProduto(p,c[i].cor):(+p.estoque||0);
+     const disponivel=typeof estoqueDisponivelProduto==='function'?estoqueDisponivelProduto(p,c[i].cor,c[i].tam):(+p.estoque||0);
     if(!(p && disponivel > 0)) { toast(c[i].cor ? `A cor ${c[i].cor} está esgotada` : 'Produto esgotado'); return; }
     c[i].qtd=Math.max(1,Math.min(disponivel,c[i].qtd+d)); saveCart(c); renderCart();
   } catch { c[i].qtd=Math.max(1,c[i].qtd+d); saveCart(c); renderCart(); }
